@@ -1,1 +1,42 @@
-<p >navbar works!</p>
+<mat-toolbar
+  [ngStyle]="{
+    'background-color': scrollPosition > 10 ? 'rgba(7, 7, 16, 0.7)' : 'transparent',
+    'backdrop-filter': scrollPosition > 10 ? 'blur(60px)' : 'none',
+    'height': '70px',
+    'padding': '10px 0'
+  }"
+  class="fixed top-0 flex justify-between items-center px-4"
+>
+  <mat-toolbar-row class="w-full flex justify-between items-center">
+    <a routerLink="/" class="cursor-pointer">
+      <img
+        [src]="'/assets/d.png'"
+        alt="Logo"
+        [class]="isMobile ? 'h-10' : 'h-12'"
+        class="w-auto object-contain"
+      />
+    </a>
+
+  
+    <div class="hidden lg:flex gap-10  text-gray-400" *ngIf="!isMobile">
+      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/')">Home</span>
+      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/h')">About</span>
+      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/a')">Contact</span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center space-x-4">
+      <!-- Mobile Menu Button -->
+      <button *ngIf="isMobile" mat-icon-button (click)="toggleMenu()">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <!-- Desktop Action Buttons -->
+      <div *ngIf="!isMobile" class="flex gap-5">
+       
+        <!-- Replace this with your Launch Button -->
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Login / Signup</button>
+      </div>
+    </div>
+  </mat-toolbar-row>
+</mat-toolbar>
