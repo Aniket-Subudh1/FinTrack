@@ -1,9 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ /* Import your custom fonts */
+ 
 .landing-page {
     background-image: url('/assets/bg.png');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+  }
+  .landing-page1 {
+    background-image: url('/assets/saa.png');
     background-size: cover;
     background-position: center;
     height: 100vh;
@@ -23,4 +30,102 @@
   .mat-toolbar {
     box-shadow: none;
   }
+ 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* Glassmorphism wrapper */
+.glass-wrapper {
+  width: 400px;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1); /* Light glassy background */
+  backdrop-filter: blur(8px); /* Blur effect */
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Border for glass effect */
+}
+
+/* Form input fields */
+.glass-wrapper .input-field {
+  position: relative;
+  margin: 15px 0;
+  border-bottom: 2px solid #ccc;
+}
+
+.glass-wrapper .input-field label {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.glass-wrapper .input-field input {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+}
+
+.glass-wrapper .input-field input:focus ~ label,
+.glass-wrapper .input-field input:valid ~ label {
+  font-size: 0.8rem;
+  top: 10px;
+  transform: translateY(-120%);
+}
+
+/* Submit button */
+.glass-wrapper button {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  border: 2px solid transparent;
+  transition: 0.3s ease;
+}
+
+.glass-wrapper button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #fff;
+}
+
+.glass-wrapper .register a {
+  color: #efefef;
+  text-decoration: none;
+}
+
+.glass-wrapper .register a:hover {
+  text-decoration: underline;
+}
+
+/* Style adjustments for the form footer */
+.glass-wrapper .register {
+  margin-top: 30px;
+  color: #fff;
+}
+.spline-wrapper {
+  height: 100%;
   
+}
+
+canvas {
+  display: block;
+  width: 50%;
+  height: 50%;
+}

@@ -1,15 +1,17 @@
 // app.routes.ts
 import { Routes } from '@angular/router';
-import { SignUpComponent } from './pages/signup/signup.component'; 
-import { LoginComponent  } from './pages/login/login.component'; 
+ 
+ 
 import { HomeComponent} from './pages/home/home.component'; 
+import { Page2Component } from './pages/page2/page2.component';
+import { Page3Component } from './pages/page3/page3.component';
 
 
 
 
 export const routes: Routes = [
-    { path: 'signup', component: SignUpComponent },
-    { path: 'login', component:LoginComponent  },
+    { path: 'signup', component: Page2Component },
+    { path: 'login', component:Page3Component  },
     { path: '', component:  HomeComponent },
    
   

@@ -1,0 +1,50 @@
+<div class="flex items-center justify-center min-h-screen landing-page1">
+  <div class="flex w-10/12 h-auto fixed">
+    
+    <!-- Left: Sign-up form with full height -->
+    <div class="glass-wrapper w-1/2 ml-20 mr-auto h-full mt-24">
+      <h2 class="text-2xl mb-4 text-white">Sign Up</h2>
+      <form class="flex flex-col h-auto">
+        
+        <!-- Username Input -->
+        <div class="input-field">
+          <input type="text" id="username" name="username" required class="p-3 border border-gray-300 rounded w-full">
+          <label for="username">Username:</label>
+        </div>
+
+        <!-- Email Input -->
+        <div class="input-field">
+          <input type="email" id="email" name="email" required class="p-3 border border-gray-300 rounded w-full">
+          <label for="email">Email:</label>
+        </div>
+
+        <!-- Password Input -->
+        <div class="input-field relative">
+          <input [type]="showPassword ? 'text' : 'password'" id="password" name="password" required class="p-3 border border-gray-300 rounded w-full">
+          <label for="password">Password:</label>
+          <mat-icon class="absolute right-3 top-3 cursor-pointer" (click)="togglePasswordVisibility('password')">
+            {{ showPassword ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </div>
+
+        <!-- Confirm Password Input -->
+        <div class="input-field relative">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirm-password" name="confirm-password" required class="p-3 border border-gray-300 rounded w-full">
+          <label for="confirm-password">Confirm Password:</label>
+          <mat-icon class="absolute right-3 top-3 cursor-pointer" (click)="togglePasswordVisibility('confirm-password')">
+            {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full">Sign Up</button>
+
+      </form>
+    </div>
+
+    <!-- Right: Spline Canvas -->
+    <div class="spline-wrapper w-1/2 h-auto flex items-center justify-center">
+      <canvas #canvas3d id="canvas3d" width="100%" height="100%"></canvas>
+    </div>
+  </div>
+</div>
