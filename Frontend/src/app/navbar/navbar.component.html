@@ -23,16 +23,13 @@
       <span class="cursor-pointer hover:text-white" (click)="navigateTo('/a')">Contact</span>
     </div>
 
-  
     <div class="flex items-center space-x-4 ml-12">  
-   
       <button *ngIf="isMobile" mat-icon-button (click)="toggleMenu()">
         <mat-icon>menu</mat-icon>
       </button>
 
-     
       <div *ngIf="!isMobile" class="flex gap-5">
-        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">Login / Signup</button>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600" (click)="navigateTo('/signup')">Login / Signup</button>
       </div>
     </div>
   </mat-toolbar-row>
