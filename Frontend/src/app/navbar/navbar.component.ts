@@ -10,13 +10,13 @@ import { CommonModule } from '@angular/common';
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
-  standalone: true,  // Standalone component
+  standalone: true,  
   imports: [
-    MatToolbarModule,  // Toolbar module from Angular Material
-    MatButtonModule,   // Button module from Angular Material
-    MatIconModule,     // Icon module from Angular Material
+    MatToolbarModule,  
+    MatButtonModule,  
+    MatIconModule,     
     RouterModule,
-    CommonModule       // RouterModule for navigation
+    CommonModule       
   ]
 })
 export class NavbarComponent {
@@ -27,26 +27,28 @@ export class NavbarComponent {
     this.observeScreenSize();
   }
 
-  // Observe screen size for responsive behavior
+  
   observeScreenSize() {
     this.breakpointObserver.observe([Breakpoints.Small, Breakpoints.Handset])
       .subscribe(result => {
         this.isMobile = result.matches;
+        console.log('Is mobile:', this.isMobile); 
       });
   }
 
-  // Listen to window scroll to apply dynamic background styling
+ 
   @HostListener('window:scroll', [])
   onWindowScroll() {
     this.scrollPosition = window.pageYOffset;
+    console.log('Current scroll position:', this.scrollPosition); 
   }
 
-  // Navigation function
+ 
   navigateTo(route: string) {
-    window.location.href = route;
+    window.location.href = route; 
   }
 
-  // Placeholder for mobile menu toggle
+
   toggleMenu() {
     console.log("Menu toggled");
   }
