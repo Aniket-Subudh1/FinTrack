@@ -10,22 +10,12 @@ import { CommonModule } from '@angular/common';
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
-<<<<<<< HEAD
-  standalone: true,  
-  imports: [
-    MatToolbarModule,  
-    MatButtonModule,  
-    MatIconModule,     
-    RouterModule,
-    CommonModule       
-=======
   standalone: true,
   imports: [
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
     CommonModule
->>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
   ]
 })
 export class NavbarComponent {
@@ -36,10 +26,6 @@ export class NavbarComponent {
     this.observeScreenSize();
   }
 
-<<<<<<< HEAD
-  
-=======
->>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
   observeScreenSize() {
     this.breakpointObserver.observe([Breakpoints.Small, Breakpoints.Handset])
       .subscribe(result => {
@@ -48,29 +34,16 @@ export class NavbarComponent {
       });
   }
 
-<<<<<<< HEAD
- 
-=======
->>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
   @HostListener('window:scroll', [])
   onWindowScroll() {
     this.scrollPosition = window.pageYOffset;
     console.log('Current scroll position:', this.scrollPosition); 
   }
 
-<<<<<<< HEAD
- 
-  navigateTo(route: string) {
-    window.location.href = route; 
-  }
-
-
-=======
   navigateTo(route: string) {
     this.router.navigate([route]);
   }
 
->>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
   toggleMenu() {
     console.log("Menu toggled");
   }
