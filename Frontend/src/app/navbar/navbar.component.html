@@ -5,9 +5,9 @@
     'height': '60px',
     'padding': '10px 0'
   }"
-  class="fixed top-0 flex justify-between items-center px-4"
+  class="fixed top-0 flex justify-between items-center px-4 z-50"
 >
-  <mat-toolbar-row class="w-full flex justify-between items-center">
+  <mat-toolbar-row class="w-full ml-36 flex justify-between items-center">
     <a routerLink="/" class="cursor-pointer">
       <img
         [src]="'/assets/d.png'"
@@ -17,19 +17,29 @@
       />
     </a>
 
-    <div class="hidden lg:flex gap-x-12 ml-auto text-sm text-gray-400" *ngIf="!isMobile">
-      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/')">Home</span>
-      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/h')">About</span>
-      <span class="cursor-pointer hover:text-white" (click)="navigateTo('/a')">Contact</span>
+    <div class="hidden lg:flex gap-x-12 ml-auto text-lg  text-gray-400" *ngIf="!isMobile">
+      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/')">Home</span>
+      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/h')">About</span>
+      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/a')">Contact</span>
     </div>
 
+<<<<<<< HEAD
+    <div class="flex items-center space-x-4 ml-12">
+=======
     <div class="flex items-center space-x-4 ml-12">  
+>>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
       <button *ngIf="isMobile" mat-icon-button (click)="toggleMenu()">
         <mat-icon>menu</mat-icon>
       </button>
 
       <div *ngIf="!isMobile" class="flex gap-5">
+<<<<<<< HEAD
+        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm mr-36 hover:bg-yellow-500">
+          Login / Signup >
+        </button>
+=======
         <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600" (click)="navigateTo('/signup')">Login / Signup</button>
+>>>>>>> 263306760c323a22cc9c5464a424c2effb2d8875
       </div>
     </div>
   </mat-toolbar-row>
