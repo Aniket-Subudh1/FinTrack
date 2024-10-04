@@ -13,7 +13,7 @@
         [src]="'/assets/d.png'"
         alt="Logo"
         [class]="isMobile ? 'h-8' : 'h-10'"
-        class="w-auto object-contain"
+        class="w-auto object-contain btn-n"
       />
     </a>
 
@@ -26,7 +26,7 @@
 
     
       <div *ngIf="!isMobile" class="flex gap-5">
-        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm mr-36 hover:bg-yellow-500"(click)="navigateTo('/signup')">
+        <button class="btn-p text-white px-4 py-2 rounded-lg text-sm mr-36 "(click)="navigateTo('/signup')">
            SignUp >
         </button>
         

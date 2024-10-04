@@ -18,9 +18,9 @@
     </a>
 
     <div class="hidden lg:flex gap-x-12 ml-auto text-lg  text-gray-400" *ngIf="!isMobile">
-      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/')">Home</span>
-      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/h')">About</span>
-      <span class="cursor-pointer hover:text-yellow-500" (click)="navigateTo('/a')">Contact</span>
+      <span class="cursor-pointer btn-n hover:text-yellow-500" (click)="navigateTo('/')">Home</span>
+      <span class="cursor-pointer btn-n hover:text-yellow-500" (click)="navigateTo('/h')">About</span>
+      <span class="cursor-pointer btn-n hover:text-yellow-500" (click)="navigateTo('/a')">Contact</span>
     </div>
 
     <div class="flex items-center space-x-4 ml-12">
@@ -30,7 +30,7 @@
 
     
       <div *ngIf="!isMobile" class="flex gap-5">
-        <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm mr-36 hover:bg-yellow-500"(click)="navigateTo('/login')">
+        <button class=" text-white px-4 py-2 rounded-lg text-sm mr-36 btn-p"(click)="navigateTo('/login')">
            Login / SignUp >
         </button>
         

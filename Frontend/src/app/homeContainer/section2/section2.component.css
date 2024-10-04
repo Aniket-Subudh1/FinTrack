@@ -1,0 +1,19 @@
+/* Glow effect around the container */
+.glow-effect {
+    box-shadow: 0 0 30px rgba(255, 223, 77, 0.8), 0 0 60px rgba(255, 223, 77, 0.6);
+  }
+  
+  /* Font settings */
+ 
+  
+  .font-vietnam {
+    font-family: 'Be Vietnam', sans-serif;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    h2 {
+      font-size: 3rem; /* Reduce font size for mobile screens */
+    }
+  }
+  

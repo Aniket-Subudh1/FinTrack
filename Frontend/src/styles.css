@@ -2,20 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import your custom fonts */
+.landing-page1 {
+  background-color: #000; 
+  background-image: 
+      radial-gradient(circle at 30% 20%, rgba(241, 254, 0, 0.2), transparent 40%),
+      radial-gradient(circle at 70% 40%, rgba(191, 73, 0, 0.15), transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(241, 254, 0, 0.1), transparent 30%),
+      radial-gradient(circle at 60% 70%, rgba(191, 73, 0, 0.25), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(191, 73, 0, 0.1), transparent 30%);
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+.glow-effect {
+  box-shadow: 0 0 20px rgba(223, 248, 33, 0.1), 0 0 40px rgba(223, 248, 33, 0.1), 0 0 60px rgba(223, 248, 33, 0.1);
+}
+
+.glow-effect::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -30px;
+  right: -30px;
+  bottom: -8px;
+  background: radial-gradient(circle, rgba(223, 248, 33, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+}
 
 .landing-page {
-    background-image: url('/assets/bg.png');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
+  background-color: #000; 
+  background-image: 
+      linear-gradient(to bottom, rgba(191, 73, 0, 0.2), rgba(0, 0, 0, 1)), 
+      radial-gradient(circle at 80% 90%, rgba(191, 73, 0, 0.1), transparent 30%),
+      radial-gradient(circle at 0% 10%, rgba(241, 254, 0, 0.2), transparent 40%),
+      radial-gradient(circle at 70% 40%, rgba(191, 73, 0, 0.15), transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(241, 254, 0, 0.1), transparent 30%),
+      radial-gradient(circle at 60% 70%, rgba(191, 73, 0, 0.25), transparent 40%);
+     
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
 }
-.landing-page1 {
-    background-image: url('/assets/saa.png');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-} 
+
 
 h1 {
     font-size: 5rem;
@@ -188,4 +221,64 @@ canvas {
   color: #fff;
   background: rgba(255, 255, 255, 0.15);
   border-color: #fff;
+}
+.button-container {
+  display: flex;
+  gap: 16px; /* Adds space between buttons */
+}
+
+/* Common Button Styles */
+.btn {
+  border: 2px solid orange;
+  color: white;
+  background-color: transparent;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 5px;
+  margin: 10px;
+  transition: background-color 0.3s ease;
+}
+
+
+
+.btn-n:hover {
+  text-shadow: 0 0 20px rgba(245, 158, 11, 1), 0 0 40px rgba(245, 158, 11, 1); /* Strong yellow glow */
+}
+
+.btn-p {
+  background-color: #d8c832; /* Yellow-600 */
+  color: white;
+  box-shadow: 0 4px 6px rgba(241, 254, 0, 0.4); /* Regular shadow */
+}
+
+.btn-p:hover {
+  background-color: #f2ff07; /* Yellow-500 */
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.9), 0 0 40px rgba(245, 158, 11, 0.7); /* Strong yellow glow */
+}
+/* Primary Button Styles */
+.btn-primary {
+  background-color: #d8c832; /* Yellow-600 */
+  color: white;
+  box-shadow: 0 4px 6px rgba(241, 254, 0, 0.4); /* Regular shadow */
+}
+
+.btn-primary:hover {
+  background-color: #f2ff07; /* Yellow-500 */
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.9), 0 0 40px rgba(245, 158, 11, 0.7); /* Strong yellow glow */
+}
+
+
+.btn-secondary {
+  background-color: transparent;
+  color: white;
+  border: 2px solid #f2ff07; /* Yellow-600 border */
+  box-shadow: 1px 4px 6px rgba(241, 254, 1, 0.4);/* Regular shadow */
+}
+
+.btn-secondary:hover {
+  background-color: #f2ff07; /* Yellow-500 */
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.9), 0 0 40px rgba(245, 158, 11, 0.7); /* Strong yellow glow */
 }

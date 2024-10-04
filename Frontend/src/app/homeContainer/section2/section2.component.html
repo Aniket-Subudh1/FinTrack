@@ -1,1 +1,18 @@
-<p class="text-black">section2 works!</p>
+<div class="bg-black relative">
+    <div class="mx-auto py-16 flex justify-center">
+      <div class="top-0 -mt-20 bg-black rounded-full p-8 border z-10 border-yellow-400 shadow-xl w-full lg:w-3/4 relative glow-effect">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div *ngFor="let item of items" class="flex justify-center text-white">
+            <app-custom-counter
+              [before]="item.before"
+              [after]="item.after"
+              [counter]="item.counter"
+              [subtitle]="item.subtitle"
+              [decimals]="item.decimals"
+            ></app-custom-counter>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
