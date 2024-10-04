@@ -1,36 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- /* Import your custom fonts */
- 
+
+/* Import your custom fonts */
+
 .landing-page {
     background-image: url('/assets/bg.png');
     background-size: cover;
     background-position: center;
     height: 100vh;
-  }
-  .landing-page1 {
+}
+.landing-page1 {
     background-image: url('/assets/saa.png');
     background-size: cover;
     background-position: center;
     height: 100vh;
-  }
-  
-  h1 {
+} 
+
+h1 {
     font-size: 5rem;
     font-weight: bold;
-  }
-  
-  p {
+}
+
+p {
     font-size: 1.5rem;
     margin-top: 20px;
     color: white;
-  }
-  
-  .mat-toolbar {
+}
+
+.mat-toolbar {
     box-shadow: none;
-  }
- 
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -44,10 +45,10 @@
   padding: 30px;
   border-radius: 8px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.1); /* Light glassy background */
-  backdrop-filter: blur(8px); /* Blur effect */
-  -webkit-backdrop-filter: blur(8px); /* Safari support */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Border for glass effect */
+  background: rgba(255, 255, 255, 0.05); /* Light glassy background */
+  backdrop-filter: blur(10px); /* Blur effect */
+  -webkit-backdrop-filter: blur(10px); /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Border for glass effect */
 }
 
 /* Form input fields */
@@ -119,13 +120,72 @@
   margin-top: 30px;
   color: #fff;
 }
+
 .spline-wrapper {
   height: 100%;
-  
 }
 
 canvas {
   display: block;
   width: 50%;
   height: 50%;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Dim background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Ensure modal is on top */
+}
+
+.modal-wrapper {
+  width: 400px;
+  padding: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05); /* Light glassy background */
+  backdrop-filter: blur(10px); /* Blur effect */
+  -webkit-backdrop-filter: blur(10px); /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Border for glass effect */
+  text-align: center;
+}
+
+/* Modal header */
+.modal-wrapper h2 {
+  font-size: 1.75rem;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+/* Modal text */
+.modal-wrapper p {
+  color: #efefef;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* Modal buttons */
+.modal-wrapper button {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  border: 2px solid transparent;
+  transition: 0.3s ease;
+}
+
+.modal-wrapper button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #fff;
 }

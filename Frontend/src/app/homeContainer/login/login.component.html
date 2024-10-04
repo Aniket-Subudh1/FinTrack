@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="flex items-center justify-center min-h-screen landing-page1">
 
   <div class="flex w-10/12 h-auto fixed">
@@ -16,16 +14,17 @@
     <div class="glass-wrapper w-1/2 ml-20 mr-auto h-full mt-24">
       <h2 class="text-2xl mb-4 text-white">Login</h2>
 
-      <form class="flex flex-col h-auto">
+      <!-- Bind form with (ngSubmit) and [formGroup] -->
+      <form class="flex flex-col h-auto" [formGroup]="loginForm" (ngSubmit)="submitForm()">
 
-        <!-- Email Input -->
+        <!-- Email Input with formControlName -->
         <div class="input-field mb-6">
-          <input type="email" id="email" name="email" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your email">
+          <input type="email" id="email" formControlName="email" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your email">
         </div>
 
-        <!-- Password Input -->
+        <!-- Password Input with formControlName -->
         <div class="input-field mb-6">
-          <input type="password" id="password" name="password" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your password">
+          <input type="password" id="password" formControlName="password" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your password">
         </div>
 
         <!-- Remember me and Forgot password -->
@@ -38,12 +37,12 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4">
+        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4" [disabled]="loginForm.invalid">
           Log In
         </button>
 
         <!-- Google Login Button -->
-        <button type="button" class="flex items-center justify-center bg-white text-black font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition ease-in-out">
+        <button type="button" class="flex items-center justify-center bg-white text-black font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition ease-in-out" >
           <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google Logo" class="w-6 h-6 mr-2">
           Log in with Google
         </button>
@@ -58,8 +57,5 @@
     
   </div>
 
- 
-
 </body>
-
 </html>
