@@ -1,7 +1,8 @@
 <div class="text-center">
-    <h2 class="text-6xl font-bold font-vietnam text-yellow-400">
-      {{ before }}{{ after }}
-    </h2>
-    <p class="mt-2 text-xl font-medium text-white">{{ subtitle }}</p>
-  </div>
-  
+  <h2 class="text-6xl font-bold text-yellow-400">
+    {{ before }}
+    <span [countUp]="counter" [options]="{ decimalPlaces: decimals }"></span>
+    {{ after }}
+  </h2>
+  <p class="mt-2 text-xl font-medium text-white">{{ subtitle }}</p>
+</div>

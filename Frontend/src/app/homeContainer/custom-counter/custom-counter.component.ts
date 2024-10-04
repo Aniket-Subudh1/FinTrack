@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CountUpModule } from 'ngx-countup';  // Make sure to import CountUpModule
+import { CountUpModule } from 'ngx-countup';
 
 @Component({
   selector: 'app-custom-counter',
   standalone: true,
-  imports: [CountUpModule],  
+  imports: [CountUpModule],
   templateUrl: './custom-counter.component.html',
   styleUrls: ['./custom-counter.component.css'],
 })

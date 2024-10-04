@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam:wght@400;500;700&display=swap');
+
+/* Include Tailwind directives if not already present */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 .landing-page1 {
   background-color: #000; 
@@ -29,7 +33,7 @@
   left: -30px;
   right: -30px;
   bottom: -8px;
-  background: radial-gradient(circle, rgba(223, 248, 33, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(223, 248, 33, 0.1) 0%, transparent 10%);
   border-radius: 50%;
   z-index: -1;
 }
