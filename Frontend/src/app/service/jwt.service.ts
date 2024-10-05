@@ -21,14 +21,34 @@ export class JwtService {
     return this.http.post(`${BASE_URL}/login`, loginRequest);
   }
 
-  // Method to verify OTP
+  // Method to verify OTP (Signup)
   verifyOtp(otpRequest: { email: string, otp: string }): Observable<any> {
+    // Assuming this endpoint does not require Authorization header
     return this.http.post(`${BASE_URL}/signup/verify-otp`, otpRequest);
   }
 
-  // Method to resend OTP
+  // Method to resend OTP (Signup)
   resendOtp(email: string): Observable<any> {
+    // Assuming this endpoint does not require Authorization header
     return this.http.post(`${BASE_URL}/signup/resend-otp`, { email });
+  }
+
+  // Method to send OTP for Forgot Password
+  sendForgotPasswordOtp(email: string): Observable<any> {
+    // No Authorization header needed
+    return this.http.post(`${BASE_URL}/forgot-password`, { email });
+  }
+
+  // Method to verify OTP and reset password
+  verifyForgotPasswordOtp(otpRequest: { email: string, otp: string, newPassword: string }): Observable<any> {
+    // No Authorization header needed
+    return this.http.post(`${BASE_URL}/forgot-password/reset`, otpRequest);
+  }
+
+  // Method to resend OTP for Forgot Password
+  resendForgotPasswordOtp(email: string): Observable<any> {
+    // No Authorization header needed
+    return this.http.post(`${BASE_URL}/forgot-password/resend-otp`, { email });
   }
 
   // Create Authorization Header with JWT token from localStorage

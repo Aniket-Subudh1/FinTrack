@@ -14,8 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
@@ -44,7 +42,7 @@ public class WebSecurityConfiguration {
                     return corsConfig;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/signup", "/signup/verify-otp", "/login").permitAll()  // Allow these endpoints without auth
+                        .requestMatchers("/signup", "/signup/verify-otp", "/login", "/forgot-password", "/forgot-password/reset").permitAll()  // Allow forgot-password endpoints without auth
                         .requestMatchers("/api/**").authenticated()  // Secure other API endpoints
                 )
                 .sessionManagement(session -> session
