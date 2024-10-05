@@ -1,23 +1,19 @@
 <div class="flex items-center justify-center min-h-screen landing-page1">
   <div class="flex w-10/12 h-auto fixed">
     
-    
     <div class="glass-wrapper glow-effect w-1/2 ml-20 mr-auto h-full mt-24">
       <h2 class="text-2xl mb-4 text-white">Sign Up</h2>
       <form class="flex flex-col h-auto" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        
 
         <div class="input-field">
           <input type="text" id="username" formControlName="name" required class="p-3 border border-gray-300 rounded w-full">
           <label for="username">Username:</label>
         </div>
 
-
         <div class="input-field">
           <input type="email" id="email" formControlName="email" required class="p-3 border border-gray-300 rounded w-full">
           <label for="email">Email:</label>
         </div>
-
 
         <div class="input-field relative">
           <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" required class="p-3 border border-gray-300 rounded w-full">
@@ -27,7 +23,6 @@
           </mat-icon>
         </div>
 
-      
         <div class="input-field relative">
           <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirm-password" formControlName="confirmPassword" required class="p-3 border border-gray-300 rounded w-full">
           <label for="confirm-password">Confirm Password:</label>
@@ -36,24 +31,37 @@
           </mat-icon>
         </div>
 
-   
-        <button type="submit" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="registerForm.invalid">Sign Up</button>
-
+        <button type="submit" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="registerForm.invalid || isLoading">Sign Up</button>
       </form>
     </div>
 
-  
     <div class="spline-wrapper w-1/2 h-auto flex items-center justify-center">
       <canvas #canvas3d id="canvas3d" width="100%" height="100%"></canvas>
     </div>
   </div>
-</div>
 
+  <!-- Loader Spinner -->
+  <div *ngIf="isLoading" class="loader-overlay">
+    <div class="spinner"></div>
+  </div>
+</div>
 
 <div *ngIf="showModal" class="modal-overlay">
   <div class="modal-wrapper">
-    <h2>Registration Successful!</h2>
-    <p>Click "OK" to go to the login page.</p>
-    <button (click)="redirectToLogin()">OK</button>
+    <h2 *ngIf="!otpVerified">Enter OTP</h2>
+    <h2 *ngIf="otpVerified">Registration Successful!</h2>
+
+    <ng-container *ngIf="!otpVerified">
+      <p>We have sent an OTP to your email. Please enter it below.</p>
+      <div class="input-field">
+        <input type="text" id="otp" [(ngModel)]="otp" class="p-3 border border-gray-300 rounded w-full" placeholder="Enter OTP">
+      </div>
+      <p *ngIf="timer > 0">Time remaining: {{ timer }} seconds</p>
+      <p *ngIf="timer === 0">OTP expired. Please resend the OTP.</p>
+      <button (click)="verifyOtp()" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="timer === 0 || isLoading">Verify OTP</button>
+      <button *ngIf="timer === 0" (click)="resendOtp()" class="bg-blue-500 text-white py-3 rounded hover:bg-blue-600 w-full" [disabled]="isLoading">Resend OTP</button>
+    </ng-container>
+
+    <button *ngIf="otpVerified" (click)="redirectToLogin()">OK</button>
   </div>
 </div>

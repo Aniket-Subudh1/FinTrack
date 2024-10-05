@@ -1,23 +1,20 @@
 package com.personalfinancetracker.backend.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
-
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-public class Customer {
+public class OtpVerification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+
     private String email;
+    private String name;
     private String password;
-    private String otp;  // To store OTP temporarily
-    private boolean verified = false;
+    private String otp;
+    private LocalDateTime expirationTime;
 
     // Getters and setters
     public Long getId() {
@@ -28,20 +25,20 @@ public class Customer {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPassword() {
@@ -60,11 +57,11 @@ public class Customer {
         this.otp = otp;
     }
 
-    public boolean isVerified() {
-        return verified;
+    public LocalDateTime getExpirationTime() {
+        return expirationTime;
     }
 
-    public void setVerified(boolean verified) {
-        this.verified = verified;
+    public void setExpirationTime(LocalDateTime expirationTime) {
+        this.expirationTime = expirationTime;
     }
 }

@@ -1,6 +1,6 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Application } from '@splinetool/runtime'; 
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon'; 
 import { JwtService } from '../../service/jwt.service';  
 import { CommonModule } from '@angular/common'; 
@@ -14,7 +14,8 @@ import { Router } from '@angular/router';
   imports: [
     MatIconModule,  
     ReactiveFormsModule,  
-    CommonModule  
+    CommonModule,
+    FormsModule
   ]
 })
 export class SignUpComponent implements AfterViewInit, OnInit {
@@ -23,6 +24,10 @@ export class SignUpComponent implements AfterViewInit, OnInit {
   showConfirmPassword: boolean = false;
   registerForm!: FormGroup;  
   showModal: boolean = false;  
+  otp: string = '';  
+  otpVerified: boolean = false;  
+  timer: number = 120;  
+  isLoading: boolean = false;  // New flag to control loader visibility
 
   @ViewChild('canvas3d', { static: true }) canvas3d!: ElementRef<HTMLCanvasElement>;  
 
@@ -30,7 +35,7 @@ export class SignUpComponent implements AfterViewInit, OnInit {
     private fb: FormBuilder,
     private service: JwtService,
     private router: Router,
-    private cdr: ChangeDetectorRef  // Inject ChangeDetectorRef
+    private cdr: ChangeDetectorRef  
   ) {}  
 
   ngOnInit(): void {
@@ -47,7 +52,6 @@ export class SignUpComponent implements AfterViewInit, OnInit {
   passwordMatchValidator(formGroup: AbstractControl): ValidationErrors | null {
     const password = formGroup.get('password')?.value;
     const confirmPassword = formGroup.get('confirmPassword')?.value;
-
     return password === confirmPassword ? null : { mismatch: true };
   }
 
@@ -61,6 +65,7 @@ export class SignUpComponent implements AfterViewInit, OnInit {
 
   onSubmit(): void {
     if (this.registerForm.valid) {
+      this.isLoading = true;  // Show loader
       this.submitForm();  
     } else {
       console.log('Form is invalid');
@@ -68,15 +73,54 @@ export class SignUpComponent implements AfterViewInit, OnInit {
   }
 
   submitForm(): void {
-    console.log(this.registerForm.value);
     this.service.register(this.registerForm.value).subscribe(
       (response: any) => {
-        console.log('Registration successful:', response);
-        this.showModal = true;  // Show modal after successful signup
-        this.cdr.detectChanges();  // Force Angular to update the view
+        console.log('Registration successful, awaiting OTP verification:', response);
+        this.showModal = true;  
+        this.startTimer();  
+        this.isLoading = false;  // Hide loader
+        this.cdr.detectChanges();
       },
       (error: any) => {
         console.error('Error during registration:', error);
+        this.isLoading = false;  // Hide loader on error
+      }
+    );
+  }
+
+  verifyOtp(): void {
+    this.isLoading = true;  // Show loader
+    const otpRequest = {
+      email: this.registerForm.value.email,
+      otp: this.otp
+    };
+
+    this.service.verifyOtp(otpRequest).subscribe(
+      (response: any) => {
+        console.log('OTP verification successful:', response);
+        this.otpVerified = true;
+        this.isLoading = false;  // Hide loader
+        this.cdr.detectChanges();
+      },
+      (error: any) => {
+        console.error('OTP verification failed:', error);
+        this.isLoading = false;  // Hide loader on error
+      }
+    );
+  }
+
+  resendOtp(): void {
+    this.isLoading = true;  // Show loader
+    this.service.resendOtp(this.registerForm.value.email).subscribe(
+      (response: any) => {
+        console.log('OTP resent successfully:', response);
+        this.timer = 120;  
+        this.startTimer();  
+        this.isLoading = false;  // Hide loader
+      },
+      (error: any) => {
+        console.error('Error resending OTP:', error);
+        this.isLoading = false;  // Hide loader on error
       }
     );
   }
@@ -93,5 +137,14 @@ export class SignUpComponent implements AfterViewInit, OnInit {
   ngAfterViewInit(): void {
     const app = new Application(this.canvas3d.nativeElement);
     app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');  
+  }
+
+  startTimer(): void {
+    const intervalId = setInterval(() => {
+      this.timer--;
+      if (this.timer === 0) {
+        clearInterval(intervalId);
+      }
+    }, 1000);
   }
 }

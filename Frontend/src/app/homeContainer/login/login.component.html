@@ -37,7 +37,7 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4" [disabled]="loginForm.invalid">
+        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4" [disabled]="loginForm.invalid || isLoading">
           Log In
         </button>
 
@@ -55,6 +55,11 @@
       <canvas #canvas3d id="canvas3d" width="100%" height="100%"></canvas>
     </div>
     
+  </div>
+
+  <!-- Loader Spinner -->
+  <div *ngIf="isLoading" class="loader-overlay">
+    <div class="spinner"></div>
   </div>
 
 </body>

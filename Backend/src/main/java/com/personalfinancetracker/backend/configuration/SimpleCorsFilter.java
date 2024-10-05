@@ -27,7 +27,7 @@ public class SimpleCorsFilter implements Filter {
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE");
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept");
-        response.setHeader("Access-Control-Allow-Credentials", "true");  // Allow credentials if needed
+        response.setHeader("Access-Control-Allow-Credentials", "true");
 
         // For OPTIONS preflight request, return OK status
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -38,12 +38,8 @@ public class SimpleCorsFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) {
-
-    }
+    public void init(FilterConfig filterConfig) {}
 
     @Override
-    public void destroy() {
-
-    }
+    public void destroy() {}
 }

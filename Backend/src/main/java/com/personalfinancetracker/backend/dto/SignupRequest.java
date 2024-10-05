@@ -11,8 +11,7 @@ public class SignupRequest {
         this.email = email;
     }
 
-    public SignupRequest() {
-    }
+    public SignupRequest() {}
 
     public String getName() {
         return name;
