@@ -31,6 +31,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   otpSent: boolean = false;  // Tracks whether OTP has been sent
   otpVerified: boolean = false;  // Tracks whether OTP is verified
   timer: number = 120;  // Countdown timer for OTP validity
+  showPassword: boolean = false;  // Password visibility toggle
 
   constructor(private fb: FormBuilder, private service: JwtService, private router: Router) {}
 
@@ -44,6 +45,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     const app = new Application(this.canvas3d.nativeElement);
     app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');
+  }
+
+  // Toggle password visibility
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   // Show Forgot Password Modal

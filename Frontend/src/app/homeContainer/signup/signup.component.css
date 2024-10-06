@@ -1,0 +1,51 @@
+.input-field {
+    position: relative;
+    width: 100%;
+  }
+  
+  .input-field input {
+    padding-left: 2.5rem; /* Adds space for the icon */
+    width: 100%;
+    height: 40px;
+    border: none; /* Remove all borders */
+    border-radius: 5px;
+    background-color: transparent;
+    color: white;
+    outline: none; /* Remove default outline */
+    box-shadow: none; /* Remove any box shadow */
+  }
+  
+  .input-field input:focus {
+    border: none; /* Ensure no border on focus */
+    outline: none; /* Remove default outline */
+    box-shadow: none; /* Remove focus box shadow */
+  }
+  
+  .input-field input::placeholder {
+    color: #aaa; /* Placeholder color */
+  }
+  .loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: 50%;/* Semi-transparent white background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }.spinner {
+    border: 8px solid #f3f3f3; /* Light gray */
+    border-top: 8px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+  }
+  
+  /* Spinner animation */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }

@@ -1,31 +1,28 @@
-<body class="flex items-center justify-center min-h-screen landing-page1">
-
+<body class="flex items-center justify-center min-h-screen landing-page">
   <div class="flex w-10/12 h-auto fixed">
-
+    
     <!-- Left: Glassmorphism Wrapper for Form -->
     <div class="glass-wrapper glow-effect w-1/2 ml-20 mr-auto h-full mt-24 p-8">
-      <h2 class="text-2xl mb-4 text-white">Login</h2>
+      <h2 class="text-2xl mb-4 text-white text-center">Login</h2>
 
-      <!-- Bind form with (ngSubmit) and [formGroup] -->
+      <!-- Login Form -->
       <form class="flex flex-col h-auto" [formGroup]="loginForm" (ngSubmit)="submitForm()">
 
-        <!-- Email Input -->
-        <div class="input-field mb-6">
-          <input type="email" id="email" formControlName="email" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your email">
-          <!-- Display validation errors -->
-          <div *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" class="text-red-500">
-            <small *ngIf="loginForm.controls['email'].errors?.['required']">Email is required.</small>
-            <small *ngIf="loginForm.controls['email'].errors?.['email']">Invalid email address.</small>
-          </div>
+        <!-- Email Input with Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">email</mat-icon>
+          <input type="email" id="email" formControlName="email" required class="input-style" placeholder="Enter your email">
+          <!-- Validation error messages removed -->
         </div>
 
-        <!-- Password Input -->
-        <div class="input-field mb-6">
-          <input type="password" id="password" formControlName="password" required class="p-3 border border-gray-300 rounded-lg w-full text-white bg-transparent focus:ring-0 focus:outline-none placeholder-gray-300" placeholder="Enter your password">
-          <!-- Display validation errors -->
-          <div *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" class="text-red-500">
-            <small>Password is required.</small>
-          </div>
+        <!-- Password Input with Toggle Visibility Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" required class="input-style" placeholder="Enter your password">
+          <!-- White Eye Icon for Toggle Visibility Positioned to the Right -->
+          <mat-icon class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white cursor-pointer toggle-password" (click)="togglePasswordVisibility()">
+            {{ showPassword ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
         </div>
 
         <!-- Remember me and Forgot password -->
@@ -34,19 +31,19 @@
             <input type="checkbox" class="accent-white">
             <span class="ml-2">Remember me</span>
           </label>
-          <!-- Changed to a link and kept the (click) event -->
           <a href="#" class="hover:underline text-white" (click)="showForgotPassword($event)">Forgot password?</a>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4" [disabled]="loginForm.invalid || isLoading">
+        <!-- Submit Button with Login Icon -->
+        <button type="submit" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all mb-4 flex items-center justify-center" [disabled]="loginForm.invalid || isLoading">
+          <mat-icon class="mr-2">login</mat-icon>
           Log In
         </button>
 
-        <!-- Google Login Button -->
+        <!-- Google Login Button with Logo (Fixed Alignment) -->
         <button type="button" class="flex items-center justify-center bg-white text-black font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition ease-in-out">
           <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google Logo" class="w-6 h-6 mr-2">
-          Log in with Google
+          <span>Log in with Google</span>
         </button>
         
       </form>
@@ -64,53 +61,53 @@
     <div class="spinner"></div>
   </div>
 
+  
   <!-- Forgot Password Modal -->
   <div *ngIf="showForgotPasswordModal" class="modal-overlay flex items-center justify-center">
     <div class="modal-wrapper bg-white rounded-lg p-6 w-96 relative">
       <!-- Close Button -->
-      <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none" (click)="closeForgotPasswordModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+      <button class="close-button absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none" (click)="closeForgotPasswordModal()">
+        <mat-icon class="text-xl">close</mat-icon>
       </button>
       <h2 class="text-xl mb-4" *ngIf="!otpSent">Forgot Password</h2>
       <h2 class="text-xl mb-4" *ngIf="otpSent && !otpVerified">Enter OTP</h2>
       <h2 class="text-xl mb-4 text-green-500" *ngIf="otpVerified">Password Reset Successful!</h2>
-
-      <!-- Loader within Modal -->
       <div *ngIf="isModalLoading" class="modal-loader-overlay">
         <div class="spinner"></div>
       </div>
-
       <!-- Step 1: Enter Email for OTP -->
       <ng-container *ngIf="!otpSent">
         <p class="mb-4">Please enter your email to receive a password reset OTP.</p>
-        <div class="input-field mb-4">
-          <input type="email" id="forgot-password-email" [(ngModel)]="forgotPasswordEmail" class="p-3 border border-gray-300 rounded-lg w-full" placeholder="Enter your email" required>
+        <div class="input-field mb-4 relative">
+          <mat-icon class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">email</mat-icon>
+          <input type="email" id="forgot-password-email" [(ngModel)]="forgotPasswordEmail" class="input-style" placeholder="Enter your email" required>
         </div>
-        <button (click)="sendOtp()" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 w-full" [disabled]="!forgotPasswordEmail || isModalLoading">Send OTP</button>
+        <button (click)="sendOtp()" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 w-full" [disabled]="!forgotPasswordEmail || isModalLoading  ">Send OTP</button>
       </ng-container>
 
       <!-- Step 2: Enter OTP and Reset Password -->
       <ng-container *ngIf="otpSent && !otpVerified">
         <p class="mb-4">We have sent an OTP to your email. Please enter it below.</p>
-        <div class="input-field mb-4">
-          <input type="text" id="otp" [(ngModel)]="otp" class="p-3 border border-gray-300 rounded-lg w-full" placeholder="Enter OTP">
+        <div class="input-field mb-4 relative">
+          <mat-icon class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input type="text" id="otp" [(ngModel)]="otp" class="input-style" placeholder="Enter OTP">
         </div>
-
-        <!-- Countdown Timer -->
         <p class="mb-4" *ngIf="timer > 0">Time remaining: {{ timer }} seconds</p>
         <p class="mb-4 text-red-500" *ngIf="timer === 0">OTP expired. Please resend the OTP.</p>
 
-        <div class="input-field mb-4">
-          <input type="password" id="new-password" [(ngModel)]="newPassword" class="p-3 border border-gray-300 rounded-lg w-full" placeholder="Enter new password">
+        <div class="input-field mb-4 relative">
+          <mat-icon class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input [type]="showPassword ? 'text' : 'password'" id="new-password" [(ngModel)]="newPassword" class="input-style" placeholder="Enter new password">
+          <!-- White Eye Icon for Toggle Visibility Positioned to the Right in Modal -->
+          <mat-icon class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white cursor-pointer toggle-password" (click)="togglePasswordVisibility()">
+            {{ showPassword ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
         </div>
 
         <button (click)="verifyOtp()" class="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 w-full mb-4" [disabled]="timer === 0 || isModalLoading || !newPassword || !otp">Verify OTP & Reset Password</button>
         <button *ngIf="timer === 0" (click)="resendOtp()" class="bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 w-full" [disabled]="isModalLoading">Resend OTP</button>
       </ng-container>
-
-      <!-- Final Step: Success -->
+      
       <ng-container *ngIf="otpVerified">
         <p class="mb-4">Your password has been reset successfully.</p>
         <button (click)="redirectToLogin()" class="bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 w-full mt-4">OK</button>

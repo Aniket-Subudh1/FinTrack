@@ -27,7 +27,7 @@ export class SignUpComponent implements AfterViewInit, OnInit {
   otp: string = '';  
   otpVerified: boolean = false;  
   timer: number = 120;  
-  isLoading: boolean = false;  // New flag to control loader visibility
+  isLoading: boolean = false;
 
   @ViewChild('canvas3d', { static: true }) canvas3d!: ElementRef<HTMLCanvasElement>;  
 
@@ -35,7 +35,7 @@ export class SignUpComponent implements AfterViewInit, OnInit {
     private fb: FormBuilder,
     private service: JwtService,
     private router: Router,
-    private cdr: ChangeDetectorRef  
+    private cdr: ChangeDetectorRef
   ) {}  
 
   ngOnInit(): void {
@@ -65,7 +65,7 @@ export class SignUpComponent implements AfterViewInit, OnInit {
 
   onSubmit(): void {
     if (this.registerForm.valid) {
-      this.isLoading = true;  // Show loader
+      this.isLoading = true;
       this.submitForm();  
     } else {
       console.log('Form is invalid');
@@ -76,20 +76,20 @@ export class SignUpComponent implements AfterViewInit, OnInit {
     this.service.register(this.registerForm.value).subscribe(
       (response: any) => {
         console.log('Registration successful, awaiting OTP verification:', response);
-        this.showModal = true;  
+        this.showModal = true;
         this.startTimer();  
-        this.isLoading = false;  // Hide loader
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
       (error: any) => {
         console.error('Error during registration:', error);
-        this.isLoading = false;  // Hide loader on error
+        this.isLoading = false;
       }
     );
   }
 
   verifyOtp(): void {
-    this.isLoading = true;  // Show loader
+    this.isLoading = true;
     const otpRequest = {
       email: this.registerForm.value.email,
       otp: this.otp
@@ -99,44 +99,44 @@ export class SignUpComponent implements AfterViewInit, OnInit {
       (response: any) => {
         console.log('OTP verification successful:', response);
         this.otpVerified = true;
-        this.isLoading = false;  // Hide loader
+        this.isLoading = false;
         this.cdr.detectChanges();
       },
       (error: any) => {
         console.error('OTP verification failed:', error);
-        this.isLoading = false;  // Hide loader on error
+        this.isLoading = false;
       }
     );
   }
 
   resendOtp(): void {
-    this.isLoading = true;  // Show loader
+    this.isLoading = true;
     this.service.resendOtp(this.registerForm.value.email).subscribe(
       (response: any) => {
         console.log('OTP resent successfully:', response);
-        this.timer = 120;  
-        this.startTimer();  
-        this.isLoading = false;  // Hide loader
+        this.timer = 120;
+        this.startTimer();
+        this.isLoading = false;
       },
       (error: any) => {
         console.error('Error resending OTP:', error);
-        this.isLoading = false;  // Hide loader on error
+        this.isLoading = false;
       }
     );
   }
 
   redirectToLogin(): void {
     console.log('Redirecting to login page');
-    this.showModal = false;  
+    this.showModal = false;
     this.router.navigateByUrl('/login').then(
       success => console.log('Navigation Success:', success),
       error => console.error('Navigation Error:', error)
-    );  
+    );
   }
 
   ngAfterViewInit(): void {
     const app = new Application(this.canvas3d.nativeElement);
-    app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');  
+    app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');
   }
 
   startTimer(): void {

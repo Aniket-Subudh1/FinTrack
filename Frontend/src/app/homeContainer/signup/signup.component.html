@@ -1,40 +1,55 @@
-<div class="flex items-center justify-center min-h-screen landing-page1">
+<div class="flex items-center justify-center min-h-screen landing-page">
   <div class="flex w-10/12 h-auto fixed">
     
-    <div class="glass-wrapper glow-effect w-1/2 ml-20 mr-auto h-full mt-24">
-      <h2 class="text-2xl mb-4 text-white">Sign Up</h2>
+    <!-- Left: Glassmorphism Wrapper for Form -->
+    <div class="glass-wrapper glow-effect w-1/2 ml-20 mr-auto h-full mt-24 p-8">
+      <h2 class="text-2xl mb-4 text-white text-center">Sign Up</h2>
+
+      <!-- Sign Up Form -->
       <form class="flex flex-col h-auto" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
-        <div class="input-field">
-          <input type="text" id="username" formControlName="name" required class="p-3 border border-gray-300 rounded w-full">
-          <label for="username">Username:</label>
+        <!-- Username Input with Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">person</mat-icon>
+          <input type="text" id="username" formControlName="name" required class="input-style p-3 border border-gray-300 rounded w-full" placeholder="Enter your username">
+    
         </div>
 
-        <div class="input-field">
-          <input type="email" id="email" formControlName="email" required class="p-3 border border-gray-300 rounded w-full">
-          <label for="email">Email:</label>
+        <!-- Email Input with Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">email</mat-icon>
+          <input type="email" id="email" formControlName="email" required class="input-style p-3 border border-gray-300 rounded w-full" placeholder="Enter your email">
+          
         </div>
 
-        <div class="input-field relative">
-          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" required class="p-3 border border-gray-300 rounded w-full">
-          <label for="password">Password:</label>
-          <mat-icon class="absolute right-3 top-3 cursor-pointer" (click)="togglePasswordVisibility('password')">
+        <!-- Password Input with Toggle Visibility Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" required class="input-style p-3 border border-gray-300 rounded w-full" placeholder="Enter your password">
+          
+          <mat-icon class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-white" (click)="togglePasswordVisibility('password')">
             {{ showPassword ? 'visibility_off' : 'visibility' }}
           </mat-icon>
         </div>
 
-        <div class="input-field relative">
-          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirm-password" formControlName="confirmPassword" required class="p-3 border border-gray-300 rounded w-full">
-          <label for="confirm-password">Confirm Password:</label>
-          <mat-icon class="absolute right-3 top-3 cursor-pointer" (click)="togglePasswordVisibility('confirmPassword')">
+        <!-- Confirm Password Input with Toggle Visibility Icon -->
+        <div class="input-field mb-6 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirm-password" formControlName="confirmPassword" required class="input-style p-3 border border-gray-300 rounded w-full" placeholder="Confirm your password">
+         
+          <mat-icon class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-white" (click)="togglePasswordVisibility('confirmPassword')">
             {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
           </mat-icon>
         </div>
 
-        <button type="submit" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="registerForm.invalid || isLoading">Sign Up</button>
+        <!-- Submit Button -->
+        <button type="submit" class="bg-green-500  text-white flex py-3 item-center justify-center rounded hover:bg-green-600 " [disabled]="registerForm.invalid || isLoading">
+          <mat-icon class="">person_add</mat-icon> Sign Up
+        </button>
       </form>
     </div>
 
+    <!-- Right: Spline Canvas -->
     <div class="spline-wrapper w-1/2 h-auto flex items-center justify-center">
       <canvas #canvas3d id="canvas3d" width="100%" height="100%"></canvas>
     </div>
@@ -44,24 +59,26 @@
   <div *ngIf="isLoading" class="loader-overlay">
     <div class="spinner"></div>
   </div>
-</div>
 
-<div *ngIf="showModal" class="modal-overlay">
-  <div class="modal-wrapper">
-    <h2 *ngIf="!otpVerified">Enter OTP</h2>
-    <h2 *ngIf="otpVerified">Registration Successful!</h2>
+  <!-- OTP Modal -->
+  <div *ngIf="showModal" class="modal-overlay">
+    <div class="modal-wrapper">
+      <h2 *ngIf="!otpVerified">Enter OTP</h2>
+      <h2 *ngIf="otpVerified">Registration Successful!</h2>
 
-    <ng-container *ngIf="!otpVerified">
-      <p>We have sent an OTP to your email. Please enter it below.</p>
-      <div class="input-field">
-        <input type="text" id="otp" [(ngModel)]="otp" class="p-3 border border-gray-300 rounded w-full" placeholder="Enter OTP">
-      </div>
-      <p *ngIf="timer > 0">Time remaining: {{ timer }} seconds</p>
-      <p *ngIf="timer === 0">OTP expired. Please resend the OTP.</p>
-      <button (click)="verifyOtp()" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="timer === 0 || isLoading">Verify OTP</button>
-      <button *ngIf="timer === 0" (click)="resendOtp()" class="bg-blue-500 text-white py-3 rounded hover:bg-blue-600 w-full" [disabled]="isLoading">Resend OTP</button>
-    </ng-container>
+      <ng-container *ngIf="!otpVerified">
+        <p>We have sent an OTP to your email. Please enter it below.</p>
+        <div class="input-field mb-4 relative">
+          <mat-icon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">lock</mat-icon>
+          <input type="text" id="otp" [(ngModel)]="otp" class="input-style p-3 border border-gray-300 rounded w-full" placeholder="Enter OTP">
+        </div>
+        <p *ngIf="timer > 0">Time remaining: {{ timer }} seconds</p>
+        <p *ngIf="timer === 0">OTP expired. Please resend the OTP.</p>
+        <button (click)="verifyOtp()" class="bg-green-500 text-white py-3 rounded hover:bg-green-600 w-full" [disabled]="timer === 0 || isLoading">Verify OTP</button>
+        <button *ngIf="timer === 0" (click)="resendOtp()" class="bg-blue-500 text-white py-3 rounded hover:bg-blue-600 w-full" [disabled]="isLoading">Resend OTP</button>
+      </ng-container>
 
-    <button *ngIf="otpVerified" (click)="redirectToLogin()">OK</button>
+      <button *ngIf="otpVerified" (click)="redirectToLogin()" class="bg-blue-500 text-white py-3 rounded hover:bg-blue-600 w-full">OK</button>
+    </div>
   </div>
 </div>
