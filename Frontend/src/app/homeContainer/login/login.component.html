@@ -40,11 +40,19 @@
           Log In
         </button>
 
-        <!-- Google Login Button with Logo (Fixed Alignment) -->
-        <button type="button" class="flex items-center justify-center bg-white text-black font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition ease-in-out">
-          <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google Logo" class="w-6 h-6 mr-2">
-          <span>Log in with Google</span>
-        </button>
+        <button 
+  type="button" 
+  class="flex items-center justify-center bg-white text-black font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition ease-in-out"
+  aria-label="Log in with Google"
+  (click)="loginWithGoogle()">
+  
+  <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" 
+       alt="Google Logo" 
+       class="w-6 h-6 mr-2">
+  
+  <span>Log in with Google</span>
+</button>
+
         
       </form>
     </div>

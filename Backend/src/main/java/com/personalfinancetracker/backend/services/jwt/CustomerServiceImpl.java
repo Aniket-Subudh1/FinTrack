@@ -14,7 +14,8 @@ import java.util.Collections;
 
 @Service
 public class CustomerServiceImpl implements UserDetailsService {
-  private final CustomerRepository customerRepository;
+
+    private final CustomerRepository customerRepository;
 
     public CustomerServiceImpl(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
@@ -22,11 +23,30 @@ public class CustomerServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
         Customer customer = customerRepository.findByEmail(email)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+
         return new User(customer.getEmail(), customer.getPassword(), Collections.emptyList());
+    }
 
-  }
 
+    public void saveOAuth2User(String name, String email, String password, String provider) {
+        Customer existingCustomer = customerRepository.findByEmail(email)
+                .orElse(null);
 
+        if (existingCustomer == null) {
+
+            Customer customer = new Customer();
+            customer.setName(name);
+            customer.setEmail(email);
+            customer.setPassword(password);  // Save a dummy password for OAuth2 users
+            customer.setProvider(provider);
+            customer.setVerified(true);  // OAuth2 users are automatically verified
+
+            customerRepository.save(customer);
+        }
+    }
 }
+

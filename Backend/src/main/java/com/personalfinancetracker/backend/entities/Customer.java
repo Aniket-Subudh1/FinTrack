@@ -19,6 +19,15 @@ public class Customer {
     private String otp;  // To store OTP temporarily
     private boolean verified = false;
 
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    private String provider;
     // Getters and setters
     public Long getId() {
         return id;

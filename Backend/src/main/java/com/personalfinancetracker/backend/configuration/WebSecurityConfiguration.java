@@ -1,6 +1,8 @@
 package com.personalfinancetracker.backend.configuration;
 
 import com.personalfinancetracker.backend.filters.JwtRequestFilter;
+import com.personalfinancetracker.backend.services.jwt.CustomerServiceImpl;
+import com.personalfinancetracker.backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,21 +26,25 @@ import java.util.List;
 public class WebSecurityConfiguration {
 
     private final JwtRequestFilter jwtRequestFilter;
+    private final CustomerServiceImpl customerService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public WebSecurityConfiguration(JwtRequestFilter jwtRequestFilter) {
+    public WebSecurityConfiguration(JwtRequestFilter jwtRequestFilter, CustomerServiceImpl customerService, JwtUtil jwtUtil) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.customerService = customerService;
+        this.jwtUtil = jwtUtil;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
-        security
-                .csrf(csrf -> csrf.disable())  // Disable CSRF since we're using JWT
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.setAllowedOrigins(List.of("http://localhost:4200"));  // Allowed CORS origin
+                    corsConfig.setAllowedOrigins(List.of("http://localhost:4200"));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));  // Allow headers
+                    corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
@@ -45,12 +52,33 @@ public class WebSecurityConfiguration {
                         .requestMatchers("/signup", "/signup/verify-otp", "/login", "/forgot-password", "/forgot-password/reset").permitAll()  // Allow forgot-password endpoints without auth
                         .requestMatchers("/api/**").authenticated()  // Secure other API endpoints
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Stateless sessions for JWT
-                )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);  // Add JWT filter before auth
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .successHandler((request, response, authentication) -> {
+                            // Get OAuth2 user details and store them in the database
+                            OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
+                            String email = token.getPrincipal().getAttribute("email");
+                            String name = token.getPrincipal().getAttribute("name");
 
-        return security.build();
+                            // Save the user details (via CustomerService)
+                            customerService.saveOAuth2User(name, email, "dummyPassword", "Google");
+
+                            // Generate JWT token for OAuth2 users
+                            String jwtToken = jwtUtil.generateToken(email);
+
+                            // Add the JWT token to the response header or redirect with the token
+                            response.setHeader("Authorization", "Bearer " + jwtToken);
+
+                            // Redirect to the profile page with the token (optional)
+                            response.sendRedirect("http://localhost:4200/dashboard?token=" + jwtToken);
+                        })
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean

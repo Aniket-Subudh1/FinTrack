@@ -52,6 +52,16 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.showPassword = !this.showPassword;
   }
 
+  loginWithGoogle(): void {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  }
+  
+  // After OAuth2 login success
+  storeJwtToken(jwtToken: string): void {
+    localStorage.setItem('jwt', jwtToken);
+    this.router.navigateByUrl('/dashboard');  // Navigate to the dashboard or home page
+  }
+  
   // Show Forgot Password Modal
   showForgotPassword(event: Event): void {
     event.preventDefault();  // Prevent default action of the link
