@@ -77,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
             customer.setName(otpVerification.getName());
             customer.setPassword(otpVerification.getPassword());
             customer.setVerified(true);  // Mark as verified
+            customer.setProvider("Normal");  // Set provider to "Normal" for regular signup
             customerRepository.save(customer);
 
             // Remove OTP entry after successful verification
