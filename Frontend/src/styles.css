@@ -5,13 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.landing-page {
-  background-color: #000; 
-  background-image: url('/assets/bg.png');
-  background-size: cover;
-  background-position: center;
-  height: 100vh;
-}
 
 .landing-page1 {
   background-color: #000; 
@@ -235,7 +228,8 @@ canvas {
 }
 .button-container {
   display: flex;
-  gap: 16px; /* Adds space between buttons */
+  gap: 16px;
+  /* Adds space between buttons */
 }
 
 /* Common Button Styles */

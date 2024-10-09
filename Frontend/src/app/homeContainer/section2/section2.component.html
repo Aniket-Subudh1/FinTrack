@@ -1,7 +1,7 @@
 <div class="bg-black">
   <div class="mx-auto py-16 flex top-0 justify-center">
-    <div class="bg-black rounded-full  -mt-20  mat-typography font-be-vietnam p-8 border z-10 border-yellow-400 shadow-xl w-full lg:w-3/4 glow-effect">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
+    <div class="bg-black rounded-full -mt-20 mat-typography font-be-vietnam p-8 border border-yellow-400 shadow-xl w-full lg:w-3/4 glow-effect relative"> <!-- Added relative here -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div *ngFor="let item of items" class="flex justify-center text-white">
           <app-custom-counter
             [before]="item.before"
