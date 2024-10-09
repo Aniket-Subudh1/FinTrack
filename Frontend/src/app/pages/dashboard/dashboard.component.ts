@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CurrencyPipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +24,13 @@ export class DashboardComponent {
     { description: 'Investment', amount: -300 }
   ];
 
+  constructor(private router: Router) {} // Inject Router
+
   logout(): void {
+    // Perform any logout logic here, like clearing authentication tokens
     console.log('User logged out');
+    
+    // Navigate to the login page
+    this.router.navigate(['/login']);
   }
 }
