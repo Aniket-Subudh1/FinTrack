@@ -1,93 +1,103 @@
-<div class="min-h-screen flex bg-gray-900 text-white">
-  <!-- Sidebar -->
-  <aside class="w-64 bg-gray-800 p-5">
-    <div class="mb-10">
-      <img src="/public/assets/c.png" alt="FinTrack" class="h-12 mx-auto">
-    </div>
-    <nav>
-      <ul class="space-y-4">
-        <li><a routerLink="/dashboard" class="block text-lg font-medium hover:text-yellow-400">Dashboard</a></li>
-        <li><a routerLink="/transactions" class="block text-lg font-medium hover:text-yellow-400">Transactions</a></li>
-        <li><a routerLink="/goals" class="block text-lg font-medium hover:text-yellow-400">Goals</a></li>
-        <li><a routerLink="/analytics" class="block text-lg font-medium hover:text-yellow-400">Analytics</a></li>
-        <li><a routerLink="/profile" class="block text-lg font-medium hover:text-yellow-400">Profile</a></li>
-      </ul>
-    </nav>
-  </aside>
+<div class="min-h-screen flex flex-col bg-gray-900 text-white">
 
-  <!-- Main Content -->
-  <main class="flex-1 p-10">
-    <header class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold">Welcome to Your Dashboard</h1>
-      <button class="bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold" (click)="logout()">Logout</button>
-    </header>
+  <div class="flex flex-1 relative">
+    <!-- Hamburger Menu Button -->
+    <button class="absolute top-4 left-4 p-4 text-yellow-400 z-10" (click)="toggleSidebar()">
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
 
-    <!-- Overview Section -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
-        <h3 class="text-lg font-semibold text-yellow-400">Total Balance</h3>
-        <p class="text-2xl font-bold mt-2">{{ totalBalance | currency }}</p>
+    <!-- Sidebar -->
+    <aside [ngClass]="{'hidden': !isSidebarOpen}" class="w-80 bg-gray-800 p-5 transition duration-300 ease-in-out">
+      <div class="mb-10">
+        <img src="/public/assets/bg.png" alt="FinTrack" class="h-12 mx-auto">
       </div>
-      <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
-        <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
-        <p class="text-2xl font-bold mt-2">{{ monthlyIncome | currency }}</p>
-      </div>
-      <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
-        <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
-        <p class="text-2xl font-bold mt-2">{{ monthlyExpenses | currency }}</p>
-      </div>
-      <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
-        <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
-        <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency }}</p>
-      </div>
-    </section>
+      <nav>
+        <ul class="space-y-4">
+          <li><a routerLink="/dashboard" class="block text-lg font-medium hover:text-yellow-400">Dashboard</a></li>
+          <li><a routerLink="/transactions" class="block text-lg font-medium hover:text-yellow-400">Transactions</a></li>
+          <li><a routerLink="/goals" class="block text-lg font-medium hover:text-yellow-400">Goals</a></li>
+          <li><a routerLink="/analytics" class="block text-lg font-medium hover:text-yellow-400">Analytics</a></li>
+          <li><a routerLink="/profile" class="block text-lg font-medium hover:text-yellow-400">Profile</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-    <!-- CSS Bar Graph Section -->
-    <section class="mt-10">
-      <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Monthly Expenses Breakdown</h2>
-      <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-        <div class="flex items-center mb-2">
-          <span class="w-1/4 text-yellow-400">Rent</span>
-          <div class="relative w-3/4 bg-gray-600 rounded">
-            <div class="h-6 bg-yellow-400" style="width: 60%;"></div>
-          </div>
-        </div>
-        <div class="flex items-center mb-2">
-          <span class="w-1/4 text-yellow-400">Utilities</span>
-          <div class="relative w-3/4 bg-gray-600 rounded">
-            <div class="h-6 bg-yellow-400" style="width: 20%;"></div>
-          </div>
-        </div>
-        <div class="flex items-center mb-2">
-          <span class="w-1/4 text-yellow-400">Groceries</span>
-          <div class="relative w-3/4 bg-gray-600 rounded">
-            <div class="h-6 bg-yellow-400" style="width: 40%;"></div>
-          </div>
-        </div>
-        <div class="flex items-center mb-2">
-          <span class="w-1/4 text-yellow-400">Transport</span>
-          <div class="relative w-3/4 bg-gray-600 rounded">
-            <div class="h-6 bg-yellow-400" style="width: 15%;"></div>
-          </div>
-        </div>
-        <div class="flex items-center mb-2">
-          <span class="w-1/4 text-yellow-400">Entertainment</span>
-          <div class="relative w-3/4 bg-gray-600 rounded">
-            <div class="h-6 bg-yellow-400" style="width: 25%;"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Main Content -->
+    <main class="flex-1 p-20">
+      <header class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold">Welcome to Your Dashboard</h2>
+        <button class="bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold" (click)="logout()">Logout</button>
+      </header>
 
-    <!-- Recent Transactions -->
-    <section class="mt-10">
-      <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Recent Transactions</h2>
-      <ul class="space-y-4">
-        <li *ngFor="let transaction of recentTransactions" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
-          <span>{{ transaction.description }}</span>
-          <span>{{ transaction.amount | currency }}</span>
-        </li>
-      </ul>
-    </section>
-  </main>
+      <!-- Overview Section -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+          <h3 class="text-lg font-semibold text-yellow-400">Total Balance</h3>
+          <p class="text-2xl font-bold mt-2">{{ totalBalance | currency }}</p>
+        </div>
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+          <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
+          <p class="text-2xl font-bold mt-2">{{ monthlyIncome | currency }}</p>
+        </div>
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+          <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
+          <p class="text-2xl font-bold mt-2">{{ monthlyExpenses | currency }}</p>
+        </div>
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+          <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
+          <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency }}</p>
+        </div>
+      </section>
+
+      <!-- CSS Bar Graph Section -->
+      <section class="mt-10">
+        <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Monthly Expenses Breakdown</h2>
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+          <div class="flex items-center mb-2">
+            <span class="w-1/4 text-yellow-400">Rent</span>
+            <div class="relative w-3/4 bg-gray-600 rounded">
+              <div class="h-6 bg-yellow-400" style="width: 60%;"></div>
+            </div>
+          </div>
+          <div class="flex items-center mb-2">
+            <span class="w-1/4 text-yellow-400">Utilities</span>
+            <div class="relative w-3/4 bg-gray-600 rounded">
+              <div class="h-6 bg-yellow-400" style="width: 20%;"></div>
+            </div>
+          </div>
+          <div class="flex items-center mb-2">
+            <span class="w-1/4 text-yellow-400">Groceries</span>
+            <div class="relative w-3/4 bg-gray-600 rounded">
+              <div class="h-6 bg-yellow-400" style="width: 40%;"></div>
+            </div>
+          </div>
+          <div class="flex items-center mb-2">
+            <span class="w-1/4 text-yellow-400">Transport</span>
+            <div class="relative w-3/4 bg-gray-600 rounded">
+              <div class="h-6 bg-yellow-400" style="width: 15%;"></div>
+            </div>
+          </div>
+          <div class="flex items-center mb-2">
+            <span class="w-1/4 text-yellow-400">Entertainment</span>
+            <div class="relative w-3/4 bg-gray-600 rounded">
+              <div class="h-6 bg-yellow-400" style="width: 25%;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Transactions -->
+      <section class="mt-10">
+        <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Recent Transactions</h2>
+        <ul class="space-y-4">
+          <li *ngFor="let transaction of recentTransactions" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
+            <span>{{ transaction.description }}</span>
+            <span>{{ transaction.amount | currency }}</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </div>
 </div>

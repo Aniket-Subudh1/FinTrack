@@ -11,7 +11,6 @@ import { Router } from '@angular/router';
   imports: [CommonModule, CurrencyPipe]
 })
 export class DashboardComponent {
-
   totalBalance: number = 25000;
   monthlyIncome: number = 4500;
   monthlyExpenses: number = 2800;
@@ -24,13 +23,16 @@ export class DashboardComponent {
     { description: 'Investment', amount: -300 }
   ];
 
-  constructor(private router: Router) {} // Inject Router
+  isSidebarOpen: boolean = false; // Property to track sidebar visibility
+
+  constructor(private router: Router) {}
+
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen; // Toggle the sidebar visibility
+  }
 
   logout(): void {
-    // Perform any logout logic here, like clearing authentication tokens
     console.log('User logged out');
-    
-    // Navigate to the login page
     this.router.navigate(['/login']);
   }
 }
