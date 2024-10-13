@@ -1,0 +1,83 @@
+body {
+    background: linear-gradient(135deg, #121212, #1e1e1e);
+    font-family: 'Roboto', sans-serif;
+    color: white;
+  }
+  
+  /* Neon Button Glow */
+  button.glow-button {
+    background: #ffdd00;
+    color: #121212;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 221, 0, 0.8);
+    transition: all 0.4s ease-in-out;
+  }
+  
+  button.glow-button:hover {
+    box-shadow: 0 0 40px rgba(255, 221, 0, 1), 0 0 60px rgba(255, 221, 0, 0.6);
+  }
+  
+  /* Glowing Card Effect */
+  .bg-gray-800 {
+    background: rgba(50, 50, 50, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: box-shadow 0.4s ease;
+  }
+  
+  .bg-gray-800:hover {
+    box-shadow: 0 0 20px rgba(255, 221, 0, 0.8), 0 0 30px rgba(255, 221, 0, 0.5);
+  }
+  
+  /* Card Titles */
+  .text-yellow-400 {
+    color: #ffdd00;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  /* Animated Gradient Background */
+  .min-h-screen {
+    background: linear-gradient(135deg, #000000, #121212);
+    animation: gradientBackground 5s ease infinite;
+  }
+  
+  @keyframes gradientBackground {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  /* Sidebar Hover Effect */
+  nav a:hover {
+    color: #ffdd00;
+    transition: color 0.3s ease;
+  }
+  
+  /* Bar Graph Animation */
+  div.bg-yellow-400 {
+    position: relative;
+    animation: growBar 2s ease-out forwards;
+  }
+  
+  @keyframes growBar {
+    0% {
+      width: 0;
+    }
+    100% {
+      width: 100%;
+    }
+  }

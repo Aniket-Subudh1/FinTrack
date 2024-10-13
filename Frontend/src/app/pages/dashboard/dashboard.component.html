@@ -1,4 +1,4 @@
-<div class="min-h-screen flex flex-col bg-gray-900 text-white">
+<div class="min-h-screen flex flex-col bg-gray-900 text-white animate-bg">
 
   <div class="flex flex-1 relative">
     <!-- Hamburger Menu Button -->
@@ -28,24 +28,24 @@
     <main class="flex-1 p-20">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-3xl font-bold">Welcome to Your Dashboard</h2>
-        <button class="bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold" (click)="logout()">Logout</button>
+        <button class="glow-button bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold" (click)="logout()">Logout</button>
       </header>
 
       <!-- Overview Section -->
       <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
           <h3 class="text-lg font-semibold text-yellow-400">Total Balance</h3>
           <p class="text-2xl font-bold mt-2">{{ totalBalance | currency }}</p>
         </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
           <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
           <p class="text-2xl font-bold mt-2">{{ monthlyIncome | currency }}</p>
         </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
           <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
           <p class="text-2xl font-bold mt-2">{{ monthlyExpenses | currency }}</p>
         </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center">
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
           <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
           <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency }}</p>
         </div>
@@ -92,7 +92,7 @@
       <section class="mt-10">
         <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Recent Transactions</h2>
         <ul class="space-y-4">
-          <li *ngFor="let transaction of recentTransactions" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
+          <li *ngFor="let transaction of recentTransactions" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center hover:shadow-yellow-400 transition-shadow duration-300">
             <span>{{ transaction.description }}</span>
             <span>{{ transaction.amount | currency }}</span>
           </li>
