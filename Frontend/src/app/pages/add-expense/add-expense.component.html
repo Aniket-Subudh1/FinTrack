@@ -1,0 +1,26 @@
+<div class="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
+  <div class="w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold text-yellow-400 mb-4">Add Expense</h2>
+    <form (ngSubmit)="onSubmit()">
+      <div class="mb-4">
+        <label for="amount" class="block text-sm font-medium">Expense Amount</label>
+        <input id="amount" type="number" [(ngModel)]="expenseAmount" name="amount" class="w-full p-2 rounded bg-gray-700 text-white" required />
+      </div>
+      <div class="mb-4">
+        <label for="username" class="block text-sm font-medium">Username</label>
+        <input id="username" type="text" [(ngModel)]="username" name="username" class="w-full p-2 rounded bg-gray-700 text-white" required />
+      </div>
+      <div class="mb-4">
+        <label for="type" class="block text-sm font-medium">Expense Type</label>
+        <select id="type" [(ngModel)]="expenseType" name="type" class="w-full p-2 rounded bg-gray-700 text-white" required>
+          <option value="rent">Rent</option>
+          <option value="utilities">Utilities</option>
+          <option value="groceries">Groceries</option>
+          <option value="transport">Transport</option>
+          <option value="entertainment">Entertainment</option>
+        </select>
+      </div>
+      <button type="submit" class="glow-button bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold">Submit</button>
+    </form>
+  </div>
+</div>

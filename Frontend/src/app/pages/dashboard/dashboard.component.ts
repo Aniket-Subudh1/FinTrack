@@ -23,16 +23,20 @@ export class DashboardComponent {
     { description: 'Investment', amount: -300 }
   ];
 
-  isSidebarOpen: boolean = false; // Property to track sidebar visibility
+  isSidebarOpen: boolean = false;
 
   constructor(private router: Router) {}
 
   toggleSidebar(): void {
-    this.isSidebarOpen = !this.isSidebarOpen; // Toggle the sidebar visibility
+    this.isSidebarOpen = !this.isSidebarOpen;
   }
 
   logout(): void {
     console.log('User logged out');
     this.router.navigate(['/login']);
+  }
+
+  redirectToAddExpense(): void {
+    this.router.navigate(['/add-expense']);
   }
 }

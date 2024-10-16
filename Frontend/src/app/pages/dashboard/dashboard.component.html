@@ -11,15 +11,17 @@
     <!-- Sidebar -->
     <aside [ngClass]="{'hidden': !isSidebarOpen}" class="w-80 bg-gray-800 p-5 transition duration-300 ease-in-out">
       <div class="mb-10">
-        <img src="/public/assets/bg.png" alt="FinTrack" class="h-12 mx-auto">
+        <img src="/public/assets/d.png" alt="FinTrack" class="h-12 mx-auto">
       </div>
       <nav>
         <ul class="space-y-4">
           <li><a routerLink="/dashboard" class="block text-lg font-medium hover:text-yellow-400">Dashboard</a></li>
+          <li><a (click)="redirectToAddExpense()" class="block text-lg font-medium hover:text-yellow-400">Add Expenses</a></li>
           <li><a routerLink="/transactions" class="block text-lg font-medium hover:text-yellow-400">Transactions</a></li>
           <li><a routerLink="/goals" class="block text-lg font-medium hover:text-yellow-400">Goals</a></li>
           <li><a routerLink="/analytics" class="block text-lg font-medium hover:text-yellow-400">Analytics</a></li>
           <li><a routerLink="/profile" class="block text-lg font-medium hover:text-yellow-400">Profile</a></li>
+          
         </ul>
       </nav>
     </aside>
