@@ -1,26 +1,26 @@
-<div class="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
-  <div class="w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-lg">
-    <h2 class="text-2xl font-bold text-yellow-400 mb-4">Add Expense</h2>
-    <form (ngSubmit)="onSubmit()">
-      <div class="mb-4">
-        <label for="amount" class="block text-sm font-medium">Expense Amount</label>
-        <input id="amount" type="number" [(ngModel)]="expenseAmount" name="amount" class="w-full p-2 rounded bg-gray-700 text-white" required />
-      </div>
-      <div class="mb-4">
-        <label for="username" class="block text-sm font-medium">Username</label>
-        <input id="username" type="text" [(ngModel)]="username" name="username" class="w-full p-2 rounded bg-gray-700 text-white" required />
-      </div>
-      <div class="mb-4">
-        <label for="type" class="block text-sm font-medium">Expense Type</label>
-        <select id="type" [(ngModel)]="expenseType" name="type" class="w-full p-2 rounded bg-gray-700 text-white" required>
-          <option value="rent">Rent</option>
-          <option value="utilities">Utilities</option>
-          <option value="groceries">Groceries</option>
-          <option value="transport">Transport</option>
-          <option value="entertainment">Entertainment</option>
-        </select>
-      </div>
-      <button type="submit" class="glow-button bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold">Submit</button>
-    </form>
+<!-- src/app/components/add-expense/add-expense.component.html -->
+<div class="submit-form">
+  <div *ngIf="!submitted">
+    <div>
+      <label for="username">Username</label>
+      <input type="text" class="form-control" id="username" required [(ngModel)]="expense.username" name="username" />
+    </div>
+
+    <div>
+      <label for="amount">Amount</label>
+      <input type="number" class="form-control" id="amount" required [(ngModel)]="expense.amount" name="amount" />
+    </div>
+
+    <div>
+      <label for="category">Category</label>
+      <input type="text" class="form-control" id="category" required [(ngModel)]="expense.category" name="category" />
+    </div>
+
+    <button (click)="addExpense()" class="btn btn-success">Submit</button>
+  </div>
+
+  <div *ngIf="submitted">
+    <h4>Expense added successfully!</h4>
+    <button (click)="newExpense()" class="btn btn-primary">Add Another</button>
   </div>
 </div>

@@ -49,7 +49,7 @@ public class WebSecurityConfiguration {
                     return corsConfig;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/signup", "/signup/verify-otp", "/login", "/forgot-password", "/forgot-password/reset").permitAll()  // Allow forgot-password endpoints without auth
+                        .requestMatchers("/signup", "/signup/verify-otp", "/login", "/forgot-password", "/forgot-password/reset" , "/api/expenses").permitAll()  // Allow forgot-password endpoints without auth
                         .requestMatchers("/api/**").authenticated()  // Secure other API endpoints
                 )
                 .oauth2Login(oauth2 -> oauth2

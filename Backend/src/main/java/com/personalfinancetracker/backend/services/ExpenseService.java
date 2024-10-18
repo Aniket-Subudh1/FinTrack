@@ -10,10 +10,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class ExpenseService {
 
-    @Autowired
-    private ExpenseRepository expenseRepository;
+    private final ExpenseRepository expenseRepository;
 
-    public Expense addExpense(Expense expense) {
-        return expenseRepository.save(expense); // Save expense to the database
+    @Autowired
+    public ExpenseService(ExpenseRepository expenseRepository) {
+        this.expenseRepository = expenseRepository;
+    }
+
+    public Expense saveExpense(Expense expense) {
+        return expenseRepository.save(expense);
     }
 }

@@ -2,10 +2,10 @@ package com.personalfinancetracker.backend.controllers;
 
 
 
-
 import com.personalfinancetracker.backend.entities.Expense;
 import com.personalfinancetracker.backend.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,12 +13,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/expenses")
 public class ExpenseController {
 
-    @Autowired
-    private ExpenseService expenseService;
+    private final ExpenseService expenseService;
 
-    @PostMapping("/add")
-    public ResponseEntity<Expense> addExpense(@RequestBody Expense expense) {
-        Expense savedExpense = expenseService.addExpense(expense);
-        return ResponseEntity.ok(savedExpense); // Return the saved expense
+    @Autowired
+    public ExpenseController(ExpenseService expenseService) {
+        this.expenseService = expenseService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Expense> createExpense(@RequestBody Expense expense) {
+        Expense newExpense = expenseService.saveExpense(expense);
+        return new ResponseEntity<>(newExpense, HttpStatus.CREATED);
     }
 }

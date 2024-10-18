@@ -1,38 +1,34 @@
-
-
 package com.personalfinancetracker.backend.entities;
 
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "expenses")
 public class Expense {
-
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;
+    @Column(nullable = false)
+    private String userName;
 
-    private String type;
-
+    @Column(nullable = false)
     private Double amount;
 
-    // Constructors, Getters and Setters
+    @Column(nullable = false)
+    private String category;
 
+    // Constructors
     public Expense() {}
 
-    public Expense(String username, String type, Double amount) {
-        this.username = username;
-        this.type = type;
+    public Expense(String userName, Double amount, String category) {
+        this.userName = userName;
         this.amount = amount;
+        this.category = category;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -41,20 +37,12 @@ public class Expense {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public Double getAmount() {
@@ -63,5 +51,13 @@ public class Expense {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }
