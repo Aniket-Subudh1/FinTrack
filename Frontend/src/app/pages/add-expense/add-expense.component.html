@@ -1,26 +1,56 @@
-<!-- src/app/components/add-expense/add-expense.component.html -->
-<div class="submit-form">
-  <div *ngIf="!submitted">
-    <div>
-      <label for="username">Username</label>
-      <input type="text" class="form-control" id="username" required [(ngModel)]="expense.username" name="username" />
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-gray-800">
+  <div class="bg-black/30 backdrop-blur-md shadow-lg p-8 rounded-lg max-w-lg w-full text-white border border-gray-700">
+    <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Add Expense</h2>
+
+    <!-- Success Message Popup -->
+    <div *ngIf="successMessage" class="mb-6 p-4 bg-green-500 text-black rounded-lg text-center">
+      {{ successMessage }}
     </div>
 
-    <div>
-      <label for="amount">Amount</label>
-      <input type="number" class="form-control" id="amount" required [(ngModel)]="expense.amount" name="amount" />
-    </div>
+    <form #expenseForm="ngForm" (ngSubmit)="onSubmit(expenseForm)">
+      <div class="mb-4">
+        <label for="userName" class="block text-lg font-medium text-yellow-300">User Name:</label>
+        <input
+          type="text"
+          id="userName"
+          class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          name="userName"
+          [(ngModel)]="expense.userName"
+          required
+        />
+      </div>
 
-    <div>
-      <label for="category">Category</label>
-      <input type="text" class="form-control" id="category" required [(ngModel)]="expense.category" name="category" />
-    </div>
+      <div class="mb-4">
+        <label for="amount" class="block text-lg font-medium text-yellow-300">Amount:</label>
+        <input
+          type="number"
+          id="amount"
+          class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          name="amount"
+          [(ngModel)]="expense.amount"
+          required
+        />
+      </div>
 
-    <button (click)="addExpense()" class="btn btn-success">Submit</button>
-  </div>
+      <div class="mb-6">
+        <label for="category" class="block text-lg font-medium text-yellow-300">Category:</label>
+        <input
+          type="text"
+          id="category"
+          class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          name="category"
+          [(ngModel)]="expense.category"
+          required
+        />
+      </div>
 
-  <div *ngIf="submitted">
-    <h4>Expense added successfully!</h4>
-    <button (click)="newExpense()" class="btn btn-primary">Add Another</button>
+      <button
+        type="submit"
+        class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
+        [disabled]="!expenseForm.form.valid"
+      >
+        Add Expense
+      </button>
+    </form>
   </div>
 </div>

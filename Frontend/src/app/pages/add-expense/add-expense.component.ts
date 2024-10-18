@@ -1,43 +1,41 @@
-// src/app/components/add-expense/add-expense.component.ts
 import { Component } from '@angular/core';
-import { ExpenseService } from '../../service/expense.service';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ExpenseService, Expense } from '../../service/expense.service';
+import { NgIf } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-add-expense',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  standalone: true, // Declares that this is a standalone component
+  imports: [NgIf, FormsModule, HttpClientModule], // Import dependencies directly
   templateUrl: './add-expense.component.html',
   styleUrls: ['./add-expense.component.css']
 })
 export class AddExpenseComponent {
-  expense = {
-    username: '',
+  expense: Expense = {
+    userName: '',
     amount: 0,
     category: ''
   };
-  submitted = false;
+
+
+  successMessage: string = '';
 
   constructor(private expenseService: ExpenseService) {}
 
-  addExpense(): void {
-    this.expenseService.addExpense(this.expense)
-      .subscribe({
-        next: (response) => {
-          console.log(response);
-          this.submitted = true;
+  onSubmit(form: NgForm) {
+    if (form.valid) {
+      this.expenseService.createExpense(this.expense).subscribe(
+        (response) => {
+          console.log('Expense added successfully', response);
+          this.successMessage = 'Expense added successfully!'; // Set the success message
+          setTimeout(() => this.successMessage = '', 3000); // Remove the message after 3 seconds
+          form.reset(); // Reset the form after successful submission
         },
-        error: (e) => console.error(e)
-      });
-  }
-
-  newExpense(): void {
-    this.submitted = false;
-    this.expense = {
-      username: '',
-      amount: 0,
-      category: ''
-    };
+        (error) => {
+          console.error('Error adding expense', error);
+        }
+      );
+    }
   }
 }
