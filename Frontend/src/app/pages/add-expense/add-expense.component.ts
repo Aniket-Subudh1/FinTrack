@@ -1,36 +1,51 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ExpenseService, Expense } from '../../service/expense.service';
-import { NgIf } from '@angular/common';
+import { CustomerService } from '../../service/customer.service'; // Import the customer service
+import { NgIf, NgFor } from '@angular/common'; // Import NgFor
 import { FormsModule, NgForm } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-add-expense',
-  standalone: true, // Declares that this is a standalone component
-  imports: [NgIf, FormsModule, HttpClientModule], // Import dependencies directly
+  standalone: true,
   templateUrl: './add-expense.component.html',
-  styleUrls: ['./add-expense.component.css']
+  styleUrls: ['./add-expense.component.css'],
+  imports: [NgIf, NgFor, FormsModule, HttpClientModule] // Import NgFor here
 })
-export class AddExpenseComponent {
+export class AddExpenseComponent implements OnInit {
   expense: Expense = {
     userName: '',
     amount: 0,
     category: ''
   };
 
-
   successMessage: string = '';
+  customers: string[] = []; // Store the fetched customer names
 
-  constructor(private expenseService: ExpenseService) {}
+  constructor(
+    private expenseService: ExpenseService,
+    private customerService: CustomerService // Inject the CustomerService
+  ) {}
+
+  ngOnInit() {
+    this.customerService.getAllCustomerNames().subscribe(
+      (customerNames) => {
+        this.customers = customerNames; // Populate the customers array with fetched names
+      },
+      (error) => {
+        console.error('Error fetching customer names', error);
+      }
+    );
+  }
 
   onSubmit(form: NgForm) {
     if (form.valid) {
       this.expenseService.createExpense(this.expense).subscribe(
         (response) => {
           console.log('Expense added successfully', response);
-          this.successMessage = 'Expense added successfully!'; // Set the success message
-          setTimeout(() => this.successMessage = '', 3000); // Remove the message after 3 seconds
-          form.reset(); // Reset the form after successful submission
+          this.successMessage = 'Expense added successfully!';
+          setTimeout(() => this.successMessage = '', 3000);
+          form.reset();
         },
         (error) => {
           console.error('Error adding expense', error);

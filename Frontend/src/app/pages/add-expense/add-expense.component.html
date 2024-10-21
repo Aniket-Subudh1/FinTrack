@@ -9,15 +9,16 @@
 
     <form #expenseForm="ngForm" (ngSubmit)="onSubmit(expenseForm)">
       <div class="mb-4">
-        <label for="userName" class="block text-lg font-medium text-yellow-300">User Name:</label>
-        <input
-          type="text"
+        <label for="userName" class="block text-lg font-medium text-yellow-300">Customer Name:</label>
+        <select
           id="userName"
           class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
           name="userName"
           [(ngModel)]="expense.userName"
           required
-        />
+        >
+          <option *ngFor="let customer of customers" [value]="customer">{{ customer }}</option>
+        </select>
       </div>
 
       <div class="mb-4">
