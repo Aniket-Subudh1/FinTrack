@@ -13,14 +13,21 @@
     <nav class="flex-1 px-4 py-6 overflow-y-auto">
         <ul class="space-y-4">
             <li>
-                <a (click)="navigateTo('/dashboard')" class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400">
+                <a 
+                  (click)="navigateTo('/dashboard')" 
+                  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400"
+                  [ngClass]="{'text-yellow-400': isActive('/dashboard')}"
+                >
                     <mat-icon>dashboard</mat-icon>
                     <span *ngIf="isSidebarOpen">Dashboard</span>
                 </a>
-                
             </li>
             <li>
-                <a (click)="navigateTo('/add-expense')" class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400">
+                <a 
+                  (click)="navigateTo('/add-expense')" 
+                  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400"
+                  [ngClass]="{'text-yellow-400': isActive('/add-expense')}"
+                >
                     <mat-icon>add_circle_outline</mat-icon>
                     <span *ngIf="isSidebarOpen">Add Expenses</span>
                 </a>

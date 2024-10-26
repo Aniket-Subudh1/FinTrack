@@ -24,7 +24,9 @@ export class SidebarComponent {
   navigateTo(path: string): void {
     this.router.navigate([path]);
   }
-
+  isActive(route: string): boolean {
+    return this.router.url === route;
+  }
   logout(): void {
     console.log('Logging out...');
     this.router.navigate(['/login']);
