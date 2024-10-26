@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { ExpenseService, Expense } from '../../service/expense.service';
-import { CustomerService } from '../../service/customer.service'; // Import the customer service
+import { ExpenseService, Expense } from '../../../service/expense.service';
+import { CustomerService } from '../../../service/customer.service';// Import the customer service
 import { NgIf, NgFor } from '@angular/common'; // Import NgFor
 import { FormsModule, NgForm } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { SidebarComponent } from '../sidebar/sidebar.component';
 
 @Component({
   selector: 'app-add-expense',
   standalone: true,
   templateUrl: './add-expense.component.html',
   styleUrls: ['./add-expense.component.css'],
-  imports: [NgIf, NgFor, FormsModule, HttpClientModule] // Import NgFor here
+  imports: [NgIf, NgFor, FormsModule, HttpClientModule, SidebarComponent] // Import NgFor here
+ // Import NgFor here
 })
 export class AddExpenseComponent implements OnInit {
   expense: Expense = {

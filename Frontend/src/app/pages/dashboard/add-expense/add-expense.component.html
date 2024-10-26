@@ -1,0 +1,66 @@
+<div class="min-h-screen flex items-center justify-center bg-black">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main Form Container -->
+  <div class="bg-black/30 flex items-center justify-center backdrop-blur-md shadow-lg p-8 rounded-lg max-w-lg w-full text-white border border-gray-700">
+    <div class="w-full">
+      <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Add Expense</h2>
+
+      <div *ngIf="successMessage" class="mb-6 p-4 bg-green-500 text-black rounded-lg text-center">
+        {{ successMessage }}
+      </div>
+
+      <form #expenseForm="ngForm" (ngSubmit)="onSubmit(expenseForm)">
+        <!-- Customer Name Field -->
+        <div class="mb-4">
+          <label for="userName" class="block text-lg font-medium text-yellow-300">Customer Name:</label>
+          <select
+            id="userName"
+            class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            name="userName"
+            [(ngModel)]="expense.userName"
+            required
+          >
+            <option *ngFor="let customer of customers" [value]="customer">{{ customer }}</option>
+          </select>
+        </div>
+
+        <!-- Amount Field -->
+        <div class="mb-4">
+          <label for="amount" class="block text-lg font-medium text-yellow-300">Amount:</label>
+          <input
+            type="number"
+            id="amount"
+            class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            name="amount"
+            [(ngModel)]="expense.amount"
+            required
+          />
+        </div>
+
+        <!-- Category Field -->
+        <div class="mb-6">
+          <label for="category" class="block text-lg font-medium text-yellow-300">Category:</label>
+          <input
+            type="text"
+            id="category"
+            class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            name="category"
+            [(ngModel)]="expense.category"
+            required
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
+          [disabled]="!expenseForm.form.valid"
+        >
+          Add Expense
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

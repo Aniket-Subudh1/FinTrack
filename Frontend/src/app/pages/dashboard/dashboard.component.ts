@@ -2,13 +2,14 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { SidebarComponent } from './sidebar/sidebar.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  imports: [CommonModule, CurrencyPipe]
+  imports: [CommonModule, CurrencyPipe, SidebarComponent]
 })
 export class DashboardComponent {
   totalBalance: number = 25000;
@@ -23,7 +24,7 @@ export class DashboardComponent {
     { description: 'Investment', amount: -300 }
   ];
 
-  isSidebarOpen: boolean = false;
+  isSidebarOpen: boolean = true;
 
   constructor(private router: Router) {}
 

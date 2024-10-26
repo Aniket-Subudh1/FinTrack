@@ -1,33 +1,10 @@
 <div class="min-h-screen flex flex-col bg-gray-900 text-white animate-bg">
-
   <div class="flex flex-1 relative">
-    <!-- Hamburger Menu Button -->
-    <button class="absolute top-4 left-4 p-4 text-yellow-400 z-10" (click)="toggleSidebar()">
-      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-      </svg>
-    </button>
-
-    <!-- Sidebar -->
-    <aside [ngClass]="{'hidden': !isSidebarOpen}" class="w-80 bg-gray-800 p-5 transition duration-300 ease-in-out">
-      <div class="mb-10">
-        <img src="/public/assets/d.png" alt="FinTrack" class="h-12 mx-auto">
-      </div>
-      <nav>
-        <ul class="space-y-4">
-          <li><a routerLink="/dashboard" class="block text-lg font-medium hover:text-yellow-400">Dashboard</a></li>
-          <li><a (click)="redirectToAddExpense()" class="block text-lg font-medium hover:text-yellow-400">Add Expenses</a></li>
-          <li><a routerLink="/transactions" class="block text-lg font-medium hover:text-yellow-400">Transactions</a></li>
-          <li><a routerLink="/goals" class="block text-lg font-medium hover:text-yellow-400">Goals</a></li>
-          <li><a routerLink="/analytics" class="block text-lg font-medium hover:text-yellow-400">Analytics</a></li>
-          <li><a routerLink="/profile" class="block text-lg font-medium hover:text-yellow-400">Profile</a></li>
-          
-        </ul>
-      </nav>
-    </aside>
+    <!-- Sidebar Component -->
+    <app-sidebar (toggleSidebar)="isSidebarOpen = !isSidebarOpen"></app-sidebar>
 
     <!-- Main Content -->
-    <main class="flex-1 p-20">
+    <main class="transition-all duration-300 p-20" [class.ml-20]="!isSidebarOpen" [class.ml-80]="isSidebarOpen">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-3xl font-bold">Welcome to Your Dashboard</h2>
         <button class="glow-button bg-yellow-400 text-gray-900 px-4 py-2 rounded font-semibold" (click)="logout()">Logout</button>

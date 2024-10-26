@@ -75,7 +75,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.timer = 120;
   }
 
-  // Send OTP to the user's email for password reset
+  
   sendOtp(): void {
     this.isModalLoading = true;
     this.service.sendForgotPasswordOtp(this.forgotPasswordEmail).subscribe(

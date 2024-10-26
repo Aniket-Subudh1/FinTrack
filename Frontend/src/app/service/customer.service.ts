@@ -7,11 +7,10 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class CustomerService {
-  private apiUrl = 'http://localhost:8080/api/customers/names'; // Backend endpoint URL
-
+  private apiUrl = 'http://localhost:8080/api/customers/names'; 
   constructor(private http: HttpClient) {}
 
   getAllCustomerNames(): Observable<string[]> {
-    return this.http.get<string[]>(this.apiUrl); // HTTP call to fetch customer names
+    return this.http.get<string[]>(this.apiUrl); 
   }
 }
