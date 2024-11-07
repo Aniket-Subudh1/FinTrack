@@ -22,7 +22,7 @@ public class ExpenseService {
     }
 
     // Retrieve expenses for a specific user
-    public List<Expense> getExpensesByUserId(String userId) {
-        return expenseRepository.findByUserId(userId);
+    public List<Expense> getExpensesByUserName(String userName) {
+        return expenseRepository.findByUserName(userName);
     }
 }

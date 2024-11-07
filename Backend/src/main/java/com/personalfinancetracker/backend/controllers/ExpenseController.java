@@ -21,13 +21,11 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<Expense> createExpense(@RequestBody Expense expense, Authentication authentication) {
-        // Get the username or ID of the currently authenticated user
-        String username = authentication.getName();
-
-        // Associate the expense with the logged-in user
-        expense.setUserId(username); // Assuming Expense has a userId field
+        String userName = authentication.getName();  // retrieve the username
+        expense.setUserName(userName);  // associate the expense with the logged-in user
 
         Expense newExpense = expenseService.saveExpense(expense);
         return new ResponseEntity<>(newExpense, HttpStatus.CREATED);
     }
+
 }

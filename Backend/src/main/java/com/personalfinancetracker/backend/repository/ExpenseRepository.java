@@ -9,5 +9,5 @@ import java.util.List;
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     // Custom method to find expenses by userId
-    List<Expense> findByUserId(String userId);
+    List<Expense> findByUserName(String userName);
 }

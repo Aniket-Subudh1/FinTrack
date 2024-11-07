@@ -49,34 +49,41 @@ public class WebSecurityConfiguration {
                     return corsConfig;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/signup", "/signup/verify-otp", "/login", "/forgot-password", "/forgot-password/reset" , "/api/expenses","/api/customers/names").permitAll()  // Allow forgot-password endpoints without auth
-                        .requestMatchers("/api/**").authenticated()  // Secure other API endpoints
+                        .requestMatchers(
+                                "/signup",
+                                "/signup/verify-otp",
+                                "/login",
+                                "/forgot-password",
+                                "/forgot-password/reset",
+                                "/api/customers/names"
+                        ).permitAll()  // Public endpoints
+                        .requestMatchers("/api/**").authenticated()  // All other API endpoints require authentication
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .successHandler((request, response, authentication) -> {
-                            // Get OAuth2 user details and store them in the database
+                            // Cast authentication to OAuth2AuthenticationToken to access user details
                             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
                             String email = token.getPrincipal().getAttribute("email");
                             String name = token.getPrincipal().getAttribute("name");
 
-                            // Save the user details (via CustomerService)
+                            // Save the user details in the database if not already present (use CustomerService)
                             customerService.saveOAuth2User(name, email, "dummyPassword", "Google");
 
                             // Generate JWT token for OAuth2 users
                             String jwtToken = jwtUtil.generateToken(email);
 
-                            // Add the JWT token to the response header or redirect with the token
+                            // Add the JWT token to the response header
                             response.setHeader("Authorization", "Bearer " + jwtToken);
 
-                            // Redirect to the profile page with the token (optional)
+                            // Redirect to the frontend dashboard with the token (optional)
                             response.sendRedirect("http://localhost:4200/dashboard?token=" + jwtToken);
                         })
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Ensure stateless sessions
                 )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);  // Add JWT filter
 
         return http.build();
     }
