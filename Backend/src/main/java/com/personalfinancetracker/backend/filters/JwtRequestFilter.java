@@ -56,7 +56,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(token); // Extract username from the token
             } catch (Exception e) {
-                logger.error("JWT Token extraction error: {}", e.getMessage());
+                logger.error("JWT Token extraction error: {}");
             }
         }
 
