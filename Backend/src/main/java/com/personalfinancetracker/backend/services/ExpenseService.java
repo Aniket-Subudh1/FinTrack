@@ -1,11 +1,10 @@
 package com.personalfinancetracker.backend.services;
 
-
-
 import com.personalfinancetracker.backend.entities.Expense;
 import com.personalfinancetracker.backend.repository.ExpenseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ExpenseService {
@@ -17,7 +16,13 @@ public class ExpenseService {
         this.expenseRepository = expenseRepository;
     }
 
+    // Save a new expense
     public Expense saveExpense(Expense expense) {
         return expenseRepository.save(expense);
+    }
+
+    // Retrieve expenses for a specific user
+    public List<Expense> getExpensesByUserId(String userId) {
+        return expenseRepository.findByUserId(userId);
     }
 }
