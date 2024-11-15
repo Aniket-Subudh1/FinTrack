@@ -3,22 +3,21 @@ package com.personalfinancetracker.backend.dto;
 import com.personalfinancetracker.backend.entities.ExpenseCategory;
 
 public class ExpenseDTO {
-
     private double amount;
     private ExpenseCategory category;
-    private String customCategory; // Field for custom category input if "Others" is selected
+    private String customCategory;
 
-    // Constructors
-    public ExpenseDTO() {
-    }
+    // Default constructor
+    public ExpenseDTO() {}
 
+    // Constructor with all fields
     public ExpenseDTO(double amount, ExpenseCategory category, String customCategory) {
         this.amount = amount;
         this.category = category;
         this.customCategory = customCategory;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public double getAmount() {
         return amount;
     }
@@ -41,5 +40,34 @@ public class ExpenseDTO {
 
     public void setCustomCategory(String customCategory) {
         this.customCategory = customCategory;
+    }
+}
+
+// CategoryDTO.java
+package com.personalfinancetracker.backend.dto;
+
+public class CategoryDTO {
+    private String value;
+    private String label;
+
+    public CategoryDTO(String value, String label) {
+        this.value = value;
+        this.label = label;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 }
