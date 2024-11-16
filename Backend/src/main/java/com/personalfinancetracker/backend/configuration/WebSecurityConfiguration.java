@@ -55,6 +55,7 @@ public class WebSecurityConfiguration {
                                 "/login",
                                 "/forgot-password",
                                 "/forgot-password/reset",
+                                "/api/expenses",
                                 "/api/customers/names"
                         ).permitAll()  // Public endpoints
                         .requestMatchers("/api/**").authenticated()  // All other API endpoints require authentication

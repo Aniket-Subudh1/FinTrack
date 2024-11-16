@@ -5,31 +5,26 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "expenses")
 public class Expense {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String userName;
-
-    @Column(nullable = false)
     private Double amount;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ExpenseCategory category;
+    private String category;
 
-    private String customCategory; // New field for custom category input
+    @Column(nullable = false)
+    private String userName;
 
     // Constructors
-    public Expense() {}
+    public Expense() {
+    }
 
-    public Expense(String userName, Double amount, ExpenseCategory category, String customCategory) {
-        this.userName = userName;
+    public Expense(Double amount, String category) {
         this.amount = amount;
         this.category = category;
-        this.customCategory = customCategory;
     }
 
     // Getters and Setters
@@ -41,14 +36,6 @@ public class Expense {
         this.id = id;
     }
 
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public Double getAmount() {
         return amount;
     }
@@ -57,19 +44,19 @@ public class Expense {
         this.amount = amount;
     }
 
-    public ExpenseCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(ExpenseCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
-    public String getCustomCategory() {
-        return customCategory;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setCustomCategory(String customCategory) {
-        this.customCategory = customCategory;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }
