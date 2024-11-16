@@ -55,40 +55,32 @@ public class WebSecurityConfiguration {
                                 "/login",
                                 "/forgot-password",
                                 "/forgot-password/reset",
-                                "/api/expenses",
-                                "/api/customers/names"
-                        ).permitAll()  // Public endpoints
-                        .requestMatchers("/api/**").authenticated()  // All other API endpoints require authentication
+                                "/api/expenses"
+                        ).permitAll()
+                        .requestMatchers("/api/**").authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .successHandler((request, response, authentication) -> {
-                            // Cast authentication to OAuth2AuthenticationToken to access user details
                             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
                             String email = token.getPrincipal().getAttribute("email");
                             String name = token.getPrincipal().getAttribute("name");
 
-                            // Save the user details in the database if not already present (use CustomerService)
                             customerService.saveOAuth2User(name, email, "dummyPassword", "Google");
-
-                            // Generate JWT token for OAuth2 users
                             String jwtToken = jwtUtil.generateToken(email);
-
-                            // Add the JWT token to the response header
                             response.setHeader("Authorization", "Bearer " + jwtToken);
 
-                            // Redirect to the frontend dashboard with the token (optional)
+
                             response.sendRedirect("http://localhost:4200/dashboard?token=" + jwtToken);
                         })
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Ensure stateless sessions
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);  // Add JWT filter
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

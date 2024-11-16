@@ -1,10 +1,6 @@
 package com.personalfinancetracker.backend.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
+import jakarta.persistence.*;
 
 
 @Entity
@@ -13,28 +9,25 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+
+    @Column(unique = true)
     private String email;
+
     private String password;
-    private String otp;  // To store OTP temporarily
+
     private boolean verified = false;
 
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
-    }
-
     private String provider;
-    // Getters and setters
+
+    // Constructors
+    public Customer() {}
+
+    // Getters and Setters
+
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -61,19 +54,19 @@ public class Customer {
         this.password = password;
     }
 
-    public String getOtp() {
-        return otp;
-    }
-
-    public void setOtp(String otp) {
-        this.otp = otp;
-    }
-
     public boolean isVerified() {
         return verified;
     }
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 }
