@@ -1,11 +1,11 @@
 package com.personalfinancetracker.backend.entities;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "expenses")
 public class Expense {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,17 +20,9 @@ public class Expense {
     @Column(nullable = false)
     private ExpenseCategory category;
 
-    @Column
-    private String customCategory;
+    private String customCategory; // New field for custom category input
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
+    // Constructors
     public Expense() {}
 
     public Expense(String userName, Double amount, ExpenseCategory category, String customCategory) {
@@ -38,10 +30,9 @@ public class Expense {
         this.amount = amount;
         this.category = category;
         this.customCategory = customCategory;
-        this.createdAt = LocalDateTime.now();
     }
 
-    // Getters and setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -80,13 +71,5 @@ public class Expense {
 
     public void setCustomCategory(String customCategory) {
         this.customCategory = customCategory;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

@@ -8,7 +8,7 @@ public class ExpenseDTO {
     private String customCategory;
 
     // Default constructor
-    public ExpenseDTO() { }
+    public ExpenseDTO() {}
 
     // Constructor with all fields
     public ExpenseDTO(double amount, ExpenseCategory category, String customCategory) {
@@ -43,4 +43,31 @@ public class ExpenseDTO {
     }
 }
 
+// CategoryDTO.java
+package com.personalfinancetracker.backend.dto;
 
+public class CategoryDTO {
+    private String value;
+    private String label;
+
+    public CategoryDTO(String value, String label) {
+        this.value = value;
+        this.label = label;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+}
