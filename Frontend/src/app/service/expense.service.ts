@@ -1,22 +1,30 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 
-export interface Expense {
-  userName: string;
-  amount: number;
-  category: string;
-}
+const BASE_URL = 'http://localhost:8080';
 
 @Injectable({
-  providedIn: 'root' // Standalone service
+  providedIn: 'root',
 })
 export class ExpenseService {
-  private apiUrl = 'http://localhost:8080/api/expenses'; // Replace with your backend API URL
-
   constructor(private http: HttpClient) {}
 
-  createExpense(expense: Expense): Observable<Expense> {
-    return this.http.post<Expense>(this.apiUrl, expense);
+  addExpense(expenseRequest: { amount: number; category: string }) {
+    const headers = this.createAuthorizationHeader();
+    return this.http.post(`${BASE_URL}/api/expenses`, expenseRequest, { headers });
+  }
+
+  getExpenses() {
+    const headers = this.createAuthorizationHeader();
+    return this.http.get(`${BASE_URL}/api/expenses`, { headers });
+  }
+
+  private createAuthorizationHeader(): HttpHeaders {
+    const jwtToken = localStorage.getItem('jwt');
+    if (jwtToken) {
+      return new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`);
+    } else {
+      return new HttpHeaders();
+    }
   }
 }
