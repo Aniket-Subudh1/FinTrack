@@ -1,10 +1,7 @@
-// src/main/java/com/personalfinancetracker/backend/entities/ExpenseCategory.java
 package com.personalfinancetracker.backend.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import com.personalfinancetracker.backend.entities.ExpenseCategoryEnum;
 
 @Entity
 public class ExpenseCategory {
@@ -12,7 +9,10 @@ public class ExpenseCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String expenseCategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private ExpenseCategoryEnum expenseCategory;
 
     // Getters and Setters
     public Long getId() {
@@ -23,11 +23,11 @@ public class ExpenseCategory {
         this.id = id;
     }
 
-    public String getExpenseCategory() {
+    public ExpenseCategoryEnum getExpenseCategory() {
         return expenseCategory;
     }
 
-    public void setExpenseCategory(String expenseCategory) {
+    public void setExpenseCategory(ExpenseCategoryEnum expenseCategory) {
         this.expenseCategory = expenseCategory;
     }
 }

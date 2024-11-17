@@ -4,9 +4,8 @@ import com.personalfinancetracker.backend.dto.ExpenseRequest;
 import com.personalfinancetracker.backend.dto.ExpenseResponse;
 import com.personalfinancetracker.backend.entities.Customer;
 import com.personalfinancetracker.backend.entities.Expense;
-import com.personalfinancetracker.backend.entities.ExpenseCategory;
+import com.personalfinancetracker.backend.entities.ExpenseCategoryEnum;
 import com.personalfinancetracker.backend.repository.CustomerRepository;
-import com.personalfinancetracker.backend.repository.ExpenseCategoryRepository;
 import com.personalfinancetracker.backend.repository.ExpenseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +25,11 @@ public class ExpenseController {
 
     private final ExpenseRepository expenseRepository;
     private final CustomerRepository customerRepository;
-    private final ExpenseCategoryRepository expenseCategoryRepository;
 
     @Autowired
-    public ExpenseController(ExpenseRepository expenseRepository, CustomerRepository customerRepository, ExpenseCategoryRepository expenseCategoryRepository) {
+    public ExpenseController(ExpenseRepository expenseRepository, CustomerRepository customerRepository) {
         this.expenseRepository = expenseRepository;
         this.customerRepository = customerRepository;
-        this.expenseCategoryRepository = expenseCategoryRepository;
     }
 
     @PostMapping
@@ -46,9 +44,18 @@ public class ExpenseController {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Validate that the category exists in the Enum
+        ExpenseCategoryEnum category;
+        try {
+            category = ExpenseCategoryEnum.valueOf(expenseRequest.getCategory().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("message", "Invalid expense category"));
+        }
+
         Expense expense = new Expense();
         expense.setAmount(expenseRequest.getAmount());
-        expense.setCategory(expenseRequest.getCategory());
+        expense.setCategory(category.name()); // Save the category as a String
         expense.setDate(LocalDateTime.now());
         expense.setCustomer(customer);
 
@@ -72,7 +79,7 @@ public class ExpenseController {
                 .map(expense -> new ExpenseResponse(
                         expense.getId(),
                         expense.getAmount(),
-                        expense.getCategory(),
+                        expense.getCategory(), // This will return the category name as a string
                         expense.getDate(),
                         expense.getCustomer().getEmail()
                 ))
@@ -83,9 +90,9 @@ public class ExpenseController {
 
     @GetMapping("/categories")
     public ResponseEntity<List<String>> getExpenseCategories() {
-        List<ExpenseCategory> categories = expenseCategoryRepository.findAll();
-        List<String> categoryNames = categories.stream()
-                .map(ExpenseCategory::getExpenseCategory)
+        // Fetch all categories from the Enum
+        List<String> categoryNames = Arrays.stream(ExpenseCategoryEnum.values())
+                .map(Enum::name)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(categoryNames);
     }
