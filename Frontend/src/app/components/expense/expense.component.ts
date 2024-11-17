@@ -1,10 +1,9 @@
-// src/app/components/expense/expense.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ExpenseService } from '../../service/expense.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-expense',
   templateUrl: './expense.component.html',
@@ -13,14 +12,20 @@ import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.componen
   imports: [FormsModule, CommonModule, SidebarComponent],
 })
 export class ExpenseComponent implements OnInit {
+  isSidebarOpen: boolean = true;
   amount: number = 0;
   category: string = '';
   categories: string[] = [];
   expenses: { date: Date; amount: number; category: string }[] = [];
   successBubble: { show: boolean; message: string } = { show: false, message: '' };
-
-  constructor(private expenseService: ExpenseService) {}
-
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+  
+  constructor(private expenseService: ExpenseService,private router: Router) {
+    
+  }
+ 
   addExpense(): void {
     if (this.amount > 0 && this.category.trim()) {
       const expenseRequest = {
