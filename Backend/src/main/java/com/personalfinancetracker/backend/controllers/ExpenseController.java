@@ -1,4 +1,3 @@
-// src/main/java/com/personalfinancetracker/backend/controllers/ExpenseController.java
 package com.personalfinancetracker.backend.controllers;
 
 import com.personalfinancetracker.backend.dto.ExpenseRequest;

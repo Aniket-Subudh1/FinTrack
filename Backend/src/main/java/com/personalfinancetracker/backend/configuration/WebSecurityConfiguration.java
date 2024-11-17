@@ -56,7 +56,8 @@ public class WebSecurityConfiguration {
                                 "/forgot-password",
                                 "/forgot-password/reset",
                                 "/api/expenses",
-                                "/api/expenses/categories"
+                                "/api/expenses/categories",
+                                "/api/user/"
                         ).permitAll()
                         .requestMatchers("/api/**").authenticated()
                 )
