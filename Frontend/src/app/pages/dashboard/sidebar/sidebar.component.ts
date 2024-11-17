@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon'; 
 import { Router } from '@angular/router';
 
@@ -11,22 +11,23 @@ import { Router } from '@angular/router';
   styleUrls: ['./sidebar.component.css'] 
 })
 export class SidebarComponent {
+  @Input() isSidebarOpen: boolean = true; 
   @Output() toggleSidebar = new EventEmitter<void>();
-  isSidebarOpen: boolean = true;
 
   constructor(private router: Router) {}
 
   toggle(): void {
-    this.isSidebarOpen = !this.isSidebarOpen;
     this.toggleSidebar.emit(); 
   }
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
   }
+
   isActive(route: string): boolean {
     return this.router.url === route;
   }
+
   logout(): void {
     console.log('Logging out...');
     this.router.navigate(['/login']);
