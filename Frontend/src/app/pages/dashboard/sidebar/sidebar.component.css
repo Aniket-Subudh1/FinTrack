@@ -1,4 +1,4 @@
-/* Global Body Styling */
+
 body {
   background: linear-gradient(135deg, #121212, #1e1e1e);
   font-family: 'Roboto', sans-serif;
@@ -7,7 +7,7 @@ body {
   padding: 0;
 }
 
-/* Neon Button Glow Effect */
+
 button.glow-button {
   background: #ffdd00;
   color: #121212;
@@ -26,12 +26,12 @@ button.glow-button:hover {
 
 
 
-/* Sidebar Link Hover Effect */
+
 nav a {
   color: gray-300;
   display: flex;
   align-items: center;
-  gap: 1rem; /* Ensures space between icon and text */
+  gap: 1rem; 
   transition: color 0.3s ease;
 }
 
@@ -39,12 +39,11 @@ nav a:hover {
   color: #ffdd00;
 }
 
-/* Sidebar Icon Styling */
 .material-icons-outlined {
   font-size: 1.5rem;
 }
 
-/* Animated Background */
+
 .min-h-screen {
   background: linear-gradient(135deg, #000000, #000000);
   background-size: 200% 200%;
@@ -63,13 +62,13 @@ nav a:hover {
   }
 }
 
-/* Sidebar Navigation List Reset */
+
 nav ul {
   padding: 0;
   margin: 0;
   list-style-type: none;
 }
-/* Sidebar Background and Styling */
+
 .absolute {
   background: #1e1e1e;
   transition: width 0.3s;
@@ -81,15 +80,12 @@ nav ul {
   width: 5rem;
 }
 
-/* Logo and Toggle Button */
 .text-yellow-400 {
   color: #ffdd00;
 }
 .text-yellow-400:hover {
   color: #ffea33;
 }
-
-/* Navigation Links and Icons */
 nav a {
   display: flex;
   align-items: center;
