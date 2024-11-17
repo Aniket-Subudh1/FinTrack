@@ -1,3 +1,4 @@
+// src/app/service/expense.service.ts
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
@@ -17,6 +18,11 @@ export class ExpenseService {
   getExpenses() {
     const headers = this.createAuthorizationHeader();
     return this.http.get(`${BASE_URL}/api/expenses`, { headers });
+  }
+
+  getExpenseCategories() {
+    const headers = this.createAuthorizationHeader();
+    return this.http.get<string[]>(`${BASE_URL}/api/expenses/categories`, { headers });
   }
 
   private createAuthorizationHeader(): HttpHeaders {

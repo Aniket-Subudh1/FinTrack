@@ -1,3 +1,4 @@
+// src/app/components/expense/expense.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ExpenseService } from '../../service/expense.service';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,7 @@ import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.componen
 export class ExpenseComponent implements OnInit {
   amount: number = 0;
   category: string = '';
+  categories: string[] = [];
   expenses: { date: Date; amount: number; category: string }[] = [];
   successBubble: { show: boolean; message: string } = { show: false, message: '' };
 
@@ -61,6 +63,17 @@ export class ExpenseComponent implements OnInit {
     );
   }
 
+  fetchCategories(): void {
+    this.expenseService.getExpenseCategories().subscribe(
+      (data: string[]) => {
+        this.categories = data;
+      },
+      (error) => {
+        console.error('Error fetching categories:', error);
+      }
+    );
+  }
+
   private resetFormFields(): void {
     this.amount = 0;
     this.category = '';
@@ -68,5 +81,6 @@ export class ExpenseComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchExpenses();
+    this.fetchCategories();
   }
 }
