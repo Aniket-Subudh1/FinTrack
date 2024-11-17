@@ -32,11 +32,14 @@
                 class="w-24 h-24 rounded-full border-4 border-yellow-400 object-cover"
               />
             </div>
-            <input
-              type="file"
-              (change)="onPhotoSelected($event)"
-              class="text-gray-300 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 w-full"
-            />
+            <input type="file" id="fileInput" (change)="onPhotoSelected($event)" class="hidden"/>
+  <label
+    for="fileInput"
+    class="block text-gray-300 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 w-full text-center cursor-pointer hover:bg-gray-600 hover:text-white"
+  >
+    Choose File
+  </label>
+  <p class="mt-2 text-sm text-gray-400 text-center" id="fileName">No file selected</p>
           </div>
 
 
