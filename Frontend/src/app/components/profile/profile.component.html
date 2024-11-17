@@ -1,0 +1,111 @@
+<div
+  class="min-h-screen flex"
+  style="background-image: url('assets/saa.png'); background-attachment: fixed; background-size: cover;"
+>
+
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen" 
+    (toggleSidebar)="toggleSidebar()"
+  ></app-sidebar>
+
+  <div class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-black/30 flex flex-col items-center justify-center backdrop-blur-md shadow-lg p-6 rounded-lg max-w-3xl w-full text-white border border-yellow-400">
+      <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">User Profile</h2>
+
+
+      <div *ngIf="successMessage" class="mb-4 p-2 bg-green-500 text-white rounded w-full text-center">
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" class="mb-4 p-2 bg-red-500 text-white rounded w-full text-center">
+        {{ errorMessage }}
+      </div>
+
+      <form [formGroup]="userDetailsForm" (ngSubmit)="saveChanges()" class="w-full">
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300 text-center">Profile Photo:</label>
+            <div class="photo-preview flex items-center justify-center mb-4">
+              <img
+                *ngIf="profilePhotoUrl"
+                [src]="profilePhotoUrl"
+                alt="Profile Photo"
+                class="w-24 h-24 rounded-full border-4 border-yellow-400 object-cover"
+              />
+            </div>
+            <input
+              type="file"
+              (change)="onPhotoSelected($event)"
+              class="text-gray-300 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 w-full"
+            />
+          </div>
+
+
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300">Name:</label>
+            <input
+              formControlName="name"
+              type="text"
+              [disabled]="true"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg text-gray-300"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300">Email:</label>
+            <input
+              formControlName="email"
+              type="email"
+              [disabled]="true"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg text-gray-300 cursor-not-allowed"
+            />
+          </div>
+
+
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300">Address:</label>
+            <input
+              formControlName="address"
+              type="text"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg text-gray-300"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300">Gender:</label>
+            <select
+              formControlName="gender"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg text-gray-300"
+            >
+              <option value="">Select Gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+     
+          <div class="col-span-1">
+            <label class="block text-lg font-medium mb-2 text-yellow-300">Age:</label>
+            <input
+              formControlName="age"
+              type="number"
+              min="1"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg text-gray-300"
+            />
+          </div>
+        </div>
+
+ 
+        <div class="w-full mt-6">
+          <button
+            type="submit"
+            [disabled]="userDetailsForm.invalid"
+            class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
