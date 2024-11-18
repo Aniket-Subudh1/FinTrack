@@ -32,11 +32,15 @@
                 </a>
             </li>
             <li>
-                <a routerLink="/transactions" class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400">
-                    <mat-icon>receipt_long</mat-icon>
-                    <span *ngIf="isSidebarOpen">Transactions</span>
+                <a 
+                  (click)="navigateTo('/transaction')" 
+                  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400"
+                  [ngClass]="{'text-yellow-400': isActive('/transaction')}"
+                >
+                  <mat-icon>swap_horiz</mat-icon>
+                  <span *ngIf="isSidebarOpen">Transactions</span>
                 </a>
-            </li>
+              </li>
             <li>
                 <a routerLink="/goals" class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400">
                     <mat-icon>flag</mat-icon>
