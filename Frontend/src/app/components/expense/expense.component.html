@@ -3,6 +3,7 @@
     [isSidebarOpen]="isSidebarOpen" 
     (toggleSidebar)="toggleSidebar()"
   ></app-sidebar>
+  
   <div class="flex-1 flex items-center justify-center">
     <div class="bg-black/30 flex items-center justify-center backdrop-blur-md shadow-lg p-8 rounded-lg max-w-lg w-full text-white border border-gray-700">
       <div class="w-full">
@@ -34,14 +35,153 @@
           <button
             type="submit"
             class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
-            [disabled]="!expenseForm.form.valid"
+            [disabled]="!expenseForm.form.valid || isLoading"
           >
-            Add Expense
+            <span *ngIf="!isLoading">Add Expense</span>
+            <span *ngIf="isLoading">Adding...</span>
           </button>
         </form>
+        
+        <!-- Expense Tracker Button -->
+        <div class="mt-6 text-center">
+          <button 
+            (click)="toggleTrackerModal()" 
+            class="px-6 py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-400"
+          >
+            Expense Tracker
+          </button>
+        </div>
       </div>
     </div>
   </div>
+  
+  <!-- Expense Tracker Modal -->
+  <div *ngIf="showTrackerModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <!-- Background Overlay -->
+    <div class="absolute inset-0 bg-black/70" (click)="toggleTrackerModal()"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-black/80 backdrop-blur-md shadow-2xl rounded-lg border border-gray-700 w-11/12 max-w-5xl max-h-[90vh] overflow-hidden z-10">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-yellow-400">Expense Tracker</h2>
+        <button 
+          (click)="toggleTrackerModal()" 
+          class="text-gray-400 hover:text-white focus:outline-none"
+        >
+          ✕
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+<div class=" mt-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div>
+    <label class="block text-sm font-medium text-yellow-300 mb-1">Categories:</label>
+    <select
+      class="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg text-gray-200"
+      [(ngModel)]="tempFilterCategory"
+    >
+      <option value="">All Categories</option>
+      <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+    </select>
+  </div>
+  <div>
+    <label class="block text-sm font-medium text-yellow-300 mb-1">Date:</label>
+    <div class="relative">
+      <input
+        type="date"
+        class="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg text-gray-200"
+        [(ngModel)]="tempSearchDate"
+        #dateInput
+      />
+      <button 
+        (click)="openCalendar(dateInput)"
+        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-yellow-300 hover:text-yellow-400 focus:outline-none"
+      >
+        📅
+      </button>
+    </div>
+  </div>
+  <div class="flex items-end">
+    <button
+      (click)="applyFilters()"
+      class="w-full py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-colors hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+    >
+      Apply Filters
+    </button>
+  </div>
+  <div class="flex items-end">
+    <button
+      (click)="clearFilters()"
+      class="w-full py-2 bg-gray-600 text-white rounded-lg transition-colors hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400"
+    >
+      Clear Filters
+    </button>
+  </div>
+</div>
+        
+        <!-- Total Summary -->
+        <div class="mb-6 p-4 bg-black/40 rounded-lg border border-gray-700">
+          <div class="flex justify-between items-center">
+            <div class="text-lg text-gray-300">Total Expenses:</div>
+            <div class="text-xl font-bold text-yellow-400">₹ {{ totalExpenses.toFixed(2) }}</div>
+          </div>
+        </div>
+        
+        <!-- Expense List -->
+        <div class="relative overflow-x-auto rounded-lg border border-gray-700">
+          <table class="w-full text-left bg-black/40">
+            <thead class="text-yellow-300 text-sm uppercase border-b border-gray-700">
+              <tr>
+                <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('date')">
+                  Date {{ getSortIcon('date') }}
+                </th>
+                <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('category')">
+                  Category {{ getSortIcon('category') }}
+                </th>
+                <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('amount')">
+                  Amount {{ getSortIcon('amount') }}
+                </th>
+                <th class="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody *ngIf="getFilteredExpenses().length > 0">
+              <tr *ngFor="let expense of getFilteredExpenses()" class="border-b border-gray-700 hover:bg-gray-800/30">
+                <td class="px-4 py-3">{{ formatDate(expense.date) }}</td>
+                <td class="px-4 py-3">{{ expense.category }}</td>
+                <td class="px-4 py-3 font-semibold">₹ {{ expense.amount.toFixed(2) }}</td>
+                <td class="px-4 py-3">
+                </td>
+              </tr>
+            </tbody>
+            <tbody *ngIf="getFilteredExpenses().length === 0">
+              <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-gray-400">
+                  No expenses found. Add some expenses to get started!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Loading overlay -->
+          <div *ngIf="isLoading" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <div class="text-yellow-400">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Filters Applied Notification -->
+<div
+*ngIf="filterToast.show"
+class="fixed top-10 bubble-container bg-gray-700 text-white px-8 py-6 rounded-lg shadow-lg animate-slide-in"
+style="z-index: 9999; right: 20px;"
+>
+<p class="text-lg">{{ filterToast.message }}</p>
+</div>
+
+  <!-- Success Notification -->
   <div
     *ngIf="successBubble.show"
     class="fixed top-10 bubble-container bg-green-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
@@ -49,4 +189,3 @@
     <h3 class="text-lg font-bold">Success!</h3>
     <p class="text-lg">{{ successBubble.message }}</p>
   </div>
-</div>
