@@ -1,0 +1,269 @@
+<div class="min-h-screen flex" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen" 
+    (toggleSidebar)="toggleSidebar()"
+  ></app-sidebar>
+  
+  <div class="flex-1 flex items-center justify-center">
+    <div class="bg-black/30 flex items-center justify-center backdrop-blur-md shadow-lg p-8 rounded-lg max-w-lg w-full text-white border border-gray-700">
+      <div class="w-full">
+        <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Add Transaction</h2>
+        <form #transactionForm="ngForm" (ngSubmit)="addTransaction()">
+          <div class="mb-4">
+            <label for="amount" class="block text-lg font-medium text-yellow-300">Amount:</label>
+            <input
+              type="number"
+              id="amount"
+              class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              name="amount"
+              [(ngModel)]="amount"
+              required
+            />
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-lg font-medium text-yellow-300">Type:</label>
+            <div class="flex mt-1 space-x-4">
+              <label class="flex items-center cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="type" 
+                  value="income" 
+                  [(ngModel)]="type" 
+                  class="mr-2"
+                />
+                <span class="text-green-400">Income</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="type" 
+                  value="expense" 
+                  [(ngModel)]="type" 
+                  class="mr-2"
+                />
+                <span class="text-red-400">Expense</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="category" class="block text-lg font-medium text-yellow-300">Category:</label>
+            <select
+              id="category"
+              class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              name="category"
+              [(ngModel)]="category"
+              required
+            >
+              <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+            </select>
+          </div>
+          
+          <div class="mb-6">
+            <label for="description" class="block text-lg font-medium text-yellow-300">Description (Optional):</label>
+            <input
+              type="text"
+              id="description"
+              class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              name="description"
+              [(ngModel)]="description"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
+            [disabled]="!transactionForm.form.valid || isLoading"
+          >
+            <span *ngIf="!isLoading">Add Transaction</span>
+            <span *ngIf="isLoading">Adding...</span>
+          </button>
+        </form>
+        
+        <!-- Transaction Tracker Button -->
+        <div class="mt-6 text-center">
+          <button 
+            (click)="toggleTrackerModal()" 
+            class="px-6 py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-400"
+          >
+            Transaction Tracker
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Transaction Tracker Modal -->
+  <div *ngIf="showTrackerModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <!-- Background Overlay -->
+    <div class="absolute inset-0 bg-black/70" (click)="toggleTrackerModal()"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-black/80 backdrop-blur-md shadow-2xl rounded-lg border border-gray-700 w-11/12 max-w-5xl max-h-[90vh] overflow-hidden z-10">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-yellow-400">Transaction Tracker</h2>
+        <button 
+          (click)="toggleTrackerModal()" 
+          class="text-gray-400 hover:text-white focus:outline-none"
+        >
+          ✕
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="mt-4 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4 px-6">
+        <div>
+          <label class="block text-sm font-medium text-yellow-300 mb-1">Categories:</label>
+          <select
+            class="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg text-gray-200"
+            [(ngModel)]="tempFilterCategory"
+          >
+            <option value="">All Categories</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-yellow-300 mb-1">Type:</label>
+          <select
+            class="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg text-gray-200"
+            [(ngModel)]="tempFilterType"
+          >
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-yellow-300 mb-1">Date:</label>
+          <div class="relative">
+            <input
+              type="date"
+              class="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-lg text-gray-200"
+              [(ngModel)]="tempSearchDate"
+              #dateInput
+            />
+            <button 
+              (click)="openCalendar(dateInput)"
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 text-yellow-300 hover:text-yellow-400 focus:outline-none"
+            >
+              📅
+            </button>
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="applyFilters()"
+            class="w-full py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-colors hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          >
+            Apply Filters
+          </button>
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="clearFilters()"
+            class="w-full py-2 bg-gray-600 text-white rounded-lg transition-colors hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+        
+      <!-- Summary Cards -->
+      <div class="mb-6 px-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Income Summary -->
+        <div class="p-4 bg-black/40 rounded-lg border border-gray-700">
+          <div class="flex justify-between items-center">
+            <div class="text-lg text-gray-300">Total Income:</div>
+            <div class="text-xl font-bold text-green-400">₹ {{ totalIncome.toFixed(2) }}</div>
+          </div>
+        </div>
+        
+        <!-- Expense Summary -->
+        <div class="p-4 bg-black/40 rounded-lg border border-gray-700">
+          <div class="flex justify-between items-center">
+            <div class="text-lg text-gray-300">Total Expenses:</div>
+            <div class="text-xl font-bold text-red-400">₹ {{ totalExpense.toFixed(2) }}</div>
+          </div>
+        </div>
+        
+        <!-- Net Balance -->
+        <div class="p-4 bg-black/40 rounded-lg border border-gray-700">
+          <div class="flex justify-between items-center">
+            <div class="text-lg text-gray-300">Net Balance:</div>
+            <div class="text-xl font-bold" [ngClass]="netBalance >= 0 ? 'text-green-400' : 'text-red-400'">
+              ₹ {{ netBalance.toFixed(2) }}
+            </div>
+          </div>
+        </div>
+      </div>
+        
+      <!-- Transaction List -->
+      <div class="relative overflow-x-auto rounded-lg border border-gray-700 mx-6 mb-6">
+        <table class="w-full text-left bg-black/40">
+          <thead class="text-yellow-300 text-sm uppercase border-b border-gray-700">
+            <tr>
+              <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('date')">
+                Date {{ getSortIcon('date') }}
+              </th>
+              <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('type')">
+                Type {{ getSortIcon('type') }}
+              </th>
+              <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('category')">
+                Category {{ getSortIcon('category') }}
+              </th>
+              <th class="px-4 py-3 cursor-pointer" (click)="toggleSort('amount')">
+                Amount {{ getSortIcon('amount') }}
+              </th>
+              <th class="px-4 py-3">Description</th>
+            </tr>
+          </thead>
+          <tbody *ngIf="getFilteredTransactions().length > 0">
+            <tr *ngFor="let transaction of getFilteredTransactions()" class="border-b border-gray-700 hover:bg-gray-800/30">
+              <td class="px-4 py-3">{{ formatDate(transaction.date) }}</td>
+              <td class="px-4 py-3" [ngClass]="{'text-green-400': transaction.type === 'income', 'text-red-400': transaction.type === 'expense'}">
+                {{ transaction.type === 'income' ? 'Income' : 'Expense' }}
+              </td>
+              <td class="px-4 py-3">{{ transaction.category }}</td>
+              <td class="px-4 py-3 font-semibold" [ngClass]="getAmountClass(transaction.type)">
+                ₹ {{ transaction.amount.toFixed(2) }}
+              </td>
+              <td class="px-4 py-3">{{ transaction.description || '-' }}</td>
+            </tr>
+          </tbody>
+          <tbody *ngIf="getFilteredTransactions().length === 0">
+            <tr>
+              <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+                No transactions found. Add some transactions to get started!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+          
+        <!-- Loading overlay -->
+        <div *ngIf="isLoading" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+          <div class="text-yellow-400">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Filters Applied Notification -->
+  <div
+    *ngIf="filterToast.show"
+    class="fixed top-10 bubble-container bg-gray-700 text-white px-8 py-6 rounded-lg shadow-lg animate-slide-in"
+    style="z-index: 9999; right: 20px;"
+  >
+    <p class="text-lg">{{ filterToast.message }}</p>
+  </div>
+
+  <!-- Success Notification -->
+  <div
+    *ngIf="successBubble.show"
+    class="fixed top-10 bubble-container bg-green-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
+  >
+    <h3 class="text-lg font-bold">Success!</h3>
+    <p class="text-lg">{{ successBubble.message }}</p>
+  </div>
+</div>
