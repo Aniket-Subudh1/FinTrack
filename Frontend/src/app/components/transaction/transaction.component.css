@@ -1,0 +1,79 @@
+@keyframes slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-in-out;
+}
+
+.bubble-container {
+  right: 1.5rem;
+  position: fixed;
+  max-width: 300px;
+  z-index: 50;
+}
+
+@media (min-width: 768px) {
+  .bubble-container {
+    right: 8%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bubble-container {
+    right: 10%;
+  }
+}
+
+.bg-green-500 {
+  font-size: 1.125rem;
+  padding: 1.5rem 2rem;
+  line-height: 1.5;
+  border-radius: 1rem;
+}
+
+/* Modal backdrop animation */
+.modal-backdrop {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+/* Modal content animation */
+.modal-content {
+  animation: scale-in 0.3s ease-in-out;
+}

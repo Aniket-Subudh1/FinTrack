@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
-import { Router } from '@angular/router';
 
 interface Transaction {
   id?: string;
