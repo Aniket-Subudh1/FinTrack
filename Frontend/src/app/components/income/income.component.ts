@@ -2,17 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
+import { IncomeService } from '../../service/income.service';
 
 interface Income {
   id?: string;
   date: Date;
   amount: number;
-  category: string;
+  source: string;
 }
 
 interface SortConfig {
   field: string;
   direction: 'asc' | 'desc';
+}
+
+interface AddIncomeResponse {
+  message: string;
 }
 
 @Component({
@@ -25,7 +30,7 @@ interface SortConfig {
 export class IncomeComponent implements OnInit {
   isSidebarOpen: boolean = true;
   amount: number = 0;
-  category: string = '';
+  source: string = '';
   categories: string[] = ['Salary', 'Business', 'Investment', 'Other'];
   incomes: Income[] = [];
   successBubble: { show: boolean; message: string } = { show: false, message: '' };
@@ -41,6 +46,8 @@ export class IncomeComponent implements OnInit {
   // Track modal state
   showTrackerModal: boolean = false;
 
+  constructor(private incomeService: IncomeService) {}
+
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
@@ -50,28 +57,31 @@ export class IncomeComponent implements OnInit {
     this.showTrackerModal = !this.showTrackerModal;
   }
 
-  constructor() {}
-
   // Function to open calendar by triggering a click on the date input
   openCalendar(dateInput: HTMLInputElement): void {
     dateInput.showPicker();
   }
 
   addIncome(): void {
-    if (this.amount > 0 && this.category.trim()) {
+    if (this.amount > 0 && this.source.trim()) {
       const incomeRequest = {
         amount: this.amount,
-        category: this.category,
-        date: new Date()
+        source: this.source
       };
 
       this.isLoading = true;
-      setTimeout(() => {
-        this.incomes.push(incomeRequest);
-        this.showSuccessBubble(`Added ${this.category}: ₹ ${this.amount}`);
-        this.resetFormFields();
-        this.isLoading = false;
-      }, 1000);
+      this.incomeService.addIncome(incomeRequest).subscribe(
+        (response: AddIncomeResponse) => {
+          this.incomes.push({ ...incomeRequest, date: new Date() });
+          this.showSuccessBubble(response.message);
+          this.resetFormFields();
+          this.isLoading = false;
+        },
+        error => {
+          console.error('Error adding income:', error);
+          this.isLoading = false;
+        }
+      );
     }
   }
 
@@ -84,7 +94,7 @@ export class IncomeComponent implements OnInit {
 
   private resetFormFields(): void {
     this.amount = 0;
-    this.category = '';
+    this.source = '';
   }
 
   formatDate(date: Date): string {
@@ -103,8 +113,8 @@ export class IncomeComponent implements OnInit {
             comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
           } else if (config.field === 'amount') {
             comparison = a.amount - b.amount;
-          } else if (config.field === 'category') {
-            comparison = a.category.localeCompare(b.category);
+          } else if (config.field === 'source') {
+            comparison = a.source.localeCompare(b.source);
           }
 
           if (comparison !== 0) {
@@ -123,8 +133,8 @@ export class IncomeComponent implements OnInit {
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
         } else if (this.sortField === 'amount') {
           comparison = a.amount - b.amount;
-        } else if (this.sortField === 'category') {
-          comparison = a.category.localeCompare(b.category);
+        } else if (this.sortField === 'source') {
+          comparison = a.source.localeCompare(b.source);
         }
 
         return this.sortDirection === 'asc' ? comparison : -comparison;
