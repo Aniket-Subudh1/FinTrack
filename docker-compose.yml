@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: fintrack-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 7008
+      MYSQL_USER: fintrack_app
+      MYSQL_PASSWORD: fintrack_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database-setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    networks:
+      - fintrack-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p7008"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Service Registry (Eureka)
+  service-registry:
+    build: ./service-registry
+    container_name: fintrack-service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - fintrack-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway-service
+    container_name: fintrack-api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - fintrack-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - service-registry
+
+  # Auth Service
+  auth-service:
+    build: ./auth-service
+    container_name: fintrack-auth-service
+    ports:
+      - "8081:8081"
+    networks:
+      - fintrack-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - service-registry
+      - mysql
+
+  # User Service
+  user-service:
+    build: ./user-service
+    container_name: fintrack-user-service
+    ports:
+      - "8082:8082"
+    networks:
+      - fintrack-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - service-registry
+      - mysql
+
+  # Expense Service
+  expense-service:
+    build: ./expense-service
+    container_name: fintrack-expense-service
+    ports:
+      - "8083:8083"
+    networks:
+      - fintrack-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - service-registry
+      - mysql
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: fintrack-frontend
+    ports:
+      - "4200:80"
+    networks:
+      - fintrack-network
+    depends_on:
+      - api-gateway
+
+networks:
+  fintrack-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
