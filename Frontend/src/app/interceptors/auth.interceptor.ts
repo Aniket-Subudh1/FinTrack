@@ -16,6 +16,9 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    console.log('Intercepting request to:', request.url);
+    console.log('Current cookies:', document.cookie);
+    
     // Always add withCredentials to send cookies with every request
     request = request.clone({
       withCredentials: true
@@ -30,19 +33,24 @@ export class AuthInterceptor implements HttpInterceptor {
           Authorization: `Bearer ${token}`
         }
       });
+    } else {
+      console.log('No JWT token in localStorage');
     }
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
+        console.error('HTTP error intercepted:', {
+          url: request.url,
+          status: error.status,
+          message: error.message
+        });
+        
         // Handle authentication errors
         if (error.status === 401) {
           console.log('401 Unauthorized response - redirecting to login');
-          localStorage.removeItem('jwt'); // Clean up any local storage
+          localStorage.removeItem('jwt');
           this.router.navigate(['/login']);
         }
-        
-        // For debugging - log all errors
-        console.error('HTTP request error:', error);
         
         return throwError(() => error);
       })

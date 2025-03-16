@@ -1,7 +1,7 @@
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 const BASE_URL = 'http://localhost:8080';
@@ -30,41 +30,54 @@ export class JwtService {
   }
 
   logout(): Observable<any> {
-    const csrfToken = this.getCsrfToken(); // Implement this to get the token from cookies
-    const headers = new HttpHeaders({
-        'X-CSRF-TOKEN': csrfToken // Send CSRF token in header
-    });
-
-    return this.http.post<any>('http://localhost:8080/logout', {}, { 
-        headers, 
-        withCredentials: true 
+    console.log('Starting logout process');
+    console.log('Current cookies:', document.cookie);
+    
+    // Don't send CSRF tokens in headers - simplify the request
+    // Your backend should recognize the authenticated cookie without additional headers
+    
+    return this.http.post<any>(`${BASE_URL}/logout`, {}, { 
+      withCredentials: true, // This ensures cookies are sent
+      observe: 'response'  // Get full response including headers
     }).pipe(
-        tap(response => {
-            console.log('Logout successful:', response);
-            localStorage.removeItem('jwt'); // Clear JWT
-            this.router.navigate(['/login']); // Redirect to login
-        }),
-        catchError(error => {
-            console.error('Logout failed:', error.status, error.message);
-            localStorage.removeItem('jwt'); // Clear JWT even if server fails
-            this.router.navigate(['/login']);
-            return of({ message: 'Logged out locally' });
-        })
+      tap(response => {
+        console.log('Logout API response:', response);
+        console.log('Response headers:', response.headers);
+        console.log('Response status:', response.status);
+        localStorage.removeItem('jwt');
+        console.log('JWT removed from localStorage');
+        console.log('Cookies after API call:', document.cookie);
+      }),
+      catchError(error => {
+        console.error('Logout API error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          error: error.error,
+          message: error.message,
+          url: error.url
+        });
+        
+        // Still clear local storage token
+        localStorage.removeItem('jwt');
+        console.log('JWT removed from localStorage despite API error');
+        console.log('Cookies after error:', document.cookie);
+        
+        return of({ message: 'Logged out locally only' });
+      }),
+      finalize(() => {
+        // Force redirect regardless of success/failure
+        this.router.navigate(['/login'], { replaceUrl: true });
+      })
     );
-}
- 
-private getCsrfToken(): string {
-  const name = 'XSRF-TOKEN=';
-  const decodedCookie = decodeURIComponent(document.cookie);
-  const cookies = decodedCookie.split(';');
-  for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.indexOf(name) === 0) {
-          return cookie.substring(name.length, cookie.length);
-      }
   }
-  return '';
-}
+ 
+  private getCsrfToken(): string {
+    // We're not using this method in the updated implementation
+    // Keep it for backward compatibility
+    console.warn('getCsrfToken() called but not used in current logout implementation');
+    return '';
+  }
+
   verifyOtp(otpRequest: { email: string, otp: string }): Observable<any> {
     return this.http.post(`${BASE_URL}/signup/verify-otp`, otpRequest, { withCredentials: true })
       .pipe(
