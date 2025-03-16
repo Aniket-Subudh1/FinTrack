@@ -1,0 +1,25 @@
+<div class="min-h-screen flex" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
+  <app-sidebar
+    [isSidebarOpen]="isSidebarOpen"
+    (toggleSidebar)="toggleSidebar()"
+  ></app-sidebar>
+  <div class="flex-1 flex items-center justify-center">
+    <div class="bg-black/30 flex items-center justify-center backdrop-blur-md shadow-lg p-8 rounded-lg max-w-4xl w-full text-white border border-gray-700">
+      <div class="w-full">
+        <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Expense Chart</h2>
+        <ngx-charts-bar-vertical
+          [view]="view"
+          [results]="expenseData"
+          [gradient]="gradient"
+          [xAxis]="showXAxis"
+          [yAxis]="showYAxis"
+          [legend]="showLegend"
+          [showXAxisLabel]="showXAxisLabel"
+          [xAxisLabel]="xAxisLabel"
+          [showYAxisLabel]="showYAxisLabel"
+          [yAxisLabel]="yAxisLabel">
+        </ngx-charts-bar-vertical>
+      </div>
+    </div>
+  </div>
+</div>

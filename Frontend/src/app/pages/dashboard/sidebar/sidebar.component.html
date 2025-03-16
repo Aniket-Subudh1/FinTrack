@@ -41,6 +41,16 @@
                   <span *ngIf="isSidebarOpen">Add Income</span>
               </a>
           </li>
+          <li>
+            <a
+              (click)="navigateTo('/barchart')"
+              class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400"
+              [ngClass]="{'text-yellow-400': isActive('/barchart')}"
+            >
+                <mat-icon>analytics</mat-icon>
+                <span *ngIf="isSidebarOpen">Analytics</span>
+            </a>
+        </li>
             <li>
                 <a
                   (click)="navigateTo('/transaction')"
@@ -58,13 +68,6 @@
                 </a>
             </li>
 
-
-            <li>
-                <a routerLink="/analytics" class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400">
-                    <mat-icon>analytics</mat-icon>
-                    <span *ngIf="isSidebarOpen">Analytics</span>
-                </a>
-            </li>
             <li>
                 <a (click)="navigateTo('/profile')"  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400" [ngClass]="{'text-yellow-400': isActive('/profile')}">
                     <mat-icon>person</mat-icon>

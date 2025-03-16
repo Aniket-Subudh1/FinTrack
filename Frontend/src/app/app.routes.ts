@@ -8,6 +8,7 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { TransactionComponent } from './components/transaction/transaction.component';
 import { IncomeComponent } from './components/income/income.component';
 import { AuthGuard } from './guard/auth.guard';
+import {ExpenseChartComponent} from './components/expense-chart/expense-chart.component'
 
 export const routes: Routes = [
     { path: 'signup', component: Page2Component },
@@ -16,23 +17,29 @@ export const routes: Routes = [
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
     {
-      path: 'expense', 
+      path: 'expense',
       component: ExpenseComponent,
       canActivate: [AuthGuard]
     },
     {
-      path: 'profile', 
+      path: 'profile',
       component: ProfileComponent,
       canActivate: [AuthGuard]
     },
     {
-      path: 'transaction', 
+      path: 'transaction',
       component: TransactionComponent,
       canActivate: [AuthGuard]
     },
     {
-      path: 'income', 
+      path: 'income',
       component: IncomeComponent,
       canActivate: [AuthGuard]
+    },
+    {
+      path: 'barchart',
+      component: ExpenseChartComponent,
+      canActivate: [AuthGuard]
+
     }
 ];

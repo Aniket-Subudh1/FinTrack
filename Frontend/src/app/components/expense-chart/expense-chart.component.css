@@ -1,0 +1,7 @@
+::ng-deep .ngx-charts .x.axis .tick text {
+  fill: white !important;
+}
+
+::ng-deep .ngx-charts .y.axis .tick text {
+  fill: white !important;
+}

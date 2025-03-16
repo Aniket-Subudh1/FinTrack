@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.6",
     "@splinetool/runtime": "^1.9.28",
+    "@swimlane/ngx-charts": "^22.0.0-alpha.0",
     "ldrs": "^1.0.2",
     "ngx-countup": "^13.2.0",
     "rxjs": "~7.8.0",
