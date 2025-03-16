@@ -1,5 +1,6 @@
 package com.personalfinancetracker.backend.controllers;
 
+import com.personalfinancetracker.backend.dto.ExpenseCategorySummary;
 import com.personalfinancetracker.backend.dto.ExpenseRequest;
 import com.personalfinancetracker.backend.dto.ExpenseResponse;
 import com.personalfinancetracker.backend.entities.Customer;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -121,6 +123,16 @@ public class ExpenseController {
                 .map(Enum::name)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(categoryNames);
+    }
+    @GetMapping("/summary")
+    public ResponseEntity<List<ExpenseCategorySummary>> getExpenseSummaryByCategory(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String email = authentication.getName();
+        List<ExpenseCategorySummary> summary = expenseRepository.getExpenseSummaryByCategory(email);
+        return ResponseEntity.ok(summary);
     }
 
     private String getEmailFromJwtCookie() {
