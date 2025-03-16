@@ -51,9 +51,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String requestPath = request.getRequestURI();
+        logger.debug("Processing request: {}", requestPath);
 
         // Check if the path should be excluded from authentication
         if (shouldExclude(requestPath)) {
+            logger.debug("Path excluded from authentication: {}", requestPath);
             filterChain.doFilter(request, response);
             return;
         }
@@ -62,12 +64,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Try to get token from cookie first
         token = jwtUtil.getJwtFromCookies(request);
+        logger.debug("JWT from cookies: {}", token != null ? "found" : "not found");
 
         // If not in cookie, try from Authorization header (backward compatibility)
         if (token == null) {
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
+                logger.debug("JWT from Authorization header: {}", token != null ? "found" : "not found");
             }
         }
 
@@ -77,6 +81,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 username = jwtUtil.extractUsername(token);
+                logger.info("TOKEN SUBJECT IS: {}", username);
+
+                // If username looks like a numeric ID (Google ID) - log warning but proceed
+                if (username != null && username.matches("\\d+")) {
+                    logger.warn("Username appears to be a numeric ID instead of email: {}", username);
+                }
             } catch (Exception e) {
                 logger.error("JWT Token extraction error: {}", e.getMessage());
             }
@@ -86,6 +96,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = authenticationService.loadUserByUsername(username);
+                logger.debug("Loaded user details for: {}", username);
 
                 if (jwtUtil.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authenticationToken =
@@ -94,6 +105,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     logger.debug("Authenticated user: {}", username);
+                } else {
+                    logger.warn("Token validation failed for user: {}", username);
                 }
             } catch (Exception e) {
                 logger.error("Authentication error: {}", e.getMessage());

@@ -18,15 +18,22 @@ export class AuthGuard implements CanActivate {
     return this.jwtService.checkAuth().pipe(
       tap(isValid => {
         if (!isValid) {
+          console.log('Authentication check failed, redirecting to login');
           localStorage.removeItem('jwt');
-          this.router.navigate(['/login'], { replaceUrl: true });
+          this.router.navigate(['/login'], { 
+            queryParams: { returnUrl: state.url },
+            replaceUrl: true 
+          });
         }
       }),
-      map(isValid => isValid),
+      map(isValid => !!isValid), // Ensure boolean result
       catchError(error => {
         console.error('Auth check failed:', error);
         localStorage.removeItem('jwt');
-        this.router.navigate(['/login'], { replaceUrl: true });
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: state.url },
+          replaceUrl: true 
+        });
         return of(false);
       })
     );

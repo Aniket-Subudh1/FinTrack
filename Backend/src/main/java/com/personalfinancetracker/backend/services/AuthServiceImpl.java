@@ -187,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
                 Customer customer = new Customer();
                 customer.setName(name);
                 customer.setEmail(email);
-                customer.setPassword(passwordEncoder.encode("OAuth2User" + System.currentTimeMillis()));  // Generate random password
+                customer.setPassword(passwordEncoder.encode("OAuth2User" + System.currentTimeMillis()));
                 customer.setVerified(true);  // OAuth2 users are automatically verified
                 customer.setProvider(provider);
 
@@ -201,7 +201,7 @@ public class AuthServiceImpl implements AuthService {
                 logger.info("Updated existing customer account for OAuth2 user: {}", email);
             }
 
-            // Generate JWT token and add to cookie
+            // Generate JWT token and add to cookie - ALWAYS use EMAIL as the subject
             authenticationService.addTokenCookie(response, email);
             logger.info("Added JWT token cookie for OAuth2 user: {}", email);
         } catch (Exception e) {

@@ -86,7 +86,7 @@ public class OAuth2Controller {
     public ResponseEntity<Map<String, String>> handleOAuth2Callback(
             @RequestBody Map<String, String> payload,
             HttpServletResponse response) {
-        logger.info("Handling OAuth2 callback");
+        logger.info("Handling OAuth2 callback with payload: {}", payload);
 
         String name = payload.get("name");
         String email = payload.get("email");

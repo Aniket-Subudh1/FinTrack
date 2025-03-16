@@ -17,7 +17,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -26,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import java.util.List;
 
@@ -38,15 +38,18 @@ public class WebSecurityConfiguration {
     private final JwtRequestFilter jwtRequestFilter;
     private final AuthService authService;
     private final AuthenticationService authenticationService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
     public WebSecurityConfiguration(
             JwtRequestFilter jwtRequestFilter,
             @Lazy AuthService authService,
-            @Lazy AuthenticationService authenticationService) {
+            @Lazy AuthenticationService authenticationService,
+            JwtUtil jwtUtil) {
         this.jwtRequestFilter = jwtRequestFilter;
         this.authService = authService;
         this.authenticationService = authenticationService;
+        this.jwtUtil = jwtUtil;
     }
 
     @Bean
@@ -72,13 +75,12 @@ public class WebSecurityConfiguration {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(requestHandler)
-                        // Disable CSRF for these API endpoints
                         .ignoringRequestMatchers(
                                 "/signup/**",
                                 "/login",
                                 "/forgot-password/**",
                                 "/oauth2/**",
-                                "/api/**" // Temporarily disable for all API endpoints
+                                "/api/**"
                         )
                 )
                 .cors(cors -> cors.configurationSource(request -> {
@@ -96,7 +98,8 @@ public class WebSecurityConfiguration {
                                 "/login",
                                 "/logout",
                                 "/forgot-password/**",
-                                "/oauth2/**"
+                                "/oauth2/**",
+                                "/api/**", "/logout"
                         ).permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
@@ -115,7 +118,9 @@ public class WebSecurityConfiguration {
                                     return;
                                 }
 
-                                // Complete OAuth2 registration flow
+                                logger.info("OAuth2 login successful for email: {}", email);
+
+                                // Complete OAuth2 registration flow - ALWAYS use email
                                 authService.completeOAuth2Registration(name, email, "Google", response);
 
                                 // Redirect to frontend
@@ -133,7 +138,6 @@ public class WebSecurityConfiguration {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            JwtUtil jwtUtil = null;
                             jwtUtil.clearJwtCookie(response);
                             response.setStatus(HttpServletResponse.SC_OK);
 
@@ -143,10 +147,19 @@ public class WebSecurityConfiguration {
                         })
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
-                        .deleteCookies("fintrack_jwt") // Also clear cookie by name
+                        .deleteCookies("fintrack_jwt")
                         .permitAll());
 
+        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
+    }
+
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Serve static resources only from /resources/**, not /api/**
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600);
     }
 
     @Bean

@@ -52,11 +52,12 @@ public class LoginController {
             if (authentication.isAuthenticated()) {
                 UserDetails userDetails = authenticationService.loadUserByUsername(loginRequest.getEmail());
 
-                // Generate JWT token and add to cookie
-                authenticationService.addTokenCookie(response, userDetails.getUsername());
+                // Generate JWT token and add to cookie - use EMAIL, not ID
+                String email = userDetails.getUsername();
+                authenticationService.addTokenCookie(response, email);
 
                 // Generate token for backward compatibility
-                String jwt = authenticationService.generateToken(userDetails.getUsername());
+                String jwt = authenticationService.generateToken(email);
 
                 logger.info("Login successful for: {}", loginRequest.getEmail());
                 return ResponseEntity.ok(new LoginResponse(jwt));

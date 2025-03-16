@@ -6,9 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +18,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/logout")
 public class LogoutController {
+    private static final Logger logger = LoggerFactory.getLogger(LogoutController.class);
 
     private final AuthenticationService authenticationService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     public LogoutController(AuthenticationService authenticationService) {
@@ -30,11 +32,13 @@ public class LogoutController {
 
     @PostMapping
     public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
-        // Clear JWT cookie
+        logger.info("Processing logout request");
         authenticationService.clearTokenCookie(response);
+        SecurityContextHolder.clearContext();
 
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("message", "Logout successful");
+        logger.info("Logout successful, cookie cleared");
 
         return ResponseEntity.ok(responseBody);
     }

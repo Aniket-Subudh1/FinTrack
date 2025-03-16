@@ -18,7 +18,6 @@ import org.springframework.web.util.WebUtils;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,11 +68,9 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        String username = extractClaim(token, Claims::getSubject);
+        logger.debug("Extracted username from token: {}", username);
+        return username;
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -87,6 +84,10 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     public Boolean isTokenExpired(String token) {
@@ -110,6 +111,13 @@ public class JwtUtil {
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
+        logger.debug("Generating token for user: {}", username);
+
+        // Ensure we're not trying to use a numeric ID as username
+        if (username != null && username.matches("\\d+")) {
+            logger.warn("Attempted to generate token with numeric ID instead of email: {}", username);
+        }
+
         return createToken(claims, username);
     }
 
@@ -127,12 +135,24 @@ public class JwtUtil {
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookieName);
         if (cookie != null) {
+            logger.debug("Found JWT cookie: {}", jwtCookieName);
             return cookie.getValue();
         } else {
+            logger.debug("JWT cookie not found: {}", jwtCookieName);
             return null;
         }
     }
-
+    public void addJwtCookie(HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from(jwtCookieName, token)
+                .path("/")
+                .maxAge(24 * 60 * 60) // 1 day
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+        logger.debug("Added JWT cookie: {}", cookie.toString());
+    }
     // Create JWT Cookie
     public void createJwtCookie(HttpServletResponse response, String jwt) {
         ResponseCookie cookie = ResponseCookie.from(jwtCookieName, jwt)
@@ -148,25 +168,15 @@ public class JwtUtil {
         logger.debug("JWT cookie created for domain: {}", domain);
     }
 
-    // Clear JWT Cookie
     public void clearJwtCookie(HttpServletResponse response) {
-        // Multiple approaches to ensure the cookie is cleared in different browsers
-
-        // Approach 1: Using ResponseCookie
-        ResponseCookie cookie = ResponseCookie.from(jwtCookieName, "")
+        ResponseCookie cookie = ResponseCookie.from(jwtCookieName, null)
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(domain)
                 .build();
-
         response.addHeader("Set-Cookie", cookie.toString());
-
-        response.addHeader("Set-Cookie",
-                jwtCookieName + "=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax");
-
-        logger.debug("JWT cookie cleared");
+        logger.info("Cleared JWT cookie: {}", cookie.toString());
     }
 }

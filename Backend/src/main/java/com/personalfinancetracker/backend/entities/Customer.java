@@ -21,6 +21,8 @@ public class Customer {
 
     private String provider;
 
+    private String providerId;
+
     public Long getId() {
         return id;
     }
@@ -67,6 +69,14 @@ public class Customer {
 
     public void setProvider(String provider) {
         this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 
     // New fields

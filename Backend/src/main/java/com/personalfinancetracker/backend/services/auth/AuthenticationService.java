@@ -68,9 +68,9 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     public void addTokenCookie(HttpServletResponse response, String username) {
-        logger.debug("Adding token cookie for: {}", username);
-        String jwt = generateToken(username);
-        jwtUtil.createJwtCookie(response, jwt);
+        String token = jwtUtil.generateToken(username);
+        jwtUtil.addJwtCookie(response, token);
+        logger.info("Added token cookie for: {}", username);
     }
 
     public void clearTokenCookie(HttpServletResponse response) {

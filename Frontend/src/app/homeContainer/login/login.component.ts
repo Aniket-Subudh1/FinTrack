@@ -158,11 +158,21 @@ export class LoginComponent implements OnInit, AfterViewInit {
     if (this.loginForm.valid) {
       this.isLoading = true;
       const loginData = this.loginForm.value;
-
+      
+      console.log('Submitting login form:', {
+        email: loginData.email,
+        password: '********'
+      });
+  
       this.service.login(loginData).subscribe(
         (response: any) => {
-          // No need to manually store token - it's in the cookie
+          console.log('Login successful:', response);
+          if (response && response.jwtToken) {
+            localStorage.setItem('jwt', response.jwtToken);
+            console.log('JWT token saved to localStorage');
+          }
           this.router.navigateByUrl('/dashboard').then(() => {
+            console.log('Redirected to dashboard');
             this.isLoading = false;
           });
         },

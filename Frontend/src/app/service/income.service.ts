@@ -14,8 +14,8 @@ interface AddIncomeResponse {
 export class IncomeService {
   constructor(private http: HttpClient) {}
 
-  addIncome(incomeRequest: { amount: number; source: string }): Observable<AddIncomeResponse> {
-    return this.http.post<AddIncomeResponse>(`${BASE_URL}/api/incomes`, incomeRequest, { withCredentials: true });
+  addIncome(incomeRequest: any): Observable<any> {
+    return this.http.post(`${BASE_URL}/api/incomes`, incomeRequest, { withCredentials: true });
   }
 
   getIncomes() {
