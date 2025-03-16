@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -15,21 +15,10 @@ export class IncomeService {
   constructor(private http: HttpClient) {}
 
   addIncome(incomeRequest: { amount: number; source: string }): Observable<AddIncomeResponse> {
-    const headers = this.createAuthorizationHeader();
-    return this.http.post<AddIncomeResponse>(`${BASE_URL}/api/incomes`, incomeRequest, { headers });
+    return this.http.post<AddIncomeResponse>(`${BASE_URL}/api/incomes`, incomeRequest, { withCredentials: true });
   }
 
   getIncomes() {
-    const headers = this.createAuthorizationHeader();
-    return this.http.get(`${BASE_URL}/api/incomes`, { headers });
-  }
-
-  private createAuthorizationHeader(): HttpHeaders {
-    const jwtToken = localStorage.getItem('jwt');
-    if (jwtToken) {
-      return new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`);
-    } else {
-      return new HttpHeaders();
-    }
+    return this.http.get(`${BASE_URL}/api/incomes`, { withCredentials: true });
   }
 }

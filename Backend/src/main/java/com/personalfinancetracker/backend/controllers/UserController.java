@@ -10,7 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
-
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -43,6 +44,14 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/check-auth")
+    public ResponseEntity<Map<String, Boolean>> checkAuth(Authentication authentication) {
+        Map<String, Boolean> response = new HashMap<>();
+        boolean isAuthenticated = (authentication != null && authentication.isAuthenticated());
+        response.put("authenticated", isAuthenticated);
+
+        return ResponseEntity.ok(response);
+    }
     @PutMapping("/details")
     public ResponseEntity<UserDetailsResponse> updateUserDetails(
             @RequestBody UserDetailsUpdateRequest updateRequest, Authentication authentication) {

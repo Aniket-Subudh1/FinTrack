@@ -1,6 +1,8 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 const BASE_URL = 'http://localhost:8080';  
 
@@ -9,7 +11,7 @@ const BASE_URL = 'http://localhost:8080';
 })
 export class JwtService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
   // Method to register a new user
   register(signRequest: any): Observable<any> {
@@ -18,48 +20,68 @@ export class JwtService {
 
   // Method to login the user and return JWT token
   login(loginRequest: any): Observable<any> {
-    return this.http.post(`${BASE_URL}/login`, loginRequest);
+    return this.http.post(`${BASE_URL}/login`, loginRequest, { withCredentials: true });
+  }
+
+  logout(): Observable<any> { // Add type parameter
+    return this.http.post<any>(`${BASE_URL}/logout`, {}, { withCredentials: true })
+      .pipe(
+        tap(() => {
+          localStorage.removeItem('jwt'); // Remove token once at the service level
+        }),
+        catchError(error => {
+          console.error('Logout error:', error);
+          localStorage.removeItem('jwt');
+          return of({ message: 'Logged out locally' });
+        })
+      );
   }
 
   // Method to verify OTP (Signup)
   verifyOtp(otpRequest: { email: string, otp: string }): Observable<any> {
-    // Assuming this endpoint does not require Authorization header
-    return this.http.post(`${BASE_URL}/signup/verify-otp`, otpRequest);
+    return this.http.post(`${BASE_URL}/signup/verify-otp`, otpRequest, { withCredentials: true });
   }
 
   // Method to resend OTP (Signup)
   resendOtp(email: string): Observable<any> {
-    // Assuming this endpoint does not require Authorization header
     return this.http.post(`${BASE_URL}/signup/resend-otp`, { email });
   }
 
   // Method to send OTP for Forgot Password
   sendForgotPasswordOtp(email: string): Observable<any> {
-    // No Authorization header needed
     return this.http.post(`${BASE_URL}/forgot-password`, { email });
   }
 
   // Method to verify OTP and reset password
   verifyForgotPasswordOtp(otpRequest: { email: string, otp: string, newPassword: string }): Observable<any> {
-    // No Authorization header needed
     return this.http.post(`${BASE_URL}/forgot-password/reset`, otpRequest);
   }
 
   // Method to resend OTP for Forgot Password
   resendForgotPasswordOtp(email: string): Observable<any> {
-    // No Authorization header needed
     return this.http.post(`${BASE_URL}/forgot-password/resend-otp`, { email });
   }
 
-  // Create Authorization Header with JWT token from localStorage
-  private createAuthorizationHeader(): HttpHeaders {
-    const jwtToken = localStorage.getItem('jwt');
-    if (jwtToken) {
-      console.log("JWT token found in local storage:", jwtToken);
-      return new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`);
-    } else {
-      console.log("JWT token not found in local storage");
-      return new HttpHeaders();  
-    }
+  // Validate session - Check if user is authenticated
+  checkAuth(): Observable<boolean> {
+    return this.http.get<any>(`${BASE_URL}/api/user/check-auth`, { withCredentials: true })
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
   }
+
+  // Handle Google OAuth token validation
+  validateOAuthToken(token: string): Observable<any> {
+    return this.http.post(`${BASE_URL}/oauth2/validate`, { token }, { withCredentials: true });
+  }
+
+  // Initialize OAuth login - redirect to Google
+  initiateGoogleLogin(): void {
+    window.location.href = `${BASE_URL}/oauth2/authorization/google`;
+  }
+}
+
+function tap(arg0: () => void): import("rxjs").OperatorFunction<Object, any> {
+  throw new Error('Function not implemented.');
 }

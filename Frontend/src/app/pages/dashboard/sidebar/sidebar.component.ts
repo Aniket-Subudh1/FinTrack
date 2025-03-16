@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon'; 
 import { Router } from '@angular/router';
+import { JwtService } from '../../../service/jwt.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,9 +13,9 @@ import { Router } from '@angular/router';
 })
 export class SidebarComponent {
   @Input() isSidebarOpen: boolean = true; 
-  @Output() toggleSidebar = new EventEmitter<void>();
+  @Output() toggleSidebar = new EventEmitter<void>(); 
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private jwtService: JwtService) {}
 
   toggle(): void {
     this.toggleSidebar.emit(); 
@@ -29,7 +30,21 @@ export class SidebarComponent {
   }
 
   logout(): void {
-    console.log('Logging out...');
-    this.router.navigate(['/login']);
+    console.log('Logout button clicked');
+    
+    this.jwtService.logout().subscribe({
+      next: (response) => {
+        console.log('Logout API call successful:', response);
+        this.router.navigate(['/login'], { replaceUrl: true });
+      },
+      error: (error) => {
+        console.error('Logout API call failed:', error);
+        // Check specific error details
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Error object:', error);
+        this.router.navigate(['/login'], { replaceUrl: true });
+      }
+    });
   }
 }

@@ -1,40 +1,38 @@
-package com.personalfinancetracker.backend.services.jwt;
+package com.personalfinancetracker.backend.services;
 
 import com.personalfinancetracker.backend.entities.Customer;
 import com.personalfinancetracker.backend.repository.CustomerRepository;
+import com.personalfinancetracker.backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-
 @Service
-public class CustomerServiceImpl implements UserDetailsService {
+public class OAuth2AuthenticationService {
 
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public CustomerServiceImpl(CustomerRepository customerRepository, PasswordEncoder passwordEncoder) {
+    public OAuth2AuthenticationService(
+            CustomerRepository customerRepository,
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return new User(customer.getEmail(), customer.getPassword(), Collections.emptyList());
+        this.jwtUtil = jwtUtil;
     }
 
     @Transactional
-    public void saveOAuth2User(String name, String email, String password, String provider) {
+    public String processOAuth2Login(String name, String email, String provider) {
+        saveOAuth2User(name, email, provider);
+        return jwtUtil.generateToken(email);
+    }
+
+    @Transactional
+    public void saveOAuth2User(String name, String email, String provider) {
         Customer existingCustomer = customerRepository.findByEmail(email)
                 .orElse(null);
 
@@ -42,7 +40,7 @@ public class CustomerServiceImpl implements UserDetailsService {
             Customer customer = new Customer();
             customer.setName(name);
             customer.setEmail(email);
-            customer.setPassword(passwordEncoder.encode(password));  // Encode even the dummy password
+            customer.setPassword(passwordEncoder.encode("dummyPassword"));  // Encode even the dummy password
             customer.setProvider(provider);
             customer.setVerified(true);  // OAuth2 users are automatically verified
 

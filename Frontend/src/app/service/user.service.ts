@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 
 export interface UserDetailsResponse {
   name: string;
@@ -25,22 +24,10 @@ export class UserService {
   constructor(private http: HttpClient) {}
  
   getUserDetails(): Observable<UserDetailsResponse> {
-    const headers = this.createAuthorizationHeader();
-    return this.http.get<UserDetailsResponse>(`${BASE_URL}/api/user/details`, { headers });
+    return this.http.get<UserDetailsResponse>(`${BASE_URL}/api/user/details`, { withCredentials: true });
   }
-
 
   updateUserDetails(updateRequest: any): Observable<UserDetailsUpdateResponse> {
-    const headers = this.createAuthorizationHeader();
-    return this.http.put<UserDetailsUpdateResponse>(`${BASE_URL}/api/user/details`, updateRequest, { headers });
-  }
-
-  private createAuthorizationHeader(): HttpHeaders {
-    const jwtToken = localStorage.getItem('jwt');
-    if (jwtToken) {
-      return new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`);
-    } else {
-      return new HttpHeaders();
-    }
+    return this.http.put<UserDetailsUpdateResponse>(`${BASE_URL}/api/user/details`, updateRequest, { withCredentials: true });
   }
 }

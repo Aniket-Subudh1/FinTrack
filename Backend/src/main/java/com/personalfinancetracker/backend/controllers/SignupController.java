@@ -3,6 +3,7 @@ package com.personalfinancetracker.backend.controllers;
 import com.personalfinancetracker.backend.dto.OtpVerificationRequest;
 import com.personalfinancetracker.backend.dto.SignupRequest;
 import com.personalfinancetracker.backend.services.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,16 +36,18 @@ public class SignupController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
-        String token = authService.verifyOtp(otpRequest.getEmail(), otpRequest.getOtp());
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, String>> verifyOtp(
+            @RequestBody OtpVerificationRequest otpRequest,
+            HttpServletResponse response) {
+        String token = authService.verifyOtp(otpRequest.getEmail(), otpRequest.getOtp(), response);
+        Map<String, String> responseMap = new HashMap<>();
         if (token != null) {
-            response.put("message", "Customer verified successfully.");
-            response.put("token", token);  // Return the generated token in the response
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            responseMap.put("message", "Customer verified successfully.");
+            responseMap.put("token", token);  // Return token for backward compatibility
+            return ResponseEntity.status(HttpStatus.OK).body(responseMap);
         } else {
-            response.put("message", "Invalid OTP or OTP expired.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            responseMap.put("message", "Invalid OTP or OTP expired.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseMap);
         }
     }
 }

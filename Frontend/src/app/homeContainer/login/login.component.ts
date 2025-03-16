@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { JwtService } from './../../service/jwt.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Application } from '@splinetool/runtime';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./login.component.css'],
   imports: [
     ReactiveFormsModule,
-    FormsModule,  // Required for [(ngModel)]
+    FormsModule,
     CommonModule,
     MatIconModule
   ]
@@ -22,23 +22,36 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   @ViewChild('canvas3d', { static: true }) canvas3d!: ElementRef<HTMLCanvasElement>;
   loginForm!: FormGroup;
-  isLoading: boolean = false;  // Loader for login
-  isModalLoading: boolean = false;  // Loader for modal actions
-  showForgotPasswordModal: boolean = false;  // Controls modal visibility
-  forgotPasswordEmail: string = '';  // Stores the email for password reset
-  otp: string = '';  // OTP entered by the user
-  newPassword: string = '';  // New password entered by the user
-  otpSent: boolean = false;  // Tracks whether OTP has been sent
-  otpVerified: boolean = false;  // Tracks whether OTP is verified
-  timer: number = 120;  // Countdown timer for OTP validity
-  showPassword: boolean = false;  // Password visibility toggle
+  isLoading: boolean = false;
+  isModalLoading: boolean = false;
+  showForgotPasswordModal: boolean = false;
+  forgotPasswordEmail: string = '';
+  otp: string = '';
+  newPassword: string = '';
+  otpSent: boolean = false;
+  otpVerified: boolean = false;
+  timer: number = 120;
+  showPassword: boolean = false;
 
-  constructor(private fb: FormBuilder, private service: JwtService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder, 
+    private service: JwtService, 
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
+    });
+
+    // Check for query params (from OAuth2 redirect)
+    this.route.queryParams.subscribe(params => {
+      // No need to extract token - cookies are handled automatically
+      if (params['login'] === 'success') {
+        this.router.navigate(['/dashboard']);
+      }
     });
   }
 
@@ -47,26 +60,17 @@ export class LoginComponent implements OnInit, AfterViewInit {
     app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');
   }
 
-  // Toggle password visibility
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
   loginWithGoogle(): void {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+    this.service.initiateGoogleLogin();
   }
   
-  // After OAuth2 login success
-  storeJwtToken(jwtToken: string): void {
-    localStorage.setItem('jwt', jwtToken);
-    this.router.navigateByUrl('/dashboard');  // Navigate to the dashboard or home page
-  }
-  
-  // Show Forgot Password Modal
   showForgotPassword(event: Event): void {
-    event.preventDefault();  // Prevent default action of the link
+    event.preventDefault();
     this.showForgotPasswordModal = true;
-    // Reset modal state
     this.forgotPasswordEmail = '';
     this.otp = '';
     this.newPassword = '';
@@ -75,7 +79,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.timer = 120;
   }
 
-  
   sendOtp(): void {
     this.isModalLoading = true;
     this.service.sendForgotPasswordOtp(this.forgotPasswordEmail).subscribe(
@@ -83,7 +86,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         console.log('OTP sent successfully:', response);
         this.otpSent = true;
         this.isModalLoading = false;
-        this.startTimer();  // Start countdown timer
+        this.startTimer();
       },
       (error: any) => {
         console.error('Error sending OTP:', error);
@@ -93,18 +96,16 @@ export class LoginComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // Start countdown timer for OTP
   startTimer(): void {
-    this.timer = 120;  // Reset timer
+    this.timer = 120;
     const intervalId = setInterval(() => {
       this.timer--;
       if (this.timer === 0) {
-        clearInterval(intervalId);  // Stop timer when it reaches zero
+        clearInterval(intervalId);
       }
     }, 1000);
   }
 
-  // Verify OTP and reset password
   verifyOtp(): void {
     this.isModalLoading = true;
     const resetPasswordRequest = {
@@ -127,14 +128,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // Resend OTP
   resendOtp(): void {
     this.isModalLoading = true;
     this.service.resendForgotPasswordOtp(this.forgotPasswordEmail).subscribe(
       (response: any) => {
         console.log('OTP resent successfully:', response);
-        this.timer = 120;  // Reset timer after resending OTP
-        this.startTimer();  // Start countdown again
+        this.timer = 120;
+        this.startTimer();
         this.isModalLoading = false;
       },
       (error: any) => {
@@ -145,38 +145,26 @@ export class LoginComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // Close Forgot Password Modal
   closeForgotPasswordModal(): void {
     this.showForgotPasswordModal = false;
   }
 
-  // Redirect to login after successful password reset
   redirectToLogin(): void {
     this.showForgotPasswordModal = false;
-    // Optionally reset the form or navigate elsewhere
     alert('Password reset successful! You can now log in with your new password.');
   }
 
-  // Submit Login Form
   submitForm(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
       const loginData = this.loginForm.value;
-      console.log('Form Values:', loginData);
 
       this.service.login(loginData).subscribe(
         (response: any) => {
-          console.log('Login Response:', response);
-          if (response && response.jwtToken) {
-            localStorage.setItem('jwt', response.jwtToken);
-            this.router.navigateByUrl('/dashboard').then(() => {
-              this.isLoading = false;
-            });
-          } else {
-            console.error('JWT not found in response:', response);
-            alert('Login failed: JWT token not found in response.');
+          // No need to manually store token - it's in the cookie
+          this.router.navigateByUrl('/dashboard').then(() => {
             this.isLoading = false;
-          }
+          });
         },
         (error: any) => {
           console.error('Login failed:', error);
