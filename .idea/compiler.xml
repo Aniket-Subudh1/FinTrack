@@ -2,28 +2,17 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Backend" />
-        <module name="auth-service" />
-        <module name="expense-service" />
-        <module name="user-service" />
-        <module name="api-gateway-service" />
-        <module name="service-registry" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Backend" options="-parameters --enable-preview" />
-      <module name="api-gateway-service" options="-parameters --enable-preview" />
-      <module name="auth-service" options="-parameters --enable-preview" />
-      <module name="expense-service" options="-parameters --enable-preview" />
-      <module name="service-registry" options="-parameters --enable-preview" />
-      <module name="user-service" options="-parameters --enable-preview" />
     </option>
   </component>
 </project>

@@ -52,7 +52,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.showPassword = !this.showPassword;
   }
 
-  
+  loginWithGoogle(): void {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  }
   
   // After OAuth2 login success
   storeJwtToken(jwtToken: string): void {
@@ -153,10 +155,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.showForgotPasswordModal = false;
     // Optionally reset the form or navigate elsewhere
     alert('Password reset successful! You can now log in with your new password.');
-  }
-  loginWithGoogle(): void {
-    const googleAuthUrl = this.service.getGoogleAuthUrl();
-    window.location.href = googleAuthUrl;
   }
 
   // Submit Login Form
