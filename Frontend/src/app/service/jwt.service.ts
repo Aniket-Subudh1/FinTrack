@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
@@ -30,22 +30,41 @@ export class JwtService {
   }
 
   logout(): Observable<any> {
-    return this.http.post<any>(`${BASE_URL}/logout`, {}, { withCredentials: true })
-      .pipe(
+    const csrfToken = this.getCsrfToken(); // Implement this to get the token from cookies
+    const headers = new HttpHeaders({
+        'X-CSRF-TOKEN': csrfToken // Send CSRF token in header
+    });
+
+    return this.http.post<any>('http://localhost:8080/logout', {}, { 
+        headers, 
+        withCredentials: true 
+    }).pipe(
         tap(response => {
-          console.log('Logout response:', response);
-          localStorage.removeItem('jwt');
-          this.router.navigate(['/login']); // Redirect after logout
+            console.log('Logout successful:', response);
+            localStorage.removeItem('jwt'); // Clear JWT
+            this.router.navigate(['/login']); // Redirect to login
         }),
         catchError(error => {
-          console.error('Logout error:', error.status, error.message, error);
-          localStorage.removeItem('jwt'); 
-          this.router.navigate(['/login']);
-          return of({ message: 'Logged out locally' });
+            console.error('Logout failed:', error.status, error.message);
+            localStorage.removeItem('jwt'); // Clear JWT even if server fails
+            this.router.navigate(['/login']);
+            return of({ message: 'Logged out locally' });
         })
-      );
+    );
+}
+ 
+private getCsrfToken(): string {
+  const name = 'XSRF-TOKEN=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookies = decodedCookie.split(';');
+  for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.indexOf(name) === 0) {
+          return cookie.substring(name.length, cookie.length);
+      }
   }
-
+  return '';
+}
   verifyOtp(otpRequest: { email: string, otp: string }): Observable<any> {
     return this.http.post(`${BASE_URL}/signup/verify-otp`, otpRequest, { withCredentials: true })
       .pipe(

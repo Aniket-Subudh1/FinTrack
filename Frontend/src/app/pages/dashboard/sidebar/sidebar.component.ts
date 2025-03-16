@@ -31,20 +31,21 @@ export class SidebarComponent {
 
   logout(): void {
     console.log('Logout button clicked');
-    
     this.jwtService.logout().subscribe({
       next: (response) => {
         console.log('Logout API call successful:', response);
+        console.log('Token after logout:', localStorage.getItem('jwt'));
         this.router.navigate(['/login'], { replaceUrl: true });
       },
       error: (error) => {
         console.error('Logout API call failed:', error);
-        // Check specific error details
         console.error('Status:', error.status);
         console.error('Message:', error.message);
         console.error('Error object:', error);
+        console.log('Token after logout error:', localStorage.getItem('jwt'));
         this.router.navigate(['/login'], { replaceUrl: true });
       }
     });
   }
+  
 }

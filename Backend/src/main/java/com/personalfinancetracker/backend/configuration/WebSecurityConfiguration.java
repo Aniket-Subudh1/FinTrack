@@ -71,7 +71,6 @@ public class WebSecurityConfiguration {
         requestHandler.setCsrfRequestAttributeName(null);
 
         http
-                // Enable CSRF protection with cookie-based tokens, but disable it for API endpoints
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(requestHandler)
@@ -80,14 +79,20 @@ public class WebSecurityConfiguration {
                                 "/login",
                                 "/forgot-password/**",
                                 "/oauth2/**",
-                                "/api/**"
+                                "/api/**",
+                                "/logout"  // Changed from "/logout/" to "/logout"
                         )
                 )
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new CorsConfiguration();
                     corsConfig.setAllowedOrigins(List.of("http://localhost:4200"));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+                    corsConfig.setAllowedHeaders(List.of(
+                            "Authorization",
+                            "Content-Type",
+                            "X-XSRF-TOKEN",
+                            "x-csrf-token"  // Added to allow Angular's header
+                    ));
                     corsConfig.setAllowCredentials(true);
                     corsConfig.setMaxAge(3600L);
                     return corsConfig;
@@ -96,10 +101,10 @@ public class WebSecurityConfiguration {
                         .requestMatchers(
                                 "/signup/**",
                                 "/login",
-                                "/logout",
+                                "/logout",          // Removed duplicate "/logout"
                                 "/forgot-password/**",
                                 "/oauth2/**",
-                                "/api/**", "/logout"
+                                "/api/**"
                         ).permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
@@ -119,11 +124,7 @@ public class WebSecurityConfiguration {
                                 }
 
                                 logger.info("OAuth2 login successful for email: {}", email);
-
-                                // Complete OAuth2 registration flow - ALWAYS use email
                                 authService.completeOAuth2Registration(name, email, "Google", response);
-
-                                // Redirect to frontend
                                 response.sendRedirect("http://localhost:4200/dashboard");
                             } catch (Exception e) {
                                 logger.error("OAuth2 authentication error: {}", e.getMessage(), e);
@@ -140,15 +141,14 @@ public class WebSecurityConfiguration {
                         .logoutSuccessHandler((request, response, authentication) -> {
                             jwtUtil.clearJwtCookie(response);
                             response.setStatus(HttpServletResponse.SC_OK);
-
-                            // Return a JSON response
                             response.setContentType("application/json");
                             response.getWriter().write("{\"message\":\"Logout successful\"}");
                         })
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("fintrack_jwt")
-                        .permitAll());
+                        .permitAll()
+                );
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -156,7 +156,6 @@ public class WebSecurityConfiguration {
     }
 
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Serve static resources only from /resources/**, not /api/**
         registry.addResourceHandler("/resources/**")
                 .addResourceLocations("classpath:/static/")
                 .setCachePeriod(3600);
