@@ -32,6 +32,10 @@ export class DashboardComponent {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 
+  navigateToGoals(): void {
+    this.router.navigate(['/goals']);
+  }
+
   logout(): void {
     console.log('User logged out');
     this.router.navigate(['/login']);

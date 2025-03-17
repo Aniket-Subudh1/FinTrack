@@ -24,10 +24,12 @@
           <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
           <p class="text-2xl font-bold mt-2">{{ monthlyExpenses | currency:'INR':'symbol':'1.2-2' }}</p>
         </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
-          <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
-          <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency:'INR':'symbol':'1.2-2' }}</p>
-        </div>
+        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300 cursor-pointer" 
+     (click)="navigateToGoals()"
+     [ngClass]="{'hover:bg-gray-700': true}">
+  <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
+  <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency:'INR':'symbol':'1.2-2' }}</p>
+</div>
       </section>
 
       <section class="mt-10">

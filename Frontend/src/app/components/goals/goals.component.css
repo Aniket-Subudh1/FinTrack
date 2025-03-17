@@ -1,0 +1,114 @@
+/* General styles */
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-in-out;
+}
+
+/* Bubble notification styles */
+.bubble-container {
+  right: 20px;
+  opacity: 0.9;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+/* Chart containers */
+#incomeVsExpenseChart, #categoryBreakdownChart {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Progress bar styles */
+.progress-bar {
+  height: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+/* Form control styles */
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.3);
+}
+
+/* Tab transition */
+.tab-content {
+  transition: all 0.3s ease;
+}
+
+/* Keyframes for animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 204, 0, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 204, 0, 0.7);
+}
+
+/* Hover effects */
+button:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Transition effects */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Card hover effects */
+.bg-black\/20:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}

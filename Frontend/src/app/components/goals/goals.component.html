@@ -1,0 +1,256 @@
+<div class="min-h-screen flex" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
+  <app-sidebar
+    [isSidebarOpen]="isSidebarOpen"
+    (toggleSidebar)="toggleSidebar()"
+  ></app-sidebar>
+
+  <div class="flex-1 flex items-center justify-center">
+    <div class="bg-black/30 backdrop-blur-md shadow-lg p-8 rounded-lg max-w-4xl w-full text-white border border-gray-700">
+      <div class="w-full">
+        <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Financial Goals</h2>
+
+        <!-- Tabs -->
+        <div class="flex mb-6 border-b border-gray-700">
+          <button 
+            [class]="activeTab === 'setup' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
+            (click)="setActiveTab('setup')"
+          >
+            Goal Setup
+          </button>
+          <button 
+            [class]="activeTab === 'progress' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
+            (click)="setActiveTab('progress')"
+          >
+            Progress Tracking
+          </button>
+          <button 
+            [class]="activeTab === 'analysis' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
+            (click)="setActiveTab('analysis')"
+          >
+            Expense Analysis
+          </button>
+        </div>
+
+        <!-- Goal Setup Tab -->
+        <div *ngIf="activeTab === 'setup'" class="animate-fade-in">
+          <form #goalForm="ngForm" (ngSubmit)="saveGoals()">
+            <div class="mb-4">
+              <label for="monthlyIncome" class="block text-lg font-medium text-yellow-300">Monthly Income (₹):</label>
+              <input
+                type="number"
+                id="monthlyIncome"
+                class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                name="monthlyIncome"
+                [(ngModel)]="monthlyIncome"
+                required
+              />
+            </div>
+
+            <div class="mb-4">
+              <label for="savingsGoal" class="block text-lg font-medium text-yellow-300">Monthly Savings Goal (₹):</label>
+              <input
+                type="number"
+                id="savingsGoal"
+                class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                name="savingsGoal"
+                [(ngModel)]="savingsGoal"
+                required
+              />
+            </div>
+
+            <div class="mb-6">
+              <div class="flex justify-between items-center">
+                <label class="block text-lg font-medium text-yellow-300">Expense Categories:</label>
+                <div class="text-sm text-gray-400">
+                  Available: ₹{{ calculateAvailableAmount() }}
+                </div>
+              </div>
+              <div class="text-sm text-gray-400 mb-2">Set your monthly budget for each category</div>
+              
+              <div *ngFor="let budget of categoryBudgets; let i = index" class="mb-4 bg-black/20 p-4 rounded-lg">
+                <div class="flex justify-between mb-2">
+                  <select
+                    class="w-1/2 px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    name="category-{{i}}"
+                    [(ngModel)]="budget.category"
+                    required
+                  >
+                    <option value="" disabled>Select Category</option>
+                    <option *ngFor="let category of availableCategories" [value]="category">{{ category }}</option>
+                  </select>
+                  
+                  <div class="flex items-center w-1/2 ml-2">
+                    <input
+                      type="number"
+                      class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      name="amount-{{i}}"
+                      [(ngModel)]="budget.amount"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      class="ml-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      (click)="removeBudgetItem(i)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div class="relative mt-2">
+                  <div class="w-full bg-gray-600 rounded-full h-2">
+                    <div 
+                      class="bg-yellow-400 h-2 rounded-full" 
+                      [style.width]="getRecommendedPercentage(i) + '%'"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between mt-1 text-xs text-gray-400">
+                    <span>{{ getRecommendedAmount(i) | currency:'INR':'symbol':'1.0-0' }}</span>
+                    <span>Recommended: {{ getRecommendedPercentage(i) }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="w-full py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-500 mb-4"
+                (click)="addBudgetItem()"
+              >
+                + Add Category
+              </button>
+
+              <button
+                type="button"
+                class="w-full py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 mb-4"
+                (click)="applyRecommendations()"
+              >
+                Apply Recommendations
+              </button>
+
+              <button
+                type="submit"
+                class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
+                [disabled]="!goalForm.form.valid || isLoading"
+              >
+                <span *ngIf="!isLoading">Save Goals</span>
+                <span *ngIf="isLoading">Saving...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Progress Tracking Tab -->
+        <div *ngIf="activeTab === 'progress'" class="animate-fade-in">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-4 text-yellow-300">Monthly Progress</h3>
+            
+            <!-- Savings Progress -->
+            <div class="mb-6 bg-black/20 p-4 rounded-lg">
+              <div class="flex justify-between mb-2">
+                <span class="text-lg font-medium">Savings Goal</span>
+                <span class="text-lg font-medium">{{ currentSavings | currency:'INR':'symbol':'1.0-0' }} / {{ savingsGoal | currency:'INR':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="relative">
+                <div class="w-full bg-gray-600 rounded-full h-4">
+                  <div 
+                    class="bg-green-400 h-4 rounded-full" 
+                    [style.width]="getSavingsPercentage() + '%'"
+                  ></div>
+                </div>
+                <div class="absolute top-0 h-4 w-full flex items-center justify-center text-xs font-bold">
+                  {{ getSavingsPercentage() }}%
+                </div>
+              </div>
+            </div>
+            
+            <!-- Category Progress -->
+            <div *ngFor="let budget of categoryBudgets" class="mb-4 bg-black/20 p-4 rounded-lg">
+              <div class="flex justify-between mb-2">
+                <span class="text-lg font-medium">{{ budget.category }}</span>
+                <span class="text-lg font-medium">{{ getCategorySpent(budget.category) | currency:'INR':'symbol':'1.0-0' }} / {{ budget.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="relative">
+                <div class="w-full bg-gray-600 rounded-full h-4">
+                  <div 
+                    [class]="getCategoryPercentage(budget.category) > 100 ? 'bg-red-500 h-4 rounded-full' : 'bg-blue-400 h-4 rounded-full'"
+                    [style.width]="getCategoryPercentage(budget.category) > 100 ? '100%' : getCategoryPercentage(budget.category) + '%'"
+                  ></div>
+                </div>
+                <div class="absolute top-0 h-4 w-full flex items-center justify-center text-xs font-bold">
+                  {{ getCategoryPercentage(budget.category) }}%
+                </div>
+              </div>
+              <div *ngIf="getCategoryPercentage(budget.category) > 100" class="mt-2 text-red-400 text-sm">
+                Budget exceeded by {{ getCategoryOverage(budget.category) | currency:'INR':'symbol':'1.0-0' }}
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-6">
+              <div class="bg-black/20 p-4 rounded-lg">
+                <h4 class="text-lg font-medium text-yellow-300 mb-2">Days Remaining</h4>
+                <p class="text-3xl font-bold">{{ daysRemaining }}</p>
+              </div>
+              <div class="bg-black/20 p-4 rounded-lg">
+                <h4 class="text-lg font-medium text-yellow-300 mb-2">Daily Budget</h4>
+                <p class="text-3xl font-bold">{{ getDailyBudget() | currency:'INR':'symbol':'1.0-0' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expense Analysis Tab -->
+        <div *ngIf="activeTab === 'analysis'" class="animate-fade-in">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-4 text-yellow-300">Expense Analysis</h3>
+            
+            <!-- Income vs Expense Chart -->
+            <div class="mb-6 bg-black/20 p-4 rounded-lg">
+              <h4 class="text-lg font-medium text-yellow-300 mb-4">Income vs Expenses</h4>
+              <div class="h-64 w-full">
+                <!-- Chart component will go here -->
+                <div id="incomeVsExpenseChart" class="h-full"></div>
+              </div>
+            </div>
+            
+            <!-- Category Breakdown Chart -->
+            <div class="mb-6 bg-black/20 p-4 rounded-lg">
+              <h4 class="text-lg font-medium text-yellow-300 mb-4">Expense Breakdown</h4>
+              <div class="h-64 w-full">
+                <!-- Chart component will go here -->
+                <div id="categoryBreakdownChart" class="h-full"></div>
+              </div>
+            </div>
+            
+            <!-- Spending Insights -->
+            <div class="bg-black/20 p-4 rounded-lg">
+              <h4 class="text-lg font-medium text-yellow-300 mb-2">Spending Insights</h4>
+              <ul class="list-disc pl-5 space-y-2">
+                <li *ngFor="let insight of spendingInsights" class="text-sm">
+                  {{ insight }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Notification -->
+  <div
+    *ngIf="successBubble.show"
+    class="fixed top-10 bubble-container bg-green-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
+  >
+    <h3 class="text-lg font-bold">Success!</h3>
+    <p class="text-lg">{{ successBubble.message }}</p>
+  </div>
+
+  <!-- Warning Notification -->
+  <div
+    *ngIf="warningBubble.show"
+    class="fixed top-10 bubble-container bg-yellow-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
+  >
+    <h3 class="text-lg font-bold">Warning!</h3>
+    <p class="text-lg">{{ warningBubble.message }}</p>
+  </div>
+</div>
