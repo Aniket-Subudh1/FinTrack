@@ -22,6 +22,8 @@
     "@angular/router": "^18.2.6",
     "@splinetool/runtime": "^1.9.28",
     "@swimlane/ngx-charts": "^22.0.0-alpha.0",
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
     "ldrs": "^1.0.2",
     "ngx-countup": "^13.2.0",
     "rxjs": "~7.8.0",

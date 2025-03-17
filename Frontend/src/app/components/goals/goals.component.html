@@ -207,7 +207,25 @@
             <div class="mb-6 bg-black/20 p-4 rounded-lg">
               <h4 class="text-lg font-medium text-yellow-300 mb-4">Income vs Expenses</h4>
               <div class="h-64 w-full">
-                <!-- Chart component will go here -->
+                <div class="mb-6 bg-black/20 p-4 rounded-lg">
+                  <h4 class="text-lg font-medium text-yellow-300 mb-4">Income vs Expenses</h4>
+                  <div class="h-64 w-full">
+                    <ngx-charts-bar-vertical
+                      [view]="[700, 250]"
+                      [scheme]="colorScheme"
+                      [results]="incomeVsExpenseData"
+                      [gradient]="true"
+                      [xAxis]="true"
+                      [yAxis]="true"
+                      [legend]="true"
+                      [showXAxisLabel]="true"
+                      [showYAxisLabel]="true"
+                      [xAxisLabel]="'Category'"
+                      [yAxisLabel]="'Amount'"
+                      [showDataLabel]="true">
+                    </ngx-charts-bar-vertical>
+                  </div>
+                </div>
                 <div id="incomeVsExpenseChart" class="h-full"></div>
               </div>
             </div>
@@ -216,7 +234,21 @@
             <div class="mb-6 bg-black/20 p-4 rounded-lg">
               <h4 class="text-lg font-medium text-yellow-300 mb-4">Expense Breakdown</h4>
               <div class="h-64 w-full">
-                <!-- Chart component will go here -->
+                <div class="mb-6 bg-black/20 p-4 rounded-lg">
+                  <h4 class="text-lg font-medium text-yellow-300 mb-4">Expense Breakdown</h4>
+                  <div class="h-64 w-full">
+                    <ngx-charts-pie-chart
+                      [view]="[700, 250]"
+                      [scheme]="colorScheme"
+                      [results]="categoryBreakdownData"
+                      [gradient]="true"
+                      [legend]="true"
+                      [labels]="true"
+                      [doughnut]="false"
+                      [arcWidth]="0.5">
+                    </ngx-charts-pie-chart>
+                  </div>
+                </div>
                 <div id="categoryBreakdownChart" class="h-full"></div>
               </div>
             </div>

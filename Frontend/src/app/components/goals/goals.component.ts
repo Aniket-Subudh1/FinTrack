@@ -1,16 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
 import { ExpenseService } from '../../service/expense.service';
 import { IncomeService } from '../../service/income.service';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { Color, ScaleType } from '@swimlane/ngx-charts';
+import * as d3 from 'd3';
 
 interface CategoryBudget {
   category: string;
   amount: number;
   recommended?: number;
   spent?: number;
+}
+
+interface ColorScheme extends Color {
+  domain: string[];
 }
 
 interface ChartData {
@@ -28,6 +34,8 @@ interface ChartData {
 export class GoalsComponent implements OnInit {
   isSidebarOpen = true;
   activeTab = 'setup';
+  @ViewChild('incomeVsExpenseChart') incomeVsExpenseChartElement!: ElementRef;
+  @ViewChild('categoryBreakdownChart') categoryBreakdownChartElement!: ElementRef;
   
   // Goal setup properties
   monthlyIncome: number = 0;
@@ -72,6 +80,7 @@ export class GoalsComponent implements OnInit {
     this.fetchExpenseCategories();
     this.loadSavedGoals();
     this.calculateDaysRemaining();
+    this.fetchExpenses();
     
     // Initialize with at least one budget item
     if (this.categoryBudgets.length === 0) {
@@ -82,6 +91,17 @@ export class GoalsComponent implements OnInit {
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
+
+  /*colorScheme = {
+    domain: ['#FFD700', '#1E88E5', '#13D8AA', '#FF5252', '#8A2BE2', '#FF7F50', '#8BC34A']
+  };*/
+
+  colorScheme: ColorScheme = {
+    name: 'customScheme',
+    selectable: true,
+    group: ScaleType.Ordinal,
+    domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
+  };
   
   setActiveTab(tab: string): void {
     this.activeTab = tab;
@@ -89,8 +109,17 @@ export class GoalsComponent implements OnInit {
     if (tab === 'progress') {
       this.fetchExpenses();
     } else if (tab === 'analysis') {
+      this.fetchExpenses();
+      setTimeout(() => {
+        this.generateCharts();
+        this.generateInsights();
+      }, 100);
+    }
+  }
+  
+  ngAfterViewInit(): void {
+    if (this.activeTab === 'analysis') {
       this.generateCharts();
-      this.generateInsights();
     }
   }
   
@@ -175,6 +204,8 @@ export class GoalsComponent implements OnInit {
       this.isLoading = false;
       this.showSuccessBubble('Financial goals saved successfully!');
       this.setActiveTab('progress');
+      this.renderIncomeVsExpenseChart();
+      this.renderCategoryBreakdownChart();
     }, 1000);
   }
   
@@ -316,5 +347,177 @@ export class GoalsComponent implements OnInit {
     setTimeout(() => {
       this.warningBubble.show = false;
     }, 3000);
+  }
+
+  renderIncomeVsExpenseChart(): void {
+    const element = document.getElementById('incomeVsExpenseChart');
+    if (!element) return;
+    
+    // Clear existing chart
+    d3.select(element).selectAll('*').remove();
+    
+    // Set up dimensions
+    const width = element.clientWidth;
+    const height = element.clientHeight;
+    const margin = {top: 20, right: 20, bottom: 30, left: 70};
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    
+    // Create SVG
+    const svg = d3.select(element)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Set up scales
+    const x = d3.scaleBand()
+      .range([0, chartWidth])
+      .padding(0.4)
+      .domain(this.incomeVsExpenseData.map(d => d.name));
+    
+    const maxValue = Math.max(...this.incomeVsExpenseData.map(d => d.value));
+    const y = d3.scaleLinear()
+      .range([chartHeight, 0])
+      .domain([0, maxValue * 1.1]);
+    
+    // Add X axis
+    svg.append('g')
+      .attr('transform', `translate(0,${chartHeight})`)
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+      .style('fill', '#ffffff');
+    
+    // Add Y axis
+    svg.append('g')
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d => `₹${d3.format(',')(d)}`))
+      .selectAll('text')
+      .style('fill', '#ffffff');
+    
+    // Add bars
+    svg.selectAll('.bar')
+      .data(this.incomeVsExpenseData)
+      .enter()
+      .append('rect')
+      .attr('class', 'bar')
+      .attr('x', d => x(d.name) ?? 0)
+      .attr('y', d => y(d.value))
+      .attr('width', x.bandwidth())
+      .attr('height', d => chartHeight - y(d.value))
+      .attr('fill', (d, i) => this.colorScheme.domain[i % this.colorScheme.domain.length]);
+    
+    // Add labels
+    svg.selectAll('.label')
+      .data(this.incomeVsExpenseData)
+      .enter()
+      .append('text')
+      .attr('class', 'label')
+      .attr('x', d => {
+        const xValue = x(d.name);
+        return xValue !== undefined ? xValue + x.bandwidth() / 2 : 0;
+      })
+      .attr('y', d => y(d.value) - 5)
+      .attr('text-anchor', 'middle')
+      .text(d => `₹${d.value.toLocaleString()}`)
+      .style('fill', '#ffffff')
+      .style('font-size', '12px');
+  }
+  
+  renderCategoryBreakdownChart(): void {
+    const element = document.getElementById('categoryBreakdownChart');
+    if (!element || this.categoryBreakdownData.length === 0) return;
+    
+    // Clear existing chart
+    d3.select(element).selectAll('*').remove();
+    
+    // Set up dimensions
+    const width = element.clientWidth;
+    const height = element.clientHeight;
+    const radius = Math.min(width, height) / 2 - 10;
+    
+    // Create SVG
+    const svg = d3.select(element)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .append('g')
+      .attr('transform', `translate(${width / 2},${height / 2})`);
+    
+    // Set up color scale
+    const color = d3.scaleOrdinal()
+      .domain(this.categoryBreakdownData.map(d => d.name))
+      .range(this.colorScheme.domain);
+    
+    // Compute the position of each group on the pie
+    const pie = d3.pie()
+      .value((d: any) => d.value)
+      .sort(null);
+    
+    const data_ready = pie(this.categoryBreakdownData as any);
+    
+    // Build the pie chart
+    const arcGenerator = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius);
+    
+    // Add the arcs
+    svg.selectAll('slices')
+      .data(data_ready)
+      .enter()
+      .append('path')
+      .attr('d', arcGenerator as unknown as string)
+      .attr('fill', d => color((d.data as unknown as ChartData).name) as string)
+      .attr('stroke', 'white')
+      .style('stroke-width', '2px');
+    
+    // Add the labels
+    const labelArc = d3.arc()
+      .innerRadius(radius * 0.6)
+      .outerRadius(radius * 0.6);
+    
+    svg.selectAll('labels')
+      .data(data_ready)
+      .enter()
+      .append('text')
+      .text(d => {
+        const percent = Math.round(((d.data as unknown as ChartData).value / this.categoryBreakdownData.reduce((sum, item) => sum + item.value, 0)) * 100);
+        return percent > 5 ? `${(d.data as unknown as ChartData).name}: ${percent}%` : '';
+      })
+      .attr('transform', d => `translate(${labelArc.centroid(d as unknown as d3.DefaultArcObject)})`)
+      .style('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', 'white');
+    
+    // Add a legend
+    const legendRectSize = 15;
+    const legendSpacing = 4;
+    const legendHeight = legendRectSize + legendSpacing;
+    
+    const legend = svg.selectAll('.legend')
+      .data(this.categoryBreakdownData)
+      .enter()
+      .append('g')
+      .attr('class', 'legend')
+      .attr('transform', (d, i) => {
+        const height = legendHeight * this.categoryBreakdownData.length;
+        const offset = height / 2;
+        const horz = radius + 20;
+        const vert = i * legendHeight - offset;
+        return `translate(${horz},${vert})`;
+      });
+    
+    legend.append('rect')
+      .attr('width', legendRectSize)
+      .attr('height', legendRectSize)
+      .style('fill', (d: ChartData) => color(d.name) as string)
+      .style('stroke', (d: ChartData) => color(d.name) as string);
+    
+    legend.append('text')
+      .attr('x', legendRectSize + legendSpacing)
+      .attr('y', legendRectSize - legendSpacing)
+      .text(d => d.name)
+      .style('fill', 'white')
+      .style('font-size', '12px');
   }
 }
