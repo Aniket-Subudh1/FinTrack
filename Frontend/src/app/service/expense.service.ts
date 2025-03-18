@@ -38,13 +38,12 @@ export class ExpenseService {
   // New: Fetch expenses by date range
   getExpensesByDateRange(startDate: string, endDate: string): Observable<any[]> {
     const headers = this.createAuthorizationHeader();
-    return this.http.get<any[]>(`${BASE_URL}/api/expenses/date-range`, {
+    return this.http.get<any[]>(`${BASE_URL}/api/expenses/filter`, {
       headers,
       params: { startDate, endDate },
     });
   }
 
-  // New: Export expense data as PDF
 
 
   private createAuthorizationHeader(): HttpHeaders {

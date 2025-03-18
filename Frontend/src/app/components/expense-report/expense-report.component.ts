@@ -6,11 +6,12 @@ import { NgIf, NgFor, DatePipe , CurrencyPipe  } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-expense-report',
   standalone: true, // Ensure it's a standalone component
-  imports: [NgIf, NgFor, FormsModule, DatePipe, CurrencyPipe ], // Import FormsModule here
+  imports: [NgIf, NgFor, FormsModule, DatePipe, CurrencyPipe, SidebarComponent], // Import FormsModule here
   templateUrl: './expense-report.component.html',
   styleUrls: ['./expense-report.component.css'],
 })
@@ -20,11 +21,15 @@ export class ExpenseReportComponent implements OnInit {
   startDate: string = '';
   endDate: string = '';
   errorMessage: string = '';
+  isSidebarOpen = true;
 
   constructor(private expenseService: ExpenseService) {}
 
   ngOnInit(): void {
     this.getExpenseSummary();
+  }
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
   }
 
   fetchExpensesByDateRange() {

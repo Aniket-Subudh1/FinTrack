@@ -1,56 +1,78 @@
-<div class="container">
-  <h2>Expense Report</h2>
+<div class="min-h-screen flex flex-col items-center justify-start bg-gray-900 py-8" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
+  <app-sidebar
+    [isSidebarOpen]="isSidebarOpen"
+    (toggleSidebar)="toggleSidebar()"
+  ></app-sidebar>
+  <div class="bg-black/30 backdrop-blur-md shadow-lg p-8 rounded-lg max-w-3xl w-full border border-gray-700">
+    <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Expense Report</h2>
 
-  <!-- Date Range Selection -->
-  <div class="date-range">
-    <label for="startDate">Start Date:</label>
-    <input id="startDate" type="date" [(ngModel)]="startDate" />
+    <!-- Date Range Selection -->
+    <div class="flex flex-col md:flex-row md:items-end gap-4 mb-6">
+      <div class="flex-1">
+        <label for="startDate" class="block text-lg font-medium text-yellow-300">Start Date:</label>
+        <input id="startDate" type="date" [(ngModel)]="startDate"
+               class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+      </div>
+      <div class="flex-1">
+        <label for="endDate" class="block text-lg font-medium text-yellow-300">End Date:</label>
+        <input id="endDate" type="date" [(ngModel)]="endDate"
+               class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+      </div>
+      <div>
+        <button (click)="fetchExpensesByDateRange()"
+                class="px-6 py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400">
+          Filter
+        </button>
+      </div>
+    </div>
 
-    <label for="endDate">End Date:</label>
-    <input id="endDate" type="date" [(ngModel)]="endDate" />
+    <!-- Error Message -->
+    <p *ngIf="errorMessage" class="text-red-500 mb-4">{{ errorMessage }}</p>
 
-    <button (click)="fetchExpensesByDateRange()">Filter</button>
+    <!-- Expense Table -->
+    <h3 class="text-2xl font-semibold text-yellow-400 mb-2">Expense Table</h3>
+    <div class="overflow-x-auto">
+      <table *ngIf="expenses.length > 0" class="min-w-full text-left bg-black/40 rounded-lg">
+        <thead class="bg-gray-800 text-yellow-300 text-sm uppercase border-b border-gray-700">
+          <tr>
+            <th class="px-4 py-3">Category</th>
+            <th class="px-4 py-3">Amount</th>
+            <th class="px-4 py-3">Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-700">
+          <tr *ngFor="let expense of expenses" class="hover:bg-gray-800/30">
+            <td class="px-4 py-3 text-white">{{ expense.category }}</td>
+            <td class="px-4 py-3 text-white">{{ expense.amount | currency }}</td>
+            <td class="px-4 py-3">{{ expense.date | date: 'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Expense Breakdown -->
+    <h3 class="text-2xl font-semibold text-yellow-400 mt-8 mb-2">Expense Breakdown</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left bg-black/40 rounded-lg">
+        <thead class="bg-gray-800 text-yellow-300 text-sm uppercase border-b border-gray-700">
+          <tr>
+            <th class="px-4 py-3">Category</th>
+            <th class="px-4 py-3">Total Amount</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-700">
+          <tr *ngFor="let summary of expenseSummary">
+            <td class="px-4 py-3 text-white">{{ summary.category }}</td>
+            <td class="px-4 py-3 text-white">{{ summary.totalAmount | currency }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Export Button -->
+    <button (click)="exportAsPDF()"
+            class="mt-6 w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400">
+      Export as PDF
+    </button>
   </div>
-
-  <!-- Error Message -->
-  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
-
-  <!-- Expense Table -->
-  <table *ngIf="expenses.length > 0">
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Amount</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let expense of expenses">
-        <td>{{ expense.category }}</td>
-        <td>{{ expense.amount | currency }}</td>
-        <td>{{ expense.date | date: 'short' }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Expense Breakdown -->
-  <h3>Expense Breakdown</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Total Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let summary of expenseSummary">
-        <td>{{ summary.category }}</td>
-        <td>{{ summary.totalAmount | currency }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Export Button -->
-  <button (click)="exportAsPDF()">Export as PDF</button>
-
 </div>
