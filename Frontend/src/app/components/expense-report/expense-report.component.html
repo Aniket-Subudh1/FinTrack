@@ -1,0 +1,56 @@
+<div class="container">
+  <h2>Expense Report</h2>
+
+  <!-- Date Range Selection -->
+  <div class="date-range">
+    <label for="startDate">Start Date:</label>
+    <input id="startDate" type="date" [(ngModel)]="startDate" />
+
+    <label for="endDate">End Date:</label>
+    <input id="endDate" type="date" [(ngModel)]="endDate" />
+
+    <button (click)="fetchExpensesByDateRange()">Filter</button>
+  </div>
+
+  <!-- Error Message -->
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+  <!-- Expense Table -->
+  <table *ngIf="expenses.length > 0">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let expense of expenses">
+        <td>{{ expense.category }}</td>
+        <td>{{ expense.amount | currency }}</td>
+        <td>{{ expense.date | date: 'short' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Expense Breakdown -->
+  <h3>Expense Breakdown</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Total Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let summary of expenseSummary">
+        <td>{{ summary.category }}</td>
+        <td>{{ summary.totalAmount | currency }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Export Button -->
+  <button (click)="exportAsPDF()">Export as PDF</button>
+
+</div>

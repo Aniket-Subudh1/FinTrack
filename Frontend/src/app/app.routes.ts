@@ -10,6 +10,7 @@ import { IncomeComponent } from './components/income/income.component';
 import { AuthGuard } from './guard/auth.guard';
 import {ExpenseChartComponent} from './components/expense-chart/expense-chart.component'
 import { GoalsComponent } from './components/goals/goals.component';
+import { ExpenseReportComponent } from './components/expense-report/expense-report.component';
 
 export const routes: Routes = [
     { path: 'signup', component: Page2Component },
@@ -40,6 +41,12 @@ export const routes: Routes = [
     {
       path: 'barchart',
       component: ExpenseChartComponent,
+      canActivate: [AuthGuard]
+
+    },
+    {
+      path: 'report',
+      component: ExpenseReportComponent,
       canActivate: [AuthGuard]
 
     },

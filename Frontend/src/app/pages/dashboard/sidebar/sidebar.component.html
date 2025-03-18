@@ -72,9 +72,20 @@
                 </a>
 
             <li>
-                <a (click)="navigateTo('/profile')"  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400" [ngClass]="{'text-yellow-400': isActive('/profile')}">
+              <li>
+                <a
+                  (click)="navigateTo('/goals')"
+                  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400"
+                  [ngClass]="{'text-yellow-400': isActive('/goals')}"
+                >
+                    <mat-icon>flag</mat-icon>
+                    <span *ngIf="isSidebarOpen">Goals</span>
+                </a>
+
+            <li>
+                <a (click)="navigateTo('/report')"  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400" [ngClass]="{'text-yellow-400': isActive('/report')}">
                     <mat-icon>person</mat-icon>
-                    <span *ngIf="isSidebarOpen">Profile</span>
+                    <span *ngIf="isSidebarOpen">Report</span>
                 </a>
             </li>
         </ul>
