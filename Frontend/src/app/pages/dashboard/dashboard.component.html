@@ -1,81 +1,422 @@
 <div class="min-h-screen flex flex-col bg-gray-900 text-white animate-bg">
   <div class="flex flex-1 relative" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
     <app-sidebar 
-    [isSidebarOpen]="isSidebarOpen" 
-    (toggleSidebar)="toggleSidebar()"
-     >
-     </app-sidebar>
+      [isSidebarOpen]="isSidebarOpen" 
+      (toggleSidebar)="toggleSidebar()"
+    ></app-sidebar>
 
-    <main class="transition-all duration-300 p-20" [class.ml-20]="!isSidebarOpen" [class.ml-80]="isSidebarOpen">
+    <main class="transition-all duration-300 p-8 w-full overflow-hidden" 
+          [ngClass]="{'ml-20': !isSidebarOpen, 'ml-80': isSidebarOpen}">
       <header class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-bold">Welcome to Your Dashboard</h2> 
+        <h2 class="text-3xl font-bold">Welcome, {{ userName || 'User' }}</h2>
+        
+        <div class="flex items-center">
+          <div class="flex flex-col items-end mr-4">
+            <span class="text-yellow-300 font-semibold">{{ userName || 'User' }}</span>
+            <span class="text-gray-400 text-sm">{{ userEmail || 'No email' }}</span>
+          </div>
+          
+          <div *ngIf="profilePhotoUrl" class="h-12 w-12 rounded-full border-2 border-yellow-400 overflow-hidden">
+            <img [src]="profilePhotoUrl" alt="Profile" class="h-full w-full object-cover">
+          </div>
+          <div *ngIf="!profilePhotoUrl" class="h-12 w-12 rounded-full bg-yellow-700 flex items-center justify-center border-2 border-yellow-400">
+            <span class="text-white text-xl font-bold">{{ userName.charAt(0) || 'U' }}</span>
+          </div>
+        </div>
       </header>
 
-      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
-          <h3 class="text-lg font-semibold text-yellow-400">Total Balance</h3>
-          <p class="text-2xl font-bold mt-2">{{ totalBalance | currency:'INR':'symbol':'1.2-2' }}</p>
-        </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
-          <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
-          <p class="text-2xl font-bold mt-2">{{ monthlyIncome | currency:'INR':'symbol':'1.2-2' }}</p>
-        </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300">
-          <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
-          <p class="text-2xl font-bold mt-2">{{ monthlyExpenses | currency:'INR':'symbol':'1.2-2' }}</p>
-        </div>
-        <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-400 transition-shadow duration-300 cursor-pointer" 
-     (click)="navigateToGoals()"
-     [ngClass]="{'hover:bg-gray-700': true}">
-  <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
-  <p class="text-2xl font-bold mt-2">{{ savingsGoal | currency:'INR':'symbol':'1.2-2' }}</p>
-</div>
-      </section>
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-12">
+        <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-yellow-400">Loading your financial data...</p>
+      </div>
 
-      <section class="mt-10">
-        <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Monthly Expenses Breakdown</h2>
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-          <div class="flex items-center mb-2">
-            <span class="w-1/4 text-yellow-400">Rent</span>
-            <div class="relative w-3/4 bg-gray-600 rounded">
-              <div class="h-6 bg-yellow-400" style="width: 60%;"></div>
+      <div *ngIf="loadingError && !isLoading" class="bg-red-900/50 text-red-300 p-4 rounded-lg mb-8">
+        <p>{{ loadingError }}</p>
+        <button (click)="loadInitialData()" class="mt-2 px-4 py-1 bg-red-800 text-white rounded-lg hover:bg-red-700">
+          Retry
+        </button>
+      </div>
+
+      <div *ngIf="!isLoading && !loadingError">
+        <!-- Financial Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800">
+            <h3 class="text-lg font-semibold text-yellow-400">Total Balance</h3>
+            <div class="flex items-center justify-center mt-2">
+              <mat-icon class="mr-2 -mt-6 text-2xl" [ngStyle]="{'color': totalBalance >= 0 ? '#4CAF50' : '#FF5252'}">
+                account_balance
+              </mat-icon>
+              <p class="text-2xl font-bold" [ngClass]="totalBalance >= 0 ? 'text-green-500' : 'text-red-500'">
+                {{ totalBalance | currency:'INR':'symbol':'1.2-2' }}
+              </p>
             </div>
           </div>
-          <div class="flex items-center mb-2">
-            <span class="w-1/4 text-yellow-400">Utilities</span>
-            <div class="relative w-3/4 bg-gray-600 rounded">
-              <div class="h-6 bg-yellow-400" style="width: 20%;"></div>
+          
+          <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800">
+            <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
+            <div class="flex items-center justify-center mt-2">
+              <mat-icon class="mr-2 -mt-6 text-2xl text-green-500">trending_up</mat-icon>
+              <p class="text-2xl font-bold text-green-500">{{ monthlyIncome | currency:'INR':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-          <div class="flex items-center mb-2">
-            <span class="w-1/4 text-yellow-400">Groceries</span>
-            <div class="relative w-3/4 bg-gray-600 rounded">
-              <div class="h-6 bg-yellow-400" style="width: 40%;"></div>
+          
+          <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800">
+            <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
+            <div class="flex items-center justify-center mt-2">
+              <mat-icon class="mr-2 -mt-6 text-2xl text-red-500">trending_down</mat-icon>
+              <p class="text-2xl font-bold text-red-500">{{ monthlyExpenses | currency:'INR':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-          <div class="flex items-center mb-2">
-            <span class="w-1/4 text-yellow-400">Transport</span>
-            <div class="relative w-3/4 bg-gray-600 rounded">
-              <div class="h-6 bg-yellow-400" style="width: 15%;"></div>
+          
+          <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800 cursor-pointer hover:bg-black/50"
+               (click)="navigateToGoals()">
+            <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
+            <div class="flex items-center justify-center mt-2">
+              <mat-icon class="mr-2 -mt-6 text-2xl text-yellow-500">flag</mat-icon>
+              <p class="text-2xl font-bold text-yellow-500">{{ savingsGoal | currency:'INR':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-          <div class="flex items-center mb-2">
-            <span class="w-1/4 text-yellow-400">Entertainment</span>
-            <div class="relative w-3/4 bg-gray-600 rounded">
-              <div class="h-6 bg-yellow-400" style="width: 25%;"></div>
+        </section>
+
+        <!-- Budget Management Section -->
+        <section class="mt-8 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-yellow-400">Budget Management</h2>
+            <button 
+              (click)="openBudgetModal()" 
+              class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300 flex items-center"
+            >
+              <mat-icon class="mr-1">edit</mat-icon>
+              Manage Budget
+            </button>
+          </div>
+
+          <!-- Budget Status Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let budget of categoryBudgets" class="bg-black/30 backdrop-blur-sm p-5 rounded-lg border border-gray-700 hover:shadow-yellow-400/30 transition-shadow duration-300">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-medium text-white">{{ budget.category }}</h4>
+                <span class="text-sm font-semibold" [ngClass]="getSpentPercentage(budget.category) > 90 ? 'text-red-500' : 'text-green-400'">
+                  {{ getAmountSpent(budget.category) | currency:'INR':'symbol':'1.0-0' }} / {{ budget.amount | currency:'INR':'symbol':'1.0-0' }}
+                </span>
+              </div>
+              <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                <div 
+                  class="h-2.5 rounded-full" 
+                  [ngClass]="getProgressColor(budget.category)"
+                  [style.width.%]="getSpentPercentage(budget.category)"
+                ></div>
+              </div>
+              <div class="flex justify-between text-xs text-gray-400">
+                <span>{{ getSpentPercentage(budget.category) }}% used</span>
+                <span>{{ getRemainingAmount(budget.category) | currency:'INR':'symbol':'1.0-0' }} left</span>
+              </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div *ngIf="categoryBudgets.length === 0" class="bg-black/30 backdrop-blur-sm p-5 rounded-lg border border-gray-700 col-span-full flex flex-col items-center justify-center py-10">
+              <mat-icon class="text-4xl text-yellow-500 mb-4">account_balance_wallet</mat-icon>
+              <p class="text-lg text-center">You haven't set up your budget yet</p>
+              <button 
+                (click)="openBudgetModal()" 
+                class="mt-4 px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
+              >
+                Set Up Budget Now
+              </button>
             </div>
           </div>
+        </section>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <section class="bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-yellow-400">Expense Breakdown</h2>
+            <div *ngIf="pieChartData && pieChartData.length > 0; else noPieData" class="h-80 w-full chart-container">
+              <ngx-charts-pie-chart
+                [results]="pieChartData"
+                [scheme]="colorScheme"
+                [gradient]="true"
+                [labels]="true"
+                [doughnut]="true"
+                [arcWidth]="0.4"
+                [labelFormatting]="currencyFormatter"
+                [legendTitle]="'Categories'"
+                [animations]="true"
+              ></ngx-charts-pie-chart>
+            </div>
+            <ng-template #noPieData>
+              <div class="flex items-center justify-center h-60 text-gray-500">
+                <span>No expense data available</span>
+              </div>
+            </ng-template>
+          </section>
+          
+          <section class="bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-yellow-400">Monthly Expenses by Category</h2>
+            <div *ngIf="(expenseSummary ?? []).length > 0; else noSummaryData" class="space-y-4">
+              <div *ngFor="let category of expenseSummary" class="flex items-center">
+                <div class="flex items-center w-1/3">
+                  <mat-icon class="mr-2 text-xl" [ngStyle]="{'color': getCategoryColor(category.category)}">
+                    {{ getCategoryIcon(category.category) }}
+                  </mat-icon>
+                  <span class="text-white truncate">{{ category.category }}</span>
+                </div>
+                <div class="w-2/3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-gray-400">
+                      {{ (monthlyExpenses > 0 ? (category.totalAmount / monthlyExpenses * 100) : 0).toFixed(1) }}%
+                    </span>
+                    <span class="text-sm font-medium text-yellow-400">
+                      {{ category.totalAmount | currency:'INR':'symbol':'1.0-0' }}
+                    </span>
+                  </div>
+                  <div class="relative w-full h-2 bg-gray-700 rounded">
+                    <div class="absolute top-0 left-0 h-2 rounded" 
+                         [ngStyle]="{
+                           'width.%': monthlyExpenses > 0 ? (category.totalAmount / monthlyExpenses * 100) : 0,
+                           'background-color': getCategoryColor(category.category)
+                         }">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noSummaryData>
+              <div class="flex items-center justify-center h-60 text-gray-500">
+                <span>No expense data available</span>
+              </div>
+            </ng-template>
+          </section>
         </div>
-      </section>
-      <section class="mt-10">
-        <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Recent Transactions</h2>
-        <ul class="space-y-4">
-          <li *ngFor="let transaction of recentTransactions" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center hover:shadow-yellow-400 transition-shadow duration-300">
-            <span>{{ transaction.description }}</span>
-            <span>{{ transaction.amount | currency:'INR':'symbol':'1.2-2' }}</span>
-          </li>
-        </ul>
-      </section>
+
+        <!-- Recent Transactions -->
+        <section class="mt-8 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
+          <h2 class="text-xl font-semibold mb-4 text-yellow-400">Recent Transactions</h2>
+          <div *ngIf="(recentTransactions ?? []).length > 0; else noTransactions" class="overflow-hidden rounded-lg">
+            <table class="min-w-full divide-y divide-gray-700">
+              <thead class="bg-gray-800">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Description</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-yellow-400 uppercase tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="bg-black/60 divide-y divide-gray-700">
+                <tr *ngFor="let transaction of recentTransactions" class="hover:bg-gray-800/50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {{ transaction.date | date:'mediumDate' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {{ transaction.description }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right"
+                      [ngClass]="transaction.amount >= 0 ? 'text-green-500' : 'text-red-500'">
+                    {{ transaction.amount | currency:'INR':'symbol':'1.2-2' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noTransactions>
+            <div class="text-center py-8 text-gray-500">
+              <span>No recent transactions</span>
+            </div>
+          </ng-template>
+          <div class="mt-4 flex justify-center">
+            <button (click)="navigateTo('/transaction')" class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors">
+              View All Transactions
+            </button>
+          </div>
+        </section>
+
+        <!-- Expense Trends -->
+        <section *ngIf="lineChartData.length > 0" class="mt-8 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
+          <h2 class="text-xl font-semibold mb-4 text-yellow-400">Expense Trends</h2>
+          <div class="h-80 w-full chart-container">
+            <ngx-charts-line-chart
+              [results]="lineChartData"
+              [scheme]="colorScheme"
+              [gradient]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              [legend]="true"
+              [legendPosition]="legendPosition"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              [xAxisLabel]="'Month'"
+              [yAxisLabel]="'Amount (₹)'"
+              [autoScale]="true"
+              [curve]="curve"
+              [animations]="true"
+              [legendTitle]="'Categories'"
+              [xAxisTickFormatting]="formatAxisLabel"
+              [yAxisTickFormatting]="formatAxisLabel"
+            ></ngx-charts-line-chart>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
-</div>
+
+  <!-- Budget Setup Modal -->
+  <div *ngIf="showBudgetModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">Budget Setup</h2>
+        <button 
+          (click)="closeBudgetModal()" 
+          class="text-gray-400 hover:text-white"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <!-- Success message in modal -->
+      <div *ngIf="successMessage" class="mb-4 bg-green-500/80 text-white p-3 rounded-lg">
+        {{ successMessage }}
+      </div>
+      
+      <!-- Error message in modal -->
+      <div *ngIf="errorMessage" class="mb-4 bg-red-500/80 text-white p-3 rounded-lg">
+        {{ errorMessage }}
+      </div>
+      
+      <!-- Savings Goal Form -->
+      <div class="mb-8 bg-black/30 p-4 rounded-lg border border-gray-700">
+        <h3 class="text-lg font-semibold text-yellow-300 mb-3">Savings Goal</h3>
+        <div class="flex items-end gap-4">
+          <div class="flex-1">
+            <label for="savingsGoal" class="block text-sm font-medium text-gray-300 mb-1">Monthly Savings Target (₹)</label>
+            <input
+              type="number"
+              id="savingsGoal"
+              [(ngModel)]="savingsGoal"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+              min="0"
+            />
+          </div>
+          <button 
+            (click)="saveSavingsGoal()" 
+            class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
+            [disabled]="isLoading"
+          >
+            Save Goal
+          </button>
+        </div>
+      </div>
+      
+      <!-- Category Budget Form -->
+      <div class="mb-6 bg-black/30 p-4 rounded-lg border border-gray-700">
+        <h3 class="text-lg font-semibold text-yellow-300 mb-3">Category Budgets</h3>
+        <div class="flex items-end gap-4 mb-4">
+          <div class="flex-1">
+            <label for="budgetCategory" class="block text-sm font-medium text-gray-300 mb-1">Category</label>
+            <select
+              id="budgetCategory"
+              [(ngModel)]="newBudgetCategory"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+            >
+              <option value="">Select a category</option>
+              <option *ngFor="let category of budgetCategories" [value]="category">{{ category }}</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label for="budgetAmount" class="block text-sm font-medium text-gray-300 mb-1">Monthly Budget (₹)</label>
+            <input
+              type="number"
+              id="budgetAmount"
+              [(ngModel)]="newBudgetAmount"
+              class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+              min="0"
+            />
+          </div>
+          <button 
+            (click)="addBudgetItem()" 
+            class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
+            [disabled]="!newBudgetCategory || newBudgetAmount <= 0 || isLoading"
+          >
+            Add
+          </button>
+        </div>
+        
+        <!-- Budget Categories List -->
+        <div class="rounded-lg border border-gray-700 overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-700">
+            <thead class="bg-black/50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-yellow-300 uppercase">Category</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-yellow-300 uppercase">Budget (₹)</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-yellow-300 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-black/20 divide-y divide-gray-800">
+              <tr *ngFor="let budget of categoryBudgets; let i = index" class="hover:bg-gray-800/30">
+                <td class="px-4 py-3 text-sm">{{ budget.category }}</td>
+                <td class="px-4 py-3 text-sm text-right">{{ budget.amount | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td class="px-4 py-3 text-center">
+                  <button 
+                    (click)="removeBudgetItem(i)" 
+                    class="text-red-400 hover:text-red-500"
+                    [disabled]="isLoading"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="categoryBudgets.length === 0">
+                <td colspan="3" class="px-4 py-6 text-center text-gray-400">
+                  No budget categories defined
+                </td>
+              </tr>
+              
+              <!-- Total row -->
+              <tr class="bg-black/40">
+                <td class="px-4 py-3 font-medium">Total Budgeted</td>
+                <td class="px-4 py-3 font-medium text-right">{{ getTotalBudgeted() | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td></td>
+              </tr>
+              <tr class="bg-black/40">
+                <td class="px-4 py-3 font-medium">Savings Goal</td>
+                <td class="px-4 py-3 font-medium text-right">{{ savingsGoal | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td></td>
+              </tr>
+              <tr class="bg-black/50">
+                <td class="px-4 py-3 font-medium">Remaining</td>
+                <td class="px-4 py-3 font-medium text-right" [ngClass]="getRemainingBudget() < 0 ? 'text-red-400' : 'text-green-400'">
+                  {{ getRemainingBudget() | currency:'INR':'symbol':'1.0-0' }}
+                </td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="flex justify-end">
+        <button 
+          (click)="closeBudgetModal()" 
+          class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-300"
+          [disabled]="isLoading"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <div *ngIf="isLoading" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm">
+    <div class="bg-black/80 p-8 rounded-lg shadow-lg flex flex-col items-center">
+      <div class="beautiful-spinner mb-4">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <p class="text-yellow-400 font-medium text-lg glow-text">Loading...</p>
+    </div>
+  </div>

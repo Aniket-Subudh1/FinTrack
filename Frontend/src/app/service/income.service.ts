@@ -8,17 +8,24 @@ interface AddIncomeResponse {
   message: string;
 }
 
+export interface Income {
+  id?: number;
+  source: string;
+  amount: number;
+  date: Date | string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class IncomeService {
   constructor(private http: HttpClient) {}
 
-  addIncome(incomeRequest: any): Observable<any> {
-    return this.http.post(`${BASE_URL}/api/incomes`, incomeRequest, { withCredentials: true });
+  addIncome(incomeRequest: any): Observable<AddIncomeResponse> {
+    return this.http.post<AddIncomeResponse>(`${BASE_URL}/api/incomes`, incomeRequest, { withCredentials: true });
   }
 
-  getIncomes() {
-    return this.http.get(`${BASE_URL}/api/incomes`, { withCredentials: true });
+  getIncomes(): Observable<Income[]> { // Updated to return Observable<Income[]>
+    return this.http.get<Income[]>(`${BASE_URL}/api/incomes`, { withCredentials: true });
   }
 }

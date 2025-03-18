@@ -1,9 +1,11 @@
 package com.personalfinancetracker.backend.controllers;
 
 import com.personalfinancetracker.backend.dto.*;
+import com.personalfinancetracker.backend.entities.Budget;
 import com.personalfinancetracker.backend.entities.Customer;
 import com.personalfinancetracker.backend.entities.Expense;
 import com.personalfinancetracker.backend.entities.ExpenseCategoryEnum;
+import com.personalfinancetracker.backend.repository.BudgetRepository;
 import com.personalfinancetracker.backend.repository.CustomerRepository;
 import com.personalfinancetracker.backend.repository.ExpenseRepository;
 import com.personalfinancetracker.backend.utils.JwtUtil;
@@ -29,14 +31,16 @@ public class ExpenseController {
 
     private final ExpenseRepository expenseRepository;
     private final CustomerRepository customerRepository;
+    private final BudgetRepository budgetRepository;
     private final JwtUtil jwtUtil;
     private final HttpServletRequest request;
 
     @Autowired
     public ExpenseController(ExpenseRepository expenseRepository, CustomerRepository customerRepository,
-                             JwtUtil jwtUtil, HttpServletRequest request) {
+                             BudgetRepository budgetRepository, JwtUtil jwtUtil, HttpServletRequest request) {
         this.expenseRepository = expenseRepository;
         this.customerRepository = customerRepository;
+        this.budgetRepository = budgetRepository;
         this.jwtUtil = jwtUtil;
         this.request = request;
     }
@@ -84,6 +88,14 @@ public class ExpenseController {
                 expense.setNote(expenseRequest.getNote());
             }
 
+            // Add recurring information if provided
+            if (expenseRequest.getIsRecurring() != null) {
+                expense.setIsRecurring(expenseRequest.getIsRecurring());
+                if (expenseRequest.getIsRecurring() && expenseRequest.getRecurringFrequency() != null) {
+                    expense.setRecurringFrequency(expenseRequest.getRecurringFrequency());
+                }
+            }
+
             expenseRepository.save(expense);
             logger.info("Expense added successfully for email: {}", email);
 
@@ -122,6 +134,10 @@ public class ExpenseController {
                         }
                         if (expense.getNote() != null) {
                             response.setNote(expense.getNote());
+                        }
+                        if (expense.getIsRecurring() != null) {
+                            response.setIsRecurring(expense.getIsRecurring());
+                            response.setRecurringFrequency(expense.getRecurringFrequency());
                         }
                         return response;
                     })
@@ -235,6 +251,10 @@ public class ExpenseController {
                         }
                         if (expense.getNote() != null) {
                             response.setNote(expense.getNote());
+                        }
+                        if (expense.getIsRecurring() != null) {
+                            response.setIsRecurring(expense.getIsRecurring());
+                            response.setRecurringFrequency(expense.getRecurringFrequency());
                         }
                         return response;
                     })
@@ -365,6 +385,13 @@ public class ExpenseController {
                 expense.setNote(expenseRequest.getNote());
             }
 
+            if (expenseRequest.getIsRecurring() != null) {
+                expense.setIsRecurring(expenseRequest.getIsRecurring());
+                if (expenseRequest.getRecurringFrequency() != null) {
+                    expense.setRecurringFrequency(expenseRequest.getRecurringFrequency());
+                }
+            }
+
             expenseRepository.save(expense);
             return ResponseEntity.ok(Collections.singletonMap("message", "Expense updated successfully"));
         } catch (Exception e) {
@@ -387,23 +414,19 @@ public class ExpenseController {
             LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
             List<Expense> expenses = expenseRepository.findByCustomerEmailAndDateAfter(email, startOfMonth);
 
-            // Get budget data from local storage (normally this would be stored in the database)
-            // For demonstration purposes, we'll create dummy budget data for each category
+            // Get budget data from database
+            List<Budget> budgets = budgetRepository.findByCustomerEmail(email);
+
+            // Create a map of category to budget amount
             Map<String, Double> categoryBudgets = new HashMap<>();
+            for (Budget budget : budgets) {
+                categoryBudgets.put(budget.getCategory(), budget.getAmount());
+            }
+
+            // Add default values for categories without budgets
             for (ExpenseCategoryEnum category : ExpenseCategoryEnum.values()) {
-                switch (category) {
-                    case GROCERY:
-                        categoryBudgets.put(category.name(), 500.0);
-                        break;
-                    case UTILITIES:
-                        categoryBudgets.put(category.name(), 300.0);
-                        break;
-                    case ENTERTAINMENT:
-                        categoryBudgets.put(category.name(), 200.0);
-                        break;
-                    default:
-                        categoryBudgets.put(category.name(), 100.0);
-                        break;
+                if (!categoryBudgets.containsKey(category.name())) {
+                    categoryBudgets.put(category.name(), 0.0);
                 }
             }
 
@@ -422,7 +445,7 @@ public class ExpenseController {
                 double budgetAmount = entry.getValue();
                 double spentAmount = categorySpending.getOrDefault(category, 0.0);
                 double remainingAmount = budgetAmount - spentAmount;
-                double percentUsed = (spentAmount / budgetAmount) * 100;
+                double percentUsed = budgetAmount > 0 ? (spentAmount / budgetAmount) * 100 : 0;
 
                 BudgetStatus status = new BudgetStatus(
                         category,

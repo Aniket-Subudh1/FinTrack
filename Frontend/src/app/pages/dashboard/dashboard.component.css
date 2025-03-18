@@ -67,17 +67,117 @@ nav a:hover {
   transition: color 0.3s ease;
 }
 
-/* Bar Graph Animation */
-div.bg-yellow-400 {
+/* Beautiful Spinner */
+.beautiful-spinner {
   position: relative;
-  animation: growBar 2s ease-out forwards;
+  width: 80px; /* Larger size for better visibility */
+  height: 80px;
 }
 
-@keyframes growBar {
+.beautiful-spinner div {
+  position: absolute;
+  width: 12px; /* Larger dots */
+  height: 12px;
+  background: #ffdd00; /* Main yellow color */
+  border-radius: 50%;
+  animation: beautiful-spinner 1.5s ease-in-out infinite; /* Smoother easing */
+  transform-origin: 40px 40px; /* Adjusted for larger size (80px / 2) */
+  box-shadow: 0 0 10px rgba(255, 221, 0, 0.8), 0 0 20px rgba(255, 221, 0, 0.4); /* Glowing effect */
+}
+
+/* Positioning each dot around the circle */
+.beautiful-spinner div:nth-child(1) { animation-delay: 0s; }
+.beautiful-spinner div:nth-child(1) { transform: rotate(0deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(2) { animation-delay: -0.1s; }
+.beautiful-spinner div:nth-child(2) { transform: rotate(45deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(3) { animation-delay: -0.2s; }
+.beautiful-spinner div:nth-child(3) { transform: rotate(90deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(4) { animation-delay: -0.3s; }
+.beautiful-spinner div:nth-child(4) { transform: rotate(135deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(5) { animation-delay: -0.4s; }
+.beautiful-spinner div:nth-child(5) { transform: rotate(180deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(6) { animation-delay: -0.5s; }
+.beautiful-spinner div:nth-child(6) { transform: rotate(225deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(7) { animation-delay: -0.6s; }
+.beautiful-spinner div:nth-child(7) { transform: rotate(270deg) translate(40px); }
+
+.beautiful-spinner div:nth-child(8) { animation-delay: -0.7s; }
+.beautiful-spinner div:nth-child(8) { transform: rotate(315deg) translate(40px); }
+
+/* Animation with rotation and pulsing effect */
+@keyframes beautiful-spinner {
   0% {
-    width: 0;
+    transform: rotate(0deg) translate(40px) scale(1);
+    background: #ffdd00;
+    box-shadow: 0 0 10px rgba(255, 221, 0, 0.8), 0 0 20px rgba(255, 221, 0, 0.4);
+  }
+  50% {
+    transform: rotate(180deg) translate(40px) scale(1.3); /* Pulsing effect */
+    background: #fff176; /* Lighter yellow for glow */
+    box-shadow: 0 0 20px rgba(255, 241, 118, 1), 0 0 30px rgba(255, 241, 118, 0.6);
   }
   100% {
-    width: 100%;
+    transform: rotate(360deg) translate(40px) scale(1);
+    background: #ffdd00;
+    box-shadow: 0 0 10px rgba(255, 221, 0, 0.8), 0 0 20px rgba(255, 221, 0, 0.4);
   }
+}
+
+/* Glow effect for the "Loading..." text */
+.glow-text {
+  text-shadow: 0 0 10px rgba(255, 221, 0, 0.8), 0 0 20px rgba(255, 221, 0, 0.4);
+}
+/* General chart styles */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Style for chart labels (axis labels, tick labels, legend labels) */
+:host ::ng-deep .ngx-charts text {
+  fill: #ffffff !important; /* White labels */
+  font-weight: 500;
+}
+
+/* Style for axis labels (Month, Amount) */
+:host ::ng-deep .ngx-charts .axis-label text {
+  fill: #ffffff !important; /* White axis labels */
+  font-size: 14px;
+  font-weight: bold;
+}
+
+:host ::ng-deep .ngx-charts .legend-label-text {
+  color: #ffffff !important; /* White legend labels */
+  font-size: 12px;
+}
+
+:host ::ng-deep .ngx-charts .pie-label text {
+  fill: #ffffff !important; /* White pie chart labels */
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Ensure legend fits when positioned on the right */
+:host ::ng-deep .ngx-charts .legend-wrap {
+  max-width: 200px !important;
+  overflow-y: auto !important;
+ 
+}
+
+/* Add padding to the chart to accommodate legend on the right */
+:host ::ng-deep .ngx-charts .chart {
+  padding-right: 220px !important;
+}
+
+/* Optional: Style for the chart background */
+.chart-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }

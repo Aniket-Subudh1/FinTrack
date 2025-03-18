@@ -50,17 +50,17 @@ export interface ExpenseFilterParams {
 export class ExpenseService {
   constructor(private http: HttpClient) {}
 
-  addExpense(expenseRequest: any) {
+  addExpense(expenseRequest: any): Observable<any> {
     const headers = this.createAuthorizationHeader();
     return this.http.post(`${BASE_URL}/api/expenses`, expenseRequest, { headers });
   }
 
-  getExpenses() {
+  getExpenses(): Observable<Expense[]> { // Changed from Observable<any[]> to Observable<Expense[]>
     const headers = this.createAuthorizationHeader();
-    return this.http.get(`${BASE_URL}/api/expenses`, { headers });
+    return this.http.get<Expense[]>(`${BASE_URL}/api/expenses`, { headers });
   }
 
-  getExpenseCategories() {
+  getExpenseCategories(): Observable<string[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<string[]>(`${BASE_URL}/api/expenses/categories`, { headers });
   }
@@ -70,7 +70,6 @@ export class ExpenseService {
     return this.http.get<ExpenseCategorySummary[]>(`${BASE_URL}/api/expenses/summary`, { headers });
   }
 
-  // Existing: Fetch expenses by date range
   getExpensesByDateRange(startDate: string, endDate: string): Observable<any[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<any[]>(`${BASE_URL}/api/expenses/filter`, {
@@ -79,34 +78,16 @@ export class ExpenseService {
     });
   }
 
-  // New: Filter expenses with advanced params
   filterExpenses(filters: ExpenseFilterParams): Observable<Expense[]> {
     const headers = this.createAuthorizationHeader();
     let params = new HttpParams();
     
-    if (filters.startDate) {
-      params = params.set('startDate', filters.startDate);
-    }
-    
-    if (filters.endDate) {
-      params = params.set('endDate', filters.endDate);
-    }
-    
-    if (filters.category) {
-      params = params.set('category', filters.category);
-    }
-    
-    if (filters.minAmount) {
-      params = params.set('minAmount', filters.minAmount.toString());
-    }
-    
-    if (filters.maxAmount) {
-      params = params.set('maxAmount', filters.maxAmount.toString());
-    }
-    
-    if (filters.tags) {
-      params = params.set('tags', filters.tags);
-    }
+    if (filters.startDate) params = params.set('startDate', filters.startDate);
+    if (filters.endDate) params = params.set('endDate', filters.endDate);
+    if (filters.category) params = params.set('category', filters.category);
+    if (filters.minAmount) params = params.set('minAmount', filters.minAmount.toString());
+    if (filters.maxAmount) params = params.set('maxAmount', filters.maxAmount.toString());
+    if (filters.tags) params = params.set('tags', filters.tags);
     
     return this.http.get<Expense[]>(`${BASE_URL}/api/expenses/filter`, {
       headers,
@@ -114,31 +95,26 @@ export class ExpenseService {
     });
   }
   
-  // New: Get expense trends for charts
   getExpenseTrends(): Observable<ExpenseTrend[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<ExpenseTrend[]>(`${BASE_URL}/api/expenses/trends`, { headers });
   }
   
-  // New: Get budget status
   getBudgetStatus(): Observable<BudgetStatus[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<BudgetStatus[]>(`${BASE_URL}/api/expenses/budget-status`, { headers });
   }
   
-  // New: Update an expense
   updateExpense(id: number, expense: any): Observable<any> {
     const headers = this.createAuthorizationHeader();
     return this.http.put(`${BASE_URL}/api/expenses/${id}`, expense, { headers });
   }
   
-  // New: Delete an expense
   deleteExpense(id: number): Observable<any> {
     const headers = this.createAuthorizationHeader();
     return this.http.delete(`${BASE_URL}/api/expenses/${id}`, { headers });
   }
   
-  // Utility method to get category icons
   getCategoryIcon(category: string): string {
     const icons: { [key: string]: string } = {
       'GROCERY': 'shopping_cart',
@@ -155,37 +131,30 @@ export class ExpenseService {
       'PERSONAL_CARE': 'spa',
       'OTHERS': 'more_horiz'
     };
-    
     return icons[category] || 'receipt_long';
   }
   
-  // Utility method to get category colors
   getCategoryColor(category: string): string {
     const colors: { [key: string]: string } = {
-      'GROCERY': '#4CAF50', // Green
-      'UTILITIES': '#2196F3', // Blue
-      'INSURANCE': '#9C27B0', // Purple
-      'ENTERTAINMENT': '#FF9800', // Orange
-      'HOUSING': '#F44336', // Red
-      'DEBT_PAYMENTS': '#607D8B', // Blue Grey
-      'HEALTH_CARE': '#E91E63', // Pink
-      'MEMBERSHIPS_AND_SUBSCRIPTIONS': '#3F51B5', // Indigo
-      'HOME_MAINTENANCE': '#795548', // Brown
-      'TAXES': '#FF5722', // Deep Orange
-      'CLOTHING': '#009688', // Teal
-      'PERSONAL_CARE': '#673AB7', // Deep Purple
-      'OTHERS': '#757575' // Grey
+      'GROCERY': '#4CAF50',
+      'UTILITIES': '#2196F3',
+      'INSURANCE': '#9C27B0',
+      'ENTERTAINMENT': '#FF9800',
+      'HOUSING': '#F44336',
+      'DEBT_PAYMENTS': '#607D8B',
+      'HEALTH_CARE': '#E91E63',
+      'MEMBERSHIPS_AND_SUBSCRIPTIONS': '#3F51B5',
+      'HOME_MAINTENANCE': '#795548',
+      'TAXES': '#FF5722',
+      'CLOTHING': '#009688',
+      'PERSONAL_CARE': '#673AB7',
+      'OTHERS': '#757575'
     };
-    
-    return colors[category] || '#FFD700'; // Default to gold
+    return colors[category] || '#FFD700';
   }
 
   private createAuthorizationHeader(): HttpHeaders {
     const jwtToken = localStorage.getItem('jwt');
-    if (jwtToken) {
-      return new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`);
-    } else {
-      return new HttpHeaders();
-    }
+    return jwtToken ? new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`) : new HttpHeaders();
   }
 }
