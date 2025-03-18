@@ -1,6 +1,7 @@
 package com.personalfinancetracker.backend.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ExpenseResponse {
     private Long id;
@@ -8,7 +9,10 @@ public class ExpenseResponse {
     private String category;
     private LocalDateTime date;
     private String customerEmail;
-
+    private List<String> tags;
+    private String note;
+    private Boolean isRecurring;
+    private String recurringFrequency;
 
     public ExpenseResponse() {}
 
@@ -62,5 +66,35 @@ public class ExpenseResponse {
         return customerEmail;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
 
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public Boolean getIsRecurring() {
+        return isRecurring;
+    }
+
+    public void setIsRecurring(Boolean isRecurring) {
+        this.isRecurring = isRecurring;
+    }
+
+    public String getRecurringFrequency() {
+        return recurringFrequency;
+    }
+
+    public void setRecurringFrequency(String recurringFrequency) {
+        this.recurringFrequency = recurringFrequency;
+    }
 }

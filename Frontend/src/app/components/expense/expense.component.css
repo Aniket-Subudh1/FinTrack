@@ -61,19 +61,49 @@
   }
 }
 
-.bg-green-500 {
-  font-size: 1.125rem;
-  padding: 1.5rem 2rem;
-  line-height: 1.5;
-  border-radius: 1rem;
+/* Ensure dropdown options match the black background */
+select {
+  background-color: #1a1a1a !important;
+  color: #fff;
 }
 
-/* Modal backdrop animation */
-.modal-backdrop {
-  animation: fade-in 0.3s ease-in-out;
+option {
+  background-color: #1a1a1a !important;
+  color: #fff;
 }
 
-/* Modal content animation */
-.modal-content {
-  animation: scale-in 0.3s ease-in-out;
+/* Gradient border animation */
+.border-gradient-to-r {
+  border-image: linear-gradient(to right, #f59e0b, #eab308) 1;
+}
+
+/* Animation for fade-in effect */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Animation for slide-in effect */
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Custom styling for the right column */
+.right-column {
+  min-height: 200px; /* Ensure minimum height for alignment */
 }

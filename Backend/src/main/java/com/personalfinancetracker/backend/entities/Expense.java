@@ -20,6 +20,18 @@ public class Expense {
     @JoinColumn(name = "customer_email", referencedColumnName = "email")
     private Customer customer;
 
+    // New fields
+    private String tags;
+
+    @Column(length = 500)
+    private String note;
+
+    @Column(name = "is_recurring")
+    private Boolean isRecurring = false;
+
+    @Column(name = "recurring_frequency")
+    private String recurringFrequency;
+
     // Constructors
     public Expense() {}
 
@@ -59,5 +71,37 @@ public class Expense {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public Boolean getIsRecurring() {
+        return isRecurring;
+    }
+
+    public void setIsRecurring(Boolean isRecurring) {
+        this.isRecurring = isRecurring;
+    }
+
+    public String getRecurringFrequency() {
+        return recurringFrequency;
+    }
+
+    public void setRecurringFrequency(String recurringFrequency) {
+        this.recurringFrequency = recurringFrequency;
     }
 }
