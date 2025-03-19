@@ -70,51 +70,44 @@ export class ExpenseService {
     return this.http.get<ExpenseCategorySummary[]>(`${BASE_URL}/api/expenses/summary`, { headers });
   }
 
-  getExpensesByDateRange(startDate: string, endDate: string): Observable<any[]> {
-    const headers = this.createAuthorizationHeader();
-    return this.http.get<any[]>(`${BASE_URL}/api/expenses/filter`, {
-      headers,
-      params: { startDate, endDate }
-    });
-  }
 
   filterExpenses(filters: ExpenseFilterParams): Observable<Expense[]> {
     const headers = this.createAuthorizationHeader();
     let params = new HttpParams();
-    
+
     if (filters.startDate) params = params.set('startDate', filters.startDate);
     if (filters.endDate) params = params.set('endDate', filters.endDate);
     if (filters.category) params = params.set('category', filters.category);
     if (filters.minAmount) params = params.set('minAmount', filters.minAmount.toString());
     if (filters.maxAmount) params = params.set('maxAmount', filters.maxAmount.toString());
     if (filters.tags) params = params.set('tags', filters.tags);
-    
+
     return this.http.get<Expense[]>(`${BASE_URL}/api/expenses/filter`, {
       headers,
       params
     });
   }
-  
+
   getExpenseTrends(): Observable<ExpenseTrend[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<ExpenseTrend[]>(`${BASE_URL}/api/expenses/trends`, { headers });
   }
-  
+
   getBudgetStatus(): Observable<BudgetStatus[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<BudgetStatus[]>(`${BASE_URL}/api/expenses/budget-status`, { headers });
   }
-  
+
   updateExpense(id: number, expense: any): Observable<any> {
     const headers = this.createAuthorizationHeader();
     return this.http.put(`${BASE_URL}/api/expenses/${id}`, expense, { headers });
   }
-  
+
   deleteExpense(id: number): Observable<any> {
     const headers = this.createAuthorizationHeader();
     return this.http.delete(`${BASE_URL}/api/expenses/${id}`, { headers });
   }
-  
+
   getCategoryIcon(category: string): string {
     const icons: { [key: string]: string } = {
       'GROCERY': 'shopping_cart',
@@ -133,7 +126,7 @@ export class ExpenseService {
     };
     return icons[category] || 'receipt_long';
   }
-  
+
   getCategoryColor(category: string): string {
     const colors: { [key: string]: string } = {
       'GROCERY': '#4CAF50',

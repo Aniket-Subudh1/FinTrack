@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ExpenseService } from '../../service/expense.service';
-import { ExpenseCategorySummary } from '../../service/expense.service';
+import { ExpenseService, ExpenseCategorySummary, ExpenseFilterParams } from '../../service/expense.service';
 import { saveAs } from 'file-saver';
-import { NgIf, NgFor, DatePipe , CurrencyPipe  } from '@angular/common';
+import { NgIf, NgFor, DatePipe, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,55 +10,54 @@ import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.componen
 @Component({
   selector: 'app-expense-report',
   standalone: true, // Ensure it's a standalone component
-  imports: [NgIf, NgFor, FormsModule, DatePipe, CurrencyPipe, SidebarComponent], // Import FormsModule here
+  imports: [NgIf, NgFor, FormsModule, DatePipe, SidebarComponent], // Import FormsModule here
   templateUrl: './expense-report.component.html',
   styleUrls: ['./expense-report.component.css'],
 })
-export class ExpenseReportComponent implements OnInit {
+export class ExpenseReportComponent {
   expenses: any[] = [];
   expenseSummary: ExpenseCategorySummary[] = [];
   startDate: string = '';
+  email: string = '';
   endDate: string = '';
+  category: string = '';
+  minAmount: string = '';
+  maxAmount: string = '';
+  tags: string = '';
   errorMessage: string = '';
   isSidebarOpen = true;
 
   constructor(private expenseService: ExpenseService) {}
 
-  ngOnInit(): void {
-    this.getExpenseSummary();
-  }
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
-
-  fetchExpensesByDateRange() {
+  fetchFilteredExpenses() {
     if (!this.startDate || !this.endDate) {
-      this.errorMessage = 'Please select a start and end date.';
+      alert('Please enter start date and end date.');
       return;
     }
 
-    this.expenseService.getExpensesByDateRange(this.startDate, this.endDate).subscribe(
+    const filters: ExpenseFilterParams = {
+      startDate: this.startDate,
+      endDate: this.endDate,
+      category: this.category || undefined,
+      minAmount: this.minAmount ? parseFloat(this.minAmount) : undefined,
+      maxAmount: this.maxAmount ? parseFloat(this.maxAmount) : undefined,
+      tags: this.tags || undefined,
+    };
+
+    this.expenseService.filterExpenses(filters).subscribe(
       (data) => {
         this.expenses = data;
-        this.errorMessage = '';
+        console.log('Filtered Expenses:', data);
       },
       (error) => {
         console.error('Error fetching expenses:', error);
-        this.errorMessage = 'Failed to load expenses.';
       }
     );
   }
 
-  getExpenseSummary() {
-    this.expenseService.getExpenseSummary().subscribe(
-      (data) => {
-        this.expenseSummary = data;
-      },
-      (error) => {
-        console.error('Error fetching expense summary:', error);
-      }
-    );
-  }
   exportAsPDF() {
     const doc = new jsPDF();
 
@@ -70,7 +68,7 @@ export class ExpenseReportComponent implements OnInit {
 
     // Expense Table
     if (this.expenses.length > 0) {
-      const expenseData = this.expenses.map(expense => [
+      const expenseData = this.expenses.map((expense) => [
         expense.category,
         expense.amount,
         new Date(expense.date).toLocaleDateString(),
@@ -89,9 +87,9 @@ export class ExpenseReportComponent implements OnInit {
 
     // Expense Summary Table
     if (this.expenseSummary.length > 0) {
-      const summaryData = this.expenseSummary.map(summary => [
+      const summaryData = this.expenseSummary.map((summary) => [
         summary.category,
-        summary.totalAmount
+        summary.totalAmount,
       ]);
 
       doc.text('Expense Breakdown', 10, finalY);
@@ -105,5 +103,4 @@ export class ExpenseReportComponent implements OnInit {
     // Save the PDF
     doc.save('Expense_Report.pdf');
   }
-
 }
