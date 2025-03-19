@@ -45,16 +45,50 @@ export class LoginComponent implements OnInit, AfterViewInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
-
+  
     // Check for query params (from OAuth2 redirect)
     this.route.queryParams.subscribe(params => {
-      // No need to extract token - cookies are handled automatically
-      if (params['login'] === 'success') {
+      if (params['token']) {
+        // If token is passed as a query parameter from OAuth
+        console.log('OAuth token found in URL');
+        localStorage.setItem('jwt', params['token']);
         this.router.navigate(['/dashboard']);
+      } else if (params['login'] === 'success') {
+        // If success flag is passed
+        console.log('OAuth login success flag found');
+        this.checkAuthAndRedirect();
+      } else if (params['error'] === 'oauth2') {
+        // Handle OAuth error
+        console.error('OAuth authentication error');
+        alert('OAuth authentication failed. Please try again or use email/password login.');
       }
     });
   }
-
+  private checkAuthAndRedirect(): void {
+    this.service.checkAuth().subscribe(isAuthenticated => {
+      if (isAuthenticated) {
+        console.log('User is authenticated, redirecting to dashboard');
+        this.router.navigate(['/dashboard']);
+      } else {
+        console.log('Authentication check failed, will attempt to get user info');
+        
+        // Try to get user info which might include token
+        this.service.getUserInfo().subscribe({
+          next: (response) => {
+            if (response.authenticated) {
+              console.log('User info confirms authentication, redirecting to dashboard');
+              this.router.navigate(['/dashboard']);
+            } else {
+              console.log('Failed to confirm authentication via user info');
+            }
+          },
+          error: (error) => {
+            console.error('Error getting user info:', error);
+          }
+        });
+      }
+    });
+  }
   ngAfterViewInit(): void {
     const app = new Application(this.canvas3d.nativeElement);
     app.load('https://prod.spline.design/mEfZs9zaxqVlMcyO/scene.splinecode');
@@ -65,6 +99,14 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   loginWithGoogle(): void {
+    console.log('Initiating Google login...');
+    this.isLoading = true;
+    
+    
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 5000);
+    
     this.service.initiateGoogleLogin();
   }
   

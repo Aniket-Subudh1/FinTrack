@@ -159,13 +159,20 @@ public class ExpenseController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<List<ExpenseCategorySummary>> getExpenseSummaryByCategory(Authentication authentication) {
-        if (authentication == null) {
+    public ResponseEntity<List<ExpenseCategorySummary>> getExpenseSummary(Authentication authentication) {
+        String email = getEmailFromJwtCookie();
+        if (email == null && authentication != null) {
+            email = authentication.getName();
+            logger.info("Using email from Authentication: {}", email);
+        }
+
+        if (email == null) {
+            logger.warn("No authenticated user found for expense summary");
             return ResponseEntity.status(401).build();
         }
 
-        String email = authentication.getName();
         List<ExpenseCategorySummary> summary = expenseRepository.getExpenseSummaryByCategory(email);
+        logger.info("Expense summary for {}: {} items returned", email, summary.size());
         return ResponseEntity.ok(summary);
     }
 

@@ -125,7 +125,12 @@ public class WebSecurityConfiguration {
 
                                 logger.info("OAuth2 login successful for email: {}", email);
                                 authService.completeOAuth2Registration(name, email, "Google", response);
-                                response.sendRedirect("http://localhost:4200/dashboard");
+
+
+                                String jwtToken = jwtUtil.getJwtFromCookies(request);
+
+
+                                response.sendRedirect("http://localhost:4200/dashboard?token=" + jwtToken);
                             } catch (Exception e) {
                                 logger.error("OAuth2 authentication error: {}", e.getMessage(), e);
                                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "OAuth2 authentication failed");

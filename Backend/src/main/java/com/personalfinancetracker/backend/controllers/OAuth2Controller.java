@@ -81,7 +81,6 @@ public class OAuth2Controller {
         userInfo.put("authenticated", false);
         return ResponseEntity.ok(userInfo);
     }
-
     @PostMapping("/callback")
     public ResponseEntity<Map<String, String>> handleOAuth2Callback(
             @RequestBody Map<String, String> payload,
@@ -100,11 +99,11 @@ public class OAuth2Controller {
         }
 
         try {
-            // Complete OAuth2 registration
             authService.completeOAuth2Registration(name, email, provider, response);
 
             Map<String, String> successResponse = new HashMap<>();
             successResponse.put("message", "OAuth2 authentication successful");
+            successResponse.put("email", email); // Include email in response
             logger.info("OAuth2 authentication successful for: {}", email);
             return ResponseEntity.ok(successResponse);
         } catch (Exception e) {

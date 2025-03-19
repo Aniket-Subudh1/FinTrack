@@ -7,7 +7,7 @@ import {
   HttpErrorResponse
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError,switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 @Injectable()
@@ -17,14 +17,10 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     console.log('Intercepting request to:', request.url);
-    console.log('Current cookies:', document.cookie);
-    
-    // Always add withCredentials to send cookies with every request
     request = request.clone({
       withCredentials: true
     });
-    
-    // Check for JWT token in localStorage (backward compatibility)
+
     const token = localStorage.getItem('jwt');
     if (token) {
       console.log('Adding JWT token from localStorage to request');
@@ -44,14 +40,14 @@ export class AuthInterceptor implements HttpInterceptor {
           status: error.status,
           message: error.message
         });
-        
+
         // Handle authentication errors
         if (error.status === 401) {
           console.log('401 Unauthorized response - redirecting to login');
           localStorage.removeItem('jwt');
           this.router.navigate(['/login']);
         }
-        
+
         return throwError(() => error);
       })
     );

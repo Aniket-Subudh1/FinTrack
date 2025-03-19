@@ -1,21 +1,21 @@
 <div class="min-h-screen flex flex-col bg-gray-900 text-white animate-bg">
   <div class="flex flex-1 relative" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
-    <app-sidebar 
-      [isSidebarOpen]="isSidebarOpen" 
+    <app-sidebar
+      [isSidebarOpen]="isSidebarOpen"
       (toggleSidebar)="toggleSidebar()"
     ></app-sidebar>
 
-    <main class="transition-all duration-300 p-8 w-full overflow-hidden" 
+    <main class="transition-all duration-300 p-8 w-full overflow-hidden"
           [ngClass]="{'ml-20': !isSidebarOpen, 'ml-80': isSidebarOpen}">
       <header class="flex justify-between items-center mb-8">
         <h2 class="text-3xl font-bold">Welcome, {{ userName || 'User' }}</h2>
-        
+
         <div class="flex items-center">
           <div class="flex flex-col items-end mr-4">
             <span class="text-yellow-300 font-semibold">{{ userName || 'User' }}</span>
             <span class="text-gray-400 text-sm">{{ userEmail || 'No email' }}</span>
           </div>
-          
+
           <div *ngIf="profilePhotoUrl" class="h-12 w-12 rounded-full border-2 border-yellow-400 overflow-hidden">
             <img [src]="profilePhotoUrl" alt="Profile" class="h-full w-full object-cover">
           </div>
@@ -51,7 +51,7 @@
               </p>
             </div>
           </div>
-          
+
           <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800">
             <h3 class="text-lg font-semibold text-yellow-400">Monthly Income</h3>
             <div class="flex items-center justify-center mt-2">
@@ -59,7 +59,7 @@
               <p class="text-2xl font-bold text-green-500">{{ monthlyIncome | currency:'INR':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-          
+
           <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800">
             <h3 class="text-lg font-semibold text-yellow-400">Monthly Expenses</h3>
             <div class="flex items-center justify-center mt-2">
@@ -67,7 +67,7 @@
               <p class="text-2xl font-bold text-red-500">{{ monthlyExpenses | currency:'INR':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-          
+
           <div class="bg-black/30 backdrop-blur-sm p-5 rounded-lg shadow-lg text-center hover:shadow-yellow-600/20 transition-shadow duration-300 border border-gray-800 cursor-pointer hover:bg-black/50"
                (click)="navigateToGoals()">
             <h3 class="text-lg font-semibold text-yellow-400">Savings Goal</h3>
@@ -82,8 +82,8 @@
         <section class="mt-8 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-yellow-400">Budget Management</h2>
-            <button 
-              (click)="openBudgetModal()" 
+            <button
+              (click)="openBudgetModal()"
               class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300 flex items-center"
             >
               <mat-icon class="mr-1">edit</mat-icon>
@@ -101,8 +101,8 @@
                 </span>
               </div>
               <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-                <div 
-                  class="h-2.5 rounded-full" 
+                <div
+                  class="h-2.5 rounded-full"
                   [ngClass]="getProgressColor(budget.category)"
                   [style.width.%]="getSpentPercentage(budget.category)"
                 ></div>
@@ -112,13 +112,13 @@
                 <span>{{ getRemainingAmount(budget.category) | currency:'INR':'symbol':'1.0-0' }} left</span>
               </div>
             </div>
-            
+
             <!-- Empty State -->
             <div *ngIf="categoryBudgets.length === 0" class="bg-black/30 backdrop-blur-sm p-5 rounded-lg border border-gray-700 col-span-full flex flex-col items-center justify-center py-10">
               <mat-icon class="text-4xl text-yellow-500 mb-4">account_balance_wallet</mat-icon>
               <p class="text-lg text-center">You haven't set up your budget yet</p>
-              <button 
-                (click)="openBudgetModal()" 
+              <button
+                (click)="openBudgetModal()"
                 class="mt-4 px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
               >
                 Set Up Budget Now
@@ -139,10 +139,10 @@
                 [labels]="true"
                 [doughnut]="true"
                 [arcWidth]="0.4"
-                [labelFormatting]="currencyFormatter"
+                [labelFormatting]=""
                 [legendTitle]="'Categories'"
-                [animations]="true"
-              ></ngx-charts-pie-chart>
+                [animations]="false"
+                ></ngx-charts-pie-chart>
             </div>
             <ng-template #noPieData>
               <div class="flex items-center justify-center h-60 text-gray-500">
@@ -150,7 +150,7 @@
               </div>
             </ng-template>
           </section>
-          
+
           <section class="bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-800">
             <h2 class="text-xl font-semibold mb-4 text-yellow-400">Monthly Expenses by Category</h2>
             <div *ngIf="(expenseSummary ?? []).length > 0; else noSummaryData" class="space-y-4">
@@ -171,7 +171,7 @@
                     </span>
                   </div>
                   <div class="relative w-full h-2 bg-gray-700 rounded">
-                    <div class="absolute top-0 left-0 h-2 rounded" 
+                    <div class="absolute top-0 left-0 h-2 rounded"
                          [ngStyle]="{
                            'width.%': monthlyExpenses > 0 ? (category.totalAmount / monthlyExpenses * 100) : 0,
                            'background-color': getCategoryColor(category.category)
@@ -263,24 +263,24 @@
     <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-yellow-400">Budget Setup</h2>
-        <button 
-          (click)="closeBudgetModal()" 
+        <button
+          (click)="closeBudgetModal()"
           class="text-gray-400 hover:text-white"
         >
           <mat-icon>close</mat-icon>
         </button>
       </div>
-      
+
       <!-- Success message in modal -->
       <div *ngIf="successMessage" class="mb-4 bg-green-500/80 text-white p-3 rounded-lg">
         {{ successMessage }}
       </div>
-      
+
       <!-- Error message in modal -->
       <div *ngIf="errorMessage" class="mb-4 bg-red-500/80 text-white p-3 rounded-lg">
         {{ errorMessage }}
       </div>
-      
+
       <!-- Savings Goal Form -->
       <div class="mb-8 bg-black/30 p-4 rounded-lg border border-gray-700">
         <h3 class="text-lg font-semibold text-yellow-300 mb-3">Savings Goal</h3>
@@ -295,8 +295,8 @@
               min="0"
             />
           </div>
-          <button 
-            (click)="saveSavingsGoal()" 
+          <button
+            (click)="saveSavingsGoal()"
             class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
             [disabled]="isLoading"
           >
@@ -304,7 +304,7 @@
           </button>
         </div>
       </div>
-      
+
       <!-- Category Budget Form -->
       <div class="mb-6 bg-black/30 p-4 rounded-lg border border-gray-700">
         <h3 class="text-lg font-semibold text-yellow-300 mb-3">Category Budgets</h3>
@@ -330,15 +330,15 @@
               min="0"
             />
           </div>
-          <button 
-            (click)="addBudgetItem()" 
+          <button
+            (click)="addBudgetItem()"
             class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition duration-300"
             [disabled]="!newBudgetCategory || newBudgetAmount <= 0 || isLoading"
           >
             Add
           </button>
         </div>
-        
+
         <!-- Budget Categories List -->
         <div class="rounded-lg border border-gray-700 overflow-hidden">
           <table class="min-w-full divide-y divide-gray-700">
@@ -354,8 +354,8 @@
                 <td class="px-4 py-3 text-sm">{{ budget.category }}</td>
                 <td class="px-4 py-3 text-sm text-right">{{ budget.amount | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td class="px-4 py-3 text-center">
-                  <button 
-                    (click)="removeBudgetItem(i)" 
+                  <button
+                    (click)="removeBudgetItem(i)"
                     class="text-red-400 hover:text-red-500"
                     [disabled]="isLoading"
                   >
@@ -368,7 +368,7 @@
                   No budget categories defined
                 </td>
               </tr>
-              
+
               <!-- Total row -->
               <tr class="bg-black/40">
                 <td class="px-4 py-3 font-medium">Total Budgeted</td>
@@ -391,10 +391,10 @@
           </table>
         </div>
       </div>
-      
+
       <div class="flex justify-end">
-        <button 
-          (click)="closeBudgetModal()" 
+        <button
+          (click)="closeBudgetModal()"
           class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-300"
           [disabled]="isLoading"
         >

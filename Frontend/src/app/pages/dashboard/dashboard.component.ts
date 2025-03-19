@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { ExpenseService, ExpenseCategorySummary, BudgetStatus } from '../../service/expense.service';
@@ -9,10 +9,11 @@ import { UserService } from '../../service/user.service';
 import { NgxChartsModule, Color, ScaleType, LegendPosition } from '@swimlane/ngx-charts';
 import { MatIconModule } from '@angular/material/icon';
 import { curveCatmullRom } from 'd3-shape';
+import { JwtService } from './../../service/jwt.service';
 import { BudgetService, BudgetItem } from '../../service/budget.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
+import { trigger, state, style, animate, transition } from '@angular/animations';
 // Interfaces
 interface Transaction {
   description: string;
@@ -58,15 +59,23 @@ interface ExpenseTrend {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
   imports: [
-    CommonModule,
+
+  CommonModule,
     CurrencyPipe,
     DatePipe,
     SidebarComponent,
     NgxChartsModule,
     MatIconModule,
     FormsModule,
+  ], animations: [
+    trigger('animationState', [
+      state('start', style({ strokeDashoffset: '0' })),
+      state('end', style({ strokeDashoffset: '100' })),
+      transition('start => end', animate('1s')),
+    ]),
   ],
 })
+
 export class DashboardComponent implements OnInit {
   // User profile
   userName: string = '';
@@ -115,20 +124,52 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private expenseService: ExpenseService,
     private incomeService: IncomeService,
     private userService: UserService,
-    private budgetService: BudgetService
+    private budgetService: BudgetService,
+    private jwtService: JwtService
   ) {}
 
   ngOnInit(): void {
+
+    this.route.queryParams.subscribe(params => {
+      const token = params['token'];
+      if (token) {
+        console.log('Found token in URL parameters, saving to localStorage');
+        localStorage.setItem('jwt', token);
+        
+      
+        this.router.navigate(['/dashboard']);
+      }
+    });
+    
+    this.checkAndSyncAuth();
     this.loadInitialData();
+  }
+
+  private checkAndSyncAuth(): void {
+    this.jwtService.checkAuth().subscribe(isAuthenticated => {
+      if (!isAuthenticated) {
+        console.warn('Authentication check failed in dashboard. Trying to sync token state...');
+        this.jwtService.syncTokenState().subscribe(synced => {
+          if (!synced) {
+            console.error('Failed to sync token state. Redirecting to login.');
+            this.router.navigate(['/login']);
+          } else {
+            console.log('Token state synced successfully. Reloading dashboard data.');
+            this.loadInitialData();
+          }
+        });
+      }
+    });
   }
 
   loadInitialData(): void {
     this.isLoading = true;
     this.loadingError = null;
-  
+
     forkJoin({
       categories: this.expenseService.getExpenseCategories().pipe(catchError(() => of([]))),
       budgetStatus: this.expenseService.getBudgetStatus().pipe(catchError(() => of([]))),
@@ -145,11 +186,11 @@ export class DashboardComponent implements OnInit {
         this.budgetStatus = results.budgetStatus;
         this.categoryBudgets = results.budgetItems;
         this.savingsGoal = results.savingsGoal.amount;
-  
+
         this.userName = results.user.name || 'User';
         this.userEmail = results.user.email || '';
         this.profilePhotoUrl = results.user.profilePhoto ? 'data:image/jpeg;base64,' + results.user.profilePhoto : null;
-  
+
         // Load expenses
         const now = new Date();
         const currentMonthExpenses = results.expenses.filter((expense: Expense) => {
@@ -164,10 +205,10 @@ export class DashboardComponent implements OnInit {
             description: expense.category + (expense.note ? ` - ${expense.note}` : ''),
             amount: -expense.amount,
             date: new Date(expense.date),
-            type: 'expense' as const
+            type: 'expense' as const,
           }));
         this.recentTransactions = [...recentExpenses];
-  
+
         // Load incomes
         const currentMonthIncomes = results.incomes.filter((income: Income) => {
           const incomeDate = new Date(income.date);
@@ -182,35 +223,52 @@ export class DashboardComponent implements OnInit {
             description: income.source || 'Income',
             amount: income.amount || 0,
             date: new Date(income.date),
-            type: 'income' as const
+            type: 'income' as const,
           }));
         this.recentTransactions = [...this.recentTransactions, ...recentIncomes]
           .sort((a, b) => b.date.getTime() - a.date.getTime())
           .slice(0, 5);
-  
+
         // Load expense trends for line chart
-        const categories = [...new Set(results.trends.map(trend => trend.category))];
-        this.lineChartData = categories.map(category => ({
+        const categories = [...new Set(results.trends.map((trend) => trend.category))];
+        this.lineChartData = categories.map((category) => ({
           name: category,
           series: results.trends
-            .filter(trend => trend.category === category)
-            .map(trend => ({
-              name: trend.month || ('date' in trend && trend.date && (typeof trend.date === 'string' || trend.date instanceof Date) ? new Date(trend.date).toLocaleString('default', { month: 'short', year: 'numeric' }) : 'Unknown'),
-              value: trend.amount || 0
-            }))
+            .filter((trend) => trend.category === category)
+            .map((trend) => ({
+              name:
+                trend.month ||
+                ('date' in trend && trend.date && (typeof trend.date === 'string' || trend.date instanceof Date)
+                  ? new Date(trend.date).toLocaleString('default', { month: 'short', year: 'numeric' })
+                  : 'Unknown'),
+              value: trend.amount || 0,
+            })),
         }));
-  
-        console.log('Raw Summary Data:', results.summary); 
-        this.expenseSummary = results.summary.map(item => ({
-          ...item,
-          totalAmount: typeof item.totalAmount === 'number' && !isNaN(item.totalAmount) ? item.totalAmount : 0
-        })).filter(item => item.totalAmount > 0);
-        this.pieChartData = this.expenseSummary.map(item => ({
-          name: item.category || 'Unknown',
-          value: Number.isFinite(item.totalAmount) ? item.totalAmount : 0
-        })).filter(item => item.value > 0);
+
+        // Load expense summary and pie chart data
+        this.expenseSummary = results.summary
+          .filter(
+            (item) =>
+              item &&
+              typeof item.category === 'string' &&
+              typeof item.totalAmount === 'number' &&
+              !isNaN(item.totalAmount) &&
+              item.totalAmount > 0
+          )
+          .map((item) => ({
+            category: item.category,
+            totalAmount: item.totalAmount,
+          }));
+
+        this.pieChartData = this.expenseSummary.map((item) => ({
+          name: item.category,
+          value: item.totalAmount,
+        }));
+
+        console.log('Raw Summary Data:', results.summary);
+        console.log('Processed Expense Summary:', this.expenseSummary);
         console.log('Pie Chart Data:', this.pieChartData);
-  
+
         this.calculateSpendingTotals();
         this.isLoading = false;
       },
@@ -218,19 +276,18 @@ export class DashboardComponent implements OnInit {
         console.error('Error loading dashboard data:', error);
         this.loadingError = 'Failed to load dashboard data. Please try again.';
         this.isLoading = false;
-      }
+      },
     });
   }
-  
- 
+
   labelFormatter(value: number): string {
-    const dataItem = this.pieChartData.find(item => Math.abs(item.value - value) < 0.01); 
-    if (dataItem && typeof value === 'number' && !isNaN(value) && value > 0) {
-      return `${dataItem.name}: ${this.currencyFormatter(value)}`;
+    const dataItem = this.pieChartData.find((item) => Math.abs(item.value - value) < 1); // Increased tolerance
+    if (dataItem && Number.isFinite(dataItem.value) && dataItem.value > 0) {
+      return `${dataItem.name}: ${this.currencyFormatter(dataItem.value)}`;
     }
-    return '₹0'; 
+    return ''; // Avoid displaying ₹0 for invalid/no-match cases
   }
-  
+
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
@@ -252,21 +309,26 @@ export class DashboardComponent implements OnInit {
   }
 
   currencyFormatter(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    if (value === undefined || value === null || isNaN(value)) {
+      return '₹0';
+    }
+    try {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
+    } catch (error) {
+      console.error('Error formatting currency value:', value, error);
+      return '₹0';
+    }
   }
-
-  
 
   formatAxisLabel(value: any): string {
     return typeof value === 'number' ? `₹${value.toLocaleString('en-IN')}` : value;
   }
 
-  // Budget Management Logic (Directly from First Code Snippet)
   openBudgetModal(): void {
     this.showBudgetModal = true;
   }
@@ -278,44 +340,33 @@ export class DashboardComponent implements OnInit {
   addBudgetItem(): void {
     if (this.newBudgetCategory && this.newBudgetAmount > 0) {
       this.isLoading = true;
-      
+
       const budgetItem: BudgetItem = {
         category: this.newBudgetCategory,
-        amount: this.newBudgetAmount
+        amount: this.newBudgetAmount,
       };
-      
+
       this.budgetService.saveOrUpdateBudgetItem(budgetItem).subscribe({
         next: () => {
-          const existingIndex = this.categoryBudgets.findIndex(
-            item => item.category === budgetItem.category
-          );
-          
+          const existingIndex = this.categoryBudgets.findIndex((item) => item.category === budgetItem.category);
           if (existingIndex >= 0) {
             this.categoryBudgets[existingIndex].amount = budgetItem.amount;
           } else {
             this.categoryBudgets.push(budgetItem);
           }
-          
           this.newBudgetCategory = '';
           this.newBudgetAmount = 0;
           this.isLoading = false;
           this.successMessage = 'Budget item saved successfully!';
-          
           this.refreshBudgetStatus();
-          
-          setTimeout(() => {
-            this.successMessage = '';
-          }, 3000);
+          setTimeout(() => (this.successMessage = ''), 3000);
         },
         error: (error) => {
           console.error('Error saving budget item:', error);
           this.isLoading = false;
           this.errorMessage = 'Failed to save budget item. Please try again.';
-          
-          setTimeout(() => {
-            this.errorMessage = '';
-          }, 3000);
-        }
+          setTimeout(() => (this.errorMessage = ''), 3000);
+        },
       });
     }
   }
@@ -326,63 +377,48 @@ export class DashboardComponent implements OnInit {
         this.budgetStatus = budgetStatus;
         this.calculateSpendingTotals();
       },
-      error: (error) => {
-        console.error('Error refreshing budget status:', error);
-      }
+      error: (error) => console.error('Error refreshing budget status:', error),
     });
   }
 
   removeBudgetItem(index: number): void {
     const budgetItem = this.categoryBudgets[index];
     if (!budgetItem) return;
-    
+
     this.isLoading = true;
-    
+
     this.budgetService.deleteBudgetItem(budgetItem.category).subscribe({
       next: () => {
         this.categoryBudgets.splice(index, 1);
         this.isLoading = false;
         this.successMessage = 'Budget item deleted successfully!';
-        
         this.refreshBudgetStatus();
-        
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
+        setTimeout(() => (this.successMessage = ''), 3000);
       },
       error: (error) => {
         console.error('Error deleting budget item:', error);
         this.isLoading = false;
         this.errorMessage = 'Failed to delete budget item. Please try again.';
-        
-        setTimeout(() => {
-          this.errorMessage = '';
-        }, 3000);
-      }
+        setTimeout(() => (this.errorMessage = ''), 3000);
+      },
     });
   }
 
   saveSavingsGoal(): void {
     this.isLoading = true;
-    
+
     this.budgetService.setSavingsGoal(this.savingsGoal).subscribe({
       next: () => {
         this.isLoading = false;
         this.successMessage = 'Savings goal saved successfully!';
-        
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
+        setTimeout(() => (this.successMessage = ''), 3000);
       },
       error: (error) => {
         console.error('Error saving savings goal:', error);
         this.isLoading = false;
         this.errorMessage = 'Failed to save savings goal. Please try again.';
-        
-        setTimeout(() => {
-          this.errorMessage = '';
-        }, 3000);
-      }
+        setTimeout(() => (this.errorMessage = ''), 3000);
+      },
     });
   }
 
@@ -391,29 +427,25 @@ export class DashboardComponent implements OnInit {
   }
 
   getSpentPercentage(category: string): number {
-    const statusItem = this.budgetStatus.find(item => item.category === category);
+    const statusItem = this.budgetStatus.find((item) => item.category === category);
     return statusItem ? Math.min(100, Math.round(statusItem.percentUsed)) : 0;
   }
 
   getAmountSpent(category: string): number {
-    const statusItem = this.budgetStatus.find(item => item.category === category);
+    const statusItem = this.budgetStatus.find((item) => item.category === category);
     return statusItem ? statusItem.spentAmount : 0;
   }
 
   getRemainingAmount(category: string): number {
-    const statusItem = this.budgetStatus.find(item => item.category === category);
+    const statusItem = this.budgetStatus.find((item) => item.category === category);
     return statusItem ? statusItem.remainingAmount : 0;
   }
 
   getProgressColor(category: string): string {
     const percentage = this.getSpentPercentage(category);
-    if (percentage >= 90) {
-      return 'bg-red-500';
-    } else if (percentage >= 70) {
-      return 'bg-orange-500';
-    } else {
-      return 'bg-green-500';
-    }
+    if (percentage >= 90) return 'bg-red-500';
+    else if (percentage >= 70) return 'bg-orange-500';
+    else return 'bg-green-500';
   }
 
   getTotalBudgeted(): number {
@@ -423,4 +455,5 @@ export class DashboardComponent implements OnInit {
   getRemainingBudget(): number {
     return this.monthlyIncome - this.getTotalBudgeted() - this.savingsGoal;
   }
+
 }

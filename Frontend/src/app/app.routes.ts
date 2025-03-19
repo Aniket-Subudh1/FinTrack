@@ -11,6 +11,7 @@ import { AuthGuard } from './guard/auth.guard';
 import {ExpenseChartComponent} from './components/expense-chart/expense-chart.component'
 import { GoalsComponent } from './components/goals/goals.component';
 import { ExpenseReportComponent } from './components/expense-report/expense-report.component';
+import { OAuthCallbackComponent } from './components/oauth-callback/oauth-callback.component';
 
 export const routes: Routes = [
     { path: 'signup', component: Page2Component },
@@ -18,6 +19,7 @@ export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: 'oauth-callback', component: OAuthCallbackComponent },
     {
       path: 'expense',
       component: ExpenseComponent,

@@ -68,19 +68,27 @@ public class UserController {
     }
 
     @GetMapping("/check-auth")
-    public ResponseEntity<Map<String, Boolean>> checkAuth(Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> checkAuth(Authentication authentication) {
         logger.info("Received request for /api/user/check-auth");
-        Map<String, Boolean> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         String email = getEmailFromJwtCookie();
         boolean isAuthenticated = (email != null);
 
         if (isAuthenticated) {
             logger.debug("User authenticated with email: {}", email);
+            response.put("authenticated", true);
+            response.put("email", email);
+
+
+            String token = jwtUtil.getJwtFromCookies(request);
+            if (token != null) {
+                response.put("token", token);
+            }
         } else {
             logger.warn("User not authenticated - no valid JWT token found");
+            response.put("authenticated", false);
         }
 
-        response.put("authenticated", isAuthenticated);
         return ResponseEntity.ok(response);
     }
 
