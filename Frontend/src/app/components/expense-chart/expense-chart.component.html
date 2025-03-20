@@ -1,24 +1,651 @@
-<div class="min-h-screen flex" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
-  <app-sidebar
-    [isSidebarOpen]="isSidebarOpen"
+<div class="min-h-screen flex flex-col" style="background-image: url('assets/saa.png'); background-attachment: fixed; background-size: cover;">
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen" 
     (toggleSidebar)="toggleSidebar()"
   ></app-sidebar>
-  <div class="flex-1 flex items-center justify-center">
-    <div class="bg-black/30 flex items-center justify-center backdrop-blur-md shadow-lg p-8 rounded-lg max-w-4xl w-full text-white border border-gray-700">
-      <div class="w-full">
-        <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Expense Chart</h2>
-        <ngx-charts-bar-vertical
-          [view]="view"
-          [results]="expenseData"
-          [gradient]="gradient"
-          [xAxis]="showXAxis"
-          [yAxis]="showYAxis"
-          [legend]="showLegend"
-          [showXAxisLabel]="showXAxisLabel"
-          [xAxisLabel]="xAxisLabel"
-          [showYAxisLabel]="showYAxisLabel"
-          [yAxisLabel]="yAxisLabel">
-        </ngx-charts-bar-vertical>
+
+  <div class="flex-1 transition-all duration-300 p-6" [ngClass]="{'ml-20': !isSidebarOpen, 'ml-80': isSidebarOpen}">
+    <!-- Page Header -->
+    <header class="mb-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500">
+          Financial Analytics Dashboard
+        </h1>
+        <div class="flex space-x-2">
+          <button (click)="exportToPDF()" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
+            <mat-icon class="mr-1">picture_as_pdf</mat-icon>
+            Export PDF
+          </button>
+          <button (click)="exportToCSV()" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
+            <mat-icon class="mr-1">table_chart</mat-icon>
+            Export CSV
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filter Controls -->
+    <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4 mb-6">
+      <div class="flex flex-wrap items-center justify-between">
+        <div class="flex space-x-2 mb-3 md:mb-0">
+          <button 
+            *ngFor="let period of ['week', 'month', 'quarter', 'year', 'all']" 
+            (click)="changeTimeframe(period)"
+            [class]="selectedTimeframe === period 
+              ? 'px-4 py-2 bg-yellow-500 text-black rounded-lg' 
+              : 'px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700'"
+          >
+            {{ period | titlecase }}
+          </button>
+        </div>
+        <div>
+          <div class="flex space-x-2">
+            <form [formGroup]="filterForm" class="flex space-x-2">
+              <input 
+                type="date" 
+                formControlName="startDate"
+                class="px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+              <input 
+                type="date" 
+                formControlName="endDate"
+                class="px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+              <button 
+                (click)="applyFilters()" 
+                class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400"
+              >
+                Apply
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+      <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Main content when loaded -->
+    <div *ngIf="!isLoading">
+      <!-- Tab Navigation -->
+      <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl mb-6">
+        <div class="flex overflow-x-auto">
+          <button 
+            *ngFor="let tab of ['overview', 'income', 'expenses', 'budget', 'trends', 'forecast']"
+            (click)="setActiveTab(tab)"
+            [class]="activeTab === tab 
+              ? 'px-6 py-3 text-yellow-400 border-b-2 border-yellow-400 font-semibold'
+              : 'px-6 py-3 text-gray-300 hover:text-yellow-300'"
+          >
+            {{ tab | titlecase }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Financial Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total Income Card -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400">Total Income</p>
+              <h3 class="text-2xl font-bold text-white">{{ formatCurrency(totalIncome) }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <mat-icon class="text-green-400">trending_up</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Expenses Card -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400">Total Expenses</p>
+              <h3 class="text-2xl font-bold text-white">{{ formatCurrency(totalExpenses) }}</h3>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <mat-icon class="text-red-400">trending_down</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Net Savings Card -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400">Net Savings</p>
+              <h3 class="text-2xl font-bold" [ngClass]="netSavings >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ formatCurrency(netSavings) }}
+              </h3>
+            </div>
+            <div class="w-10 h-10 rounded-full" 
+                 [ngClass]="netSavings >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'">
+              <mat-icon class="mt-2 ml-2" [ngClass]="netSavings >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ netSavings >= 0 ? 'savings' : 'savings' }}
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Savings Rate Card -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-400">Savings Rate</p>
+              <h3 class="text-2xl font-bold" [ngClass]="savingsRate >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ formatPercentage(savingsRate) }}
+              </h3>
+            </div>
+            <div class="w-10 h-10 rounded-full" 
+                 [ngClass]="savingsRate >= 20 ? 'bg-green-500/20' : savingsRate >= 0 ? 'bg-yellow-500/20' : 'bg-red-500/20'">
+              <mat-icon class="mt-2 ml-2" [ngClass]="savingsRate >= 20 ? 'text-green-400' : savingsRate >= 0 ? 'text-yellow-400' : 'text-red-400'">
+                {{ savingsRate >= 20 ? 'sentiment_very_satisfied' : savingsRate >= 0 ? 'sentiment_satisfied' : 'sentiment_dissatisfied' }}
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content Based on Active Tab -->
+      
+      <!-- Overview Tab -->
+      <div *ngIf="activeTab === 'overview'" class="space-y-6">
+        <!-- Insights section -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-6">
+          <h2 class="text-2xl font-bold text-white mb-4">Financial Insights</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let insight of insights" 
+                 class="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 cursor-pointer transition-all"
+                 (click)="onInsightClick(insight)">
+              <div class="flex items-start">
+                <div class="w-10 h-10 mr-3 rounded-full flex items-center justify-center"
+                     [ngClass]="insight.type === 'success' ? 'bg-green-500/20' : insight.type === 'warning' ? 'bg-red-500/20' : 'bg-blue-500/20'">
+                  <mat-icon [ngClass]="getInsightIconClass(insight.type)">{{ insight.icon }}</mat-icon>
+                </div>
+                <div>
+                  <h3 class="font-bold text-white">{{ insight.title }}</h3>
+                  <p class="text-gray-300 text-sm">{{ insight.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Charts section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Income vs. Expenses Monthly Comparison -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Income vs. Expenses</h3>
+            <div class="h-80">
+              <ngx-charts-bar-vertical-2d
+                [results]="monthlyComparisonData"
+                
+                [gradient]="gradient"
+                [xAxis]="showXAxis"
+                [yAxis]="showYAxis"
+                [showXAxisLabel]="showXAxisLabel"
+                [showYAxisLabel]="showYAxisLabel"
+                [xAxisLabel]="'Month'"
+                [yAxisLabel]="'Amount (₹)'"
+                [legendTitle]="'Legend'"
+                [showDataLabel]="true"
+                [barPadding]="5"
+                [groupPadding]="16">
+              </ngx-charts-bar-vertical-2d>
+            </div>
+          </div>
+
+          <!-- Expense by Category -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Expenses by Category</h3>
+            <div class="h-80 chart-container">
+              <ngx-charts-pie-chart
+              [view]="[200, 200]"
+              [results]="expenseByCategoryData"
+              [scheme]="colorSchemeExpense"
+              [gradient]="true"
+              [legend]="showLegend"
+              [labels]="showLabels"
+              [doughnut]="doughnut"
+              [arcWidth]="0.4">
+            </ngx-charts-pie-chart>
+            </div>
+          </div>
+
+          <!-- Savings Rate Trend -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Savings Rate Trend</h3>
+            <div class="h-80">
+              <ngx-charts-line-chart
+                
+                [results]="savingsRateData"
+                [gradient]="gradient"
+                [xAxis]="showXAxis"
+                [yAxis]="showYAxis"
+                [showXAxisLabel]="showXAxisLabel"
+                [showYAxisLabel]="showYAxisLabel"
+                [xAxisLabel]="'Month'"
+                [yAxisLabel]="'Savings Rate (%)'"
+                [autoScale]="true"
+                [timeline]="false">
+              </ngx-charts-line-chart>
+            </div>
+          </div>
+
+          <!-- Daily Spending Pattern -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Daily Spending (Current Month)</h3>
+            <div class="h-80">
+              <ngx-charts-line-chart
+              class="gap-x-24"
+                [results]="dailySpendingData"
+                [gradient]="gradient"
+                [xAxis]="showXAxis"
+                [yAxis]="showYAxis"
+                [showXAxisLabel]="showXAxisLabel"
+                [showYAxisLabel]="showYAxisLabel"
+                [xAxisLabel]="'Day'"
+                [yAxisLabel]="'Amount (₹)'">
+              </ngx-charts-line-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Income Tab -->
+      <div *ngIf="activeTab === 'income'" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Income by Source -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Income by Source</h3>
+            <div class="h-96 chart-container">
+              <ngx-charts-advanced-pie-chart
+                [results]="incomeByCategoryData"
+                [gradient]="gradient"
+                [scheme]="colorSchemeIncome">
+              </ngx-charts-advanced-pie-chart>
+            </div>
+          </div>
+
+          <!-- Income Sources Detail -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Income Sources Detail</h3>
+            <div class="overflow-y-auto max-h-96 pr-2">
+              <div *ngFor="let item of incomeByCategoryData" class="mb-4 last:mb-0">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full mr-3 flex items-center justify-center"
+                        [style.background-color]="item.value > 0 ? 'rgba(74, 222, 128, 0.2)' : 'rgba(248, 113, 113, 0.2)'">
+                      <mat-icon 
+                        [class]="item.value > 0 ? 'text-green-400' : 'text-red-400'">
+                        {{ item.value > 0 ? 'trending_up' : 'trending_down' }}
+                      </mat-icon>
+                    </div>
+                    <span class="text-white">{{ item.name }}</span>
+                  </div>
+                  <span class="text-white font-bold">{{ formatCurrency(item.value) }}</span>
+                </div>
+                
+                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-green-500 to-green-600"
+                    [style.width.%]="(item.value / totalIncome) * 100">
+                  </div>
+                </div>
+                
+                <div class="text-right text-sm text-gray-400 mt-1">
+                  {{ formatPercentage((item.value / totalIncome) * 100) }} of total income
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expenses Tab -->
+      <div *ngIf="activeTab === 'expenses'" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Expense by Category -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Expenses by Category</h3>
+            <div class="h-96">
+              <ngx-charts-advanced-pie-chart
+                [results]="expenseByCategoryData"
+                [scheme]="colorSchemeExpense"
+                [gradient]="gradient">
+                
+              </ngx-charts-advanced-pie-chart>
+            </div>
+          </div>
+
+          <!-- Recurring vs One-time Expenses -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+            <h3 class="text-xl font-bold text-white mb-4">Recurring vs One-time Expenses</h3>
+            <div class="h-96">
+              <ngx-charts-pie-chart
+                [results]="recurringVsOneTimeData"
+                [gradient]="gradient"
+                [legend]="showLegend"
+             
+                [labels]="showLabels"
+                [doughnut]="true"
+                [arcWidth]="0.4">
+              </ngx-charts-pie-chart>
+            </div>
+          </div>
+
+          <!-- Expense Categories Detail -->
+          <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4 col-span-1 lg:col-span-2">
+            <h3 class="text-xl font-bold text-white mb-4">Expense Categories Detail</h3>
+            <div class="overflow-y-auto max-h-96 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div *ngFor="let item of expenseByCategoryData" class="bg-gray-800/50 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full mr-3 flex items-center justify-center"
+                        [style.background-color]="getCategoryColor(item.name) + '33'">
+                      <mat-icon [style.color]="getCategoryColor(item.name)">
+                        {{ getCategoryIcon(item.name) }}
+                      </mat-icon>
+                    </div>
+                    <span class="text-white">{{ item.name }}</span>
+                  </div>
+                  <span class="text-white font-bold">{{ formatCurrency(item.value) }}</span>
+                </div>
+                
+                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    [style.background-color]="getCategoryColor(item.name)"
+                    [style.width.%]="(item.value / totalExpenses) * 100"
+                    class="h-full">
+                  </div>
+                </div>
+                
+                <div class="text-right text-sm text-gray-400 mt-1">
+                  {{ formatPercentage((item.value / totalExpenses) * 100) }} of total expenses
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget Tab -->
+      <div *ngIf="activeTab === 'budget'" class="space-y-6">
+        <!-- Budget vs Actual Spending -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Budget vs Actual Spending</h3>
+          <div class="h-96">
+            <ngx-charts-bar-horizontal-2d
+              [results]="categoryComparisonData"
+              [scheme]="colorSchemeBudget"
+              [gradient]="gradient"
+              [xAxis]="showXAxis"
+              [yAxis]="showYAxis"
+              [showXAxisLabel]="showXAxisLabel"
+              [showYAxisLabel]="showYAxisLabel"
+              [xAxisLabel]="'Amount (₹)'"
+              [yAxisLabel]="'Category'"
+              [legendTitle]="'Legend'"
+              [showDataLabel]="true">
+            </ngx-charts-bar-horizontal-2d>
+          </div>
+        </div>
+
+        <!-- Budget Status Table -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Budget Status</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-white">
+              <thead>
+                <tr class="border-b border-gray-700">
+                  <th class="py-2 text-left">Category</th>
+                  <th class="py-2 text-right">Budget</th>
+                  <th class="py-2 text-right">Spent</th>
+                  <th class="py-2 text-right">Remaining</th>
+                  <th class="py-2 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of budgetStatus" class="border-b border-gray-700 hover:bg-gray-800">
+                  <td class="py-2 flex items-center">
+                    <div class="w-8 h-8 rounded-full mr-3 flex items-center justify-center"
+                         [style.background-color]="getCategoryColor(item.category) + '33'">
+                      <mat-icon [style.color]="getCategoryColor(item.category)">
+                        {{ getCategoryIcon(item.category) }}
+                      </mat-icon>
+                    </div>
+                    {{ item.category }}
+                  </td>
+                  <td class="py-2 text-right">{{ formatCurrency(item.budgetAmount) }}</td>
+                  <td class="py-2 text-right">{{ formatCurrency(item.spentAmount) }}</td>
+                  <td class="py-2 text-right" [ngClass]="item.remainingAmount >= 0 ? 'text-green-400' : 'text-red-400'">
+                    {{ formatCurrency(item.remainingAmount) }}
+                  </td>
+                  <td class="py-2 text-right">
+                    <div class="inline-block w-full max-w-xs">
+                      <div class="flex items-center justify-end">
+                        <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden mr-2">
+                          <div 
+                            [class]="getStatusClass(item.percentUsed)"
+                            [style.width.%]="item.percentUsed > 100 ? 100 : item.percentUsed"
+                            class="h-full">
+                          </div>
+                        </div>
+                        <span class="w-12 text-right">{{ formatPercentage(item.percentUsed) }}</span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trends Tab -->
+      <div *ngIf="activeTab === 'trends'" class="space-y-6">
+        <!-- Spending Trends -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Spending Trends by Category</h3>
+          <div class="h-96">
+            <ngx-charts-line-chart
+              [results]="spendingTrendsData"
+              [scheme]="colorSchemeExpense"
+              [gradient]="gradient"
+              [xAxis]="showXAxis"
+              [yAxis]="showYAxis"
+              [showXAxisLabel]="showXAxisLabel"
+              [showYAxisLabel]="showYAxisLabel"
+              [xAxisLabel]="'Month'"
+              [yAxisLabel]="'Amount (₹)'"
+              [legend]="showLegend"
+              [legendTitle]="'Categories'"
+              [autoScale]="true">
+            </ngx-charts-line-chart>
+          </div>
+        </div>
+
+        <!-- Monthly Spending Heatmap -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Top Spending Categories</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let item of expenseByCategoryData.slice(0, 6)" class="bg-gray-800/50 rounded-lg p-4">
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 rounded-full mr-3 flex items-center justify-center"
+                       [style.background-color]="getCategoryColor(item.name) + '33'">
+                    <mat-icon [style.color]="getCategoryColor(item.name)">
+                      {{ getCategoryIcon(item.name) }}
+                    </mat-icon>
+                  </div>
+                  <span class="text-white">{{ item.name }}</span>
+                </div>
+                <span class="text-white font-bold">{{ formatCurrency(item.value) }}</span>
+              </div>
+              
+              <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  [style.background-color]="getCategoryColor(item.name)"
+                  [style.width.%]="(item.value / totalExpenses) * 100"
+                  class="h-full">
+                </div>
+              </div>
+              
+              <div class="text-right text-sm text-gray-400 mt-1">
+                {{ formatPercentage((item.value / totalExpenses) * 100) }} of total expenses
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forecast Tab -->
+      <div *ngIf="activeTab === 'forecast'" class="space-y-6">
+        <!-- Forecast Controls -->
+        <div class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Financial Forecast</h3>
+          <form [formGroup]="forecastForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-white mb-2">Forecast Months</label>
+              <input 
+                type="number" 
+                formControlName="months"
+                min="1"
+                max="36"
+                class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+            </div>
+            <div>
+              <label class="block text-white mb-2">Savings Goal (optional)</label>
+              <input 
+                type="number" 
+                formControlName="savingsGoal"
+                placeholder="e.g., 100000"
+                class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              >
+            </div>
+            <div class="flex items-end">
+              <button 
+                (click)="generateForecast()" 
+                class="w-full px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400"
+              >
+                Generate Forecast
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Forecast Results -->
+        <div *ngIf="forecastData.months?.length > 0" class="bg-black/30 backdrop-blur-md border border-yellow-500/30 rounded-xl p-4">
+          <h3 class="text-xl font-bold text-white mb-4">Forecast Results</h3>
+          
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-gray-800/50 rounded-lg p-4">
+              <p class="text-gray-400">Average Monthly Income</p>
+              <h3 class="text-xl font-bold text-white">{{ formatCurrency(forecastData.avgIncome) }}</h3>
+            </div>
+            <div class="bg-gray-800/50 rounded-lg p-4">
+              <p class="text-gray-400">Average Monthly Expenses</p>
+              <h3 class="text-xl font-bold text-white">{{ formatCurrency(forecastData.avgExpenses) }}</h3>
+            </div>
+            <div class="bg-gray-800/50 rounded-lg p-4">
+              <p class="text-gray-400">Projected Monthly Savings</p>
+              <h3 class="text-xl font-bold" [ngClass]="forecastData.avgIncome - forecastData.avgExpenses >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ formatCurrency(forecastData.avgIncome - forecastData.avgExpenses) }}
+              </h3>
+            </div>
+          </div>
+          
+          <!-- Time to Goal -->
+          <div *ngIf="forecastData.timeToGoal" class="bg-gray-800/50 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center mr-3">
+                <mat-icon class="text-yellow-400">flag</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-white">Time to Reach Your Savings Goal</h3>
+                <p class="text-gray-300">
+                  At your current rate, you'll reach your savings goal of {{ formatCurrency(forecastForm.get('savingsGoal')?.value) }} 
+                  in approximately <span class="text-yellow-400 font-bold">{{ forecastData.timeToGoal }} months</span>.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Monthly Forecast Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-white">
+              <thead>
+                <tr class="border-b border-gray-700">
+                  <th class="py-2 text-left">Month</th>
+                  <th class="py-2 text-right">Projected Income</th>
+                  <th class="py-2 text-right">Projected Expenses</th>
+                  <th class="py-2 text-right">Monthly Savings</th>
+                  <th class="py-2 text-right">Cumulative Savings</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let month of forecastData.months" class="border-b border-gray-700 hover:bg-gray-800">
+                  <td class="py-2">{{ month.month }}</td>
+                  <td class="py-2 text-right">{{ formatCurrency(month.projectedIncome) }}</td>
+                  <td class="py-2 text-right">{{ formatCurrency(month.projectedExpenses) }}</td>
+                  <td class="py-2 text-right" [ngClass]="month.monthlySavings >= 0 ? 'text-green-400' : 'text-red-400'">
+                    {{ formatCurrency(month.monthlySavings) }}
+                  </td>
+                  <td class="py-2 text-right" [ngClass]="month.cumulativeSavings >= 0 ? 'text-green-400' : 'text-red-400'">
+                    {{ formatCurrency(month.cumulativeSavings) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insight Details Modal -->
+  <div *ngIf="showInsightDetails" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-2xl w-full">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">{{ selectedInsight?.title }}</h2>
+        <button (click)="closeInsightDetails()" class="text-gray-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 mr-4 rounded-full flex items-center justify-center"
+               [ngClass]="selectedInsight?.type === 'success' ? 'bg-green-500/20' : selectedInsight?.type === 'warning' ? 'bg-red-500/20' : 'bg-blue-500/20'">
+            <mat-icon [ngClass]="getInsightIconClass(selectedInsight?.type || '')" class="text-2xl">
+              {{ selectedInsight?.icon }}
+            </mat-icon>
+          </div>
+          <p class="text-white text-lg">{{ selectedInsight?.description }}</p>
+        </div>
+
+        <!-- Additional details specific to the insight type would go here -->
+        <div class="bg-gray-800 rounded-lg p-4 text-gray-300 mt-4">
+          <p class="mb-2">
+            <span class="font-semibold">Analysis:</span> This insight is based on your financial data from 
+            {{ formatDate(filterForm.get('startDate')?.value) }} to {{ formatDate(filterForm.get('endDate')?.value) }}.
+          </p>
+          <p>The financial assistant analyzes your spending patterns, savings habits, and income trends to provide 
+             personalized insights that can help you improve your financial health.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-6 space-x-3">
+        <button (click)="closeInsightDetails()" class="px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600">
+          Close
+        </button>
       </div>
     </div>
   </div>

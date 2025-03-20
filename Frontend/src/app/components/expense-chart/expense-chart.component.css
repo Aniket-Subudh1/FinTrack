@@ -1,7 +1,58 @@
-::ng-deep .ngx-charts .x.axis .tick text {
-  fill: white !important;
+
+.chart-container {
+  width: 350px; 
+  height: 350px;
+  margin: 0 auto;
 }
 
-::ng-deep .ngx-charts .y.axis .tick text {
-  fill: white !important;
+
+.chart-title {
+  color: white !important;
+  font-size: 20px; 
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 16px;
 }
+
+
+:host ::ng-deep .ngx-charts text {
+  fill: #ffffff !important;
+  font-weight: 500;
+}
+
+:host ::ng-star-inserted  text {
+  fill: white !important;
+  font-size: 24px !important;
+  font-weight: bold;
+}
+
+:host ::ng-deep .advanced-pie text {
+  fill: white !important;
+  font-size: 24px !important;
+  font-weight: bold;
+}
+
+
+:host ::ng-deep .pie-label text {
+  fill: white !important;
+  font-size: 14px !important; 
+  font-weight: 500;
+}
+
+
+:host ::ng-deep .legend-label-text {
+  color: white !important;
+  font-size: 14px !important;
+}
+
+
+:host ::ng-deep .legend-label-value {
+  color: white !important;
+  font-size: 14px !important;
+}
+
+
+:host ::ng-deep .legend-item .legend-label-color {
+  margin-right: 8px;
+}
+

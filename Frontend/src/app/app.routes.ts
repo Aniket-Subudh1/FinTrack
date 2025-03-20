@@ -41,7 +41,7 @@ export const routes: Routes = [
       canActivate: [AuthGuard]
     },
     {
-      path: 'barchart',
+      path: 'analytics',
       component: ExpenseChartComponent,
       canActivate: [AuthGuard]
 

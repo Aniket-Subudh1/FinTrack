@@ -1,59 +1,408 @@
-<div class="min-h-screen flex flex-col items-center justify-start bg-gray-900 py-8" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
-  <app-sidebar
-    [isSidebarOpen]="isSidebarOpen"
+<div class="min-h-screen flex flex-col" style="background-image: url('assets/saa.png'); background-attachment: fixed; background-size: cover;">
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen" 
     (toggleSidebar)="toggleSidebar()"
   ></app-sidebar>
-  <div class="bg-black/30 backdrop-blur-md shadow-lg p-8 rounded-lg max-w-3xl w-full border border-gray-700">
-    <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Expense Report</h2>
 
-    <!-- Date Range Selection -->
-    <div class="flex flex-col md:flex-row md:items-end gap-4 mb-6">
-      <div class="flex-1">
-        <label for="startDate" class="block text-lg font-medium text-yellow-300">Start Date:</label>
-        <input id="startDate" type="date" [(ngModel)]="startDate"
-               class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-      </div>
-      <div class="flex-1">
-        <label for="endDate" class="block text-lg font-medium text-yellow-300">End Date:</label>
-        <input id="endDate" type="date" [(ngModel)]="endDate"
-               class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-      </div>
-      <div>
-        <button (click)="fetchFilteredExpenses()"
-                class="px-6 py-2 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400">
-          Filter
+  <div class="flex-1 transition-all duration-300 p-8" [ngClass]="{'ml-20': !isSidebarOpen, 'ml-80': isSidebarOpen}">
+    <!-- Header -->
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 
+                animate-gradient-text inline-block">
+        Financial Reports
+      </h1>
+      <p class="text-gray-300 mt-2">Generate comprehensive reports to analyze your financial performance.</p>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="mb-8 border-b border-gray-700">
+      <div class="flex space-x-6">
+        <button 
+          (click)="setActiveTab('generator')" 
+          class="pb-3 px-2 font-medium"
+          [class.text-yellow-400]="activeTab === 'generator'"
+          [class.text-gray-400]="activeTab !== 'generator'"
+          [class.border-b-2]="activeTab === 'generator'"
+          [class.border-yellow-400]="activeTab === 'generator'">
+          Report Generator
+        </button>
+        <button 
+          (click)="setActiveTab('saved-reports')" 
+          class="pb-3 px-2 font-medium"
+          [class.text-yellow-400]="activeTab === 'saved-reports'"
+          [class.text-gray-400]="activeTab !== 'saved-reports'"
+          [class.border-b-2]="activeTab === 'saved-reports'"
+          [class.border-yellow-400]="activeTab === 'saved-reports'">
+          Saved Reports
+        </button>
+        <button 
+          (click)="setActiveTab('insights')" 
+          class="pb-3 px-2 font-medium"
+          [class.text-yellow-400]="activeTab === 'insights'"
+          [class.text-gray-400]="activeTab !== 'insights'"
+          [class.border-b-2]="activeTab === 'insights'"
+          [class.border-yellow-400]="activeTab === 'insights'">
+          Financial Insights
         </button>
       </div>
     </div>
 
-    <!-- Error Message -->
-    <p *ngIf="errorMessage" class="text-red-500 mb-4">{{ errorMessage }}</p>
-
-    <!-- Expense Table -->
-    <h3 class="text-2xl font-semibold text-yellow-400 mb-2">Expense Table</h3>
-    <div class="overflow-x-auto">
-      <table *ngIf="expenses.length > 0" class="min-w-full text-left bg-black/40 rounded-lg">
-        <thead class="bg-gray-800 text-yellow-300 text-sm uppercase border-b border-gray-700">
-          <tr>
-            <th class="px-4 py-3">Category</th>
-            <th class="px-4 py-3">Amount</th>
-            <th class="px-4 py-3">Date</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-700">
-          <tr *ngFor="let expense of expenses" class="hover:bg-gray-800/30">
-            <td class="px-4 py-3 text-white">{{ expense.category }}</td>
-            <td class="px-4 py-3 text-white">{{ expense.amount }}</td>
-            <td class="px-4 py-3 text-white">{{ expense.date | date: 'short' }}</td> <!-- Updated to text-white -->
-          </tr>
-        </tbody>
-      </table>
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+      <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-yellow-400">Loading data...</p>
     </div>
 
-    <!-- Export Button -->
-    <button (click)="exportAsPDF()"
-            class="mt-6 w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400">
-      Export as PDF
-    </button>
-  </div>
-</div>
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="bg-red-500/30 border border-red-500 text-white px-4 py-3 rounded mb-6">
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="bg-green-500/30 border border-green-500 text-white px-4 py-3 rounded mb-6">
+      <p>{{ successMessage }}</p>
+    </div>
+
+    <!-- Report Generator Tab Content -->
+    <div *ngIf="activeTab === 'generator' && !isLoading">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Left Column - Report Configuration -->
+        <div class="lg:col-span-2">
+          <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 shadow-lg">
+            <h2 class="text-xl font-bold text-white mb-4">Report Configuration</h2>
+
+            <!-- Report Templates -->
+            <div class="mb-6">
+              <h3 class="text-md font-semibold text-yellow-400 mb-2">Report Templates</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div *ngFor="let template of reportTemplates" 
+                     (click)="selectTemplate(template.id)"
+                     [class.border-yellow-400]="selectedTemplate === template.id"
+                     class="bg-black/40 p-3 rounded-lg border border-gray-700 hover:border-yellow-400 cursor-pointer transition-all duration-200">
+                  <h6 class="text-white font-medium">{{ template.name }}</h6>
+                  <p class="text-gray-400 text-sm">{{ template.description }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Report Configuration Form -->
+            <form [formGroup]="reportForm" (ngSubmit)="generateReport()">
+              <!-- Report Title -->
+              <div class="mb-4">
+                <label for="reportTitle" class="block text-sm font-medium text-gray-300 mb-1">Report Title</label>
+                <input type="text" id="reportTitle" formControlName="reportTitle"
+                       class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-yellow-400 text-white">
+              </div>
+
+              <!-- Report Period Selection -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Report Period</label>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" (click)="updateReportPeriod('week')" 
+                          [class.bg-yellow-500]="reportPeriod === 'week'"
+                          [class.bg-gray-700]="reportPeriod !== 'week'"
+                          class="px-3 py-1 rounded text-sm">
+                    Week
+                  </button>
+                  <button type="button" (click)="updateReportPeriod('month')" 
+                          [class.bg-yellow-500]="reportPeriod === 'month'"
+                          [class.bg-gray-700]="reportPeriod !== 'month'"
+                          class="px-3 py-1 rounded text-sm">
+                    Month
+                  </button>
+                  <button type="button" (click)="updateReportPeriod('quarter')" 
+                          [class.bg-yellow-500]="reportPeriod === 'quarter'"
+                          [class.bg-gray-700]="reportPeriod !== 'quarter'"
+                          class="px-3 py-1 rounded text-sm">
+                    Quarter
+                  </button>
+                  <button type="button" (click)="updateReportPeriod('year')" 
+                          [class.bg-yellow-500]="reportPeriod === 'year'"
+                          [class.bg-gray-700]="reportPeriod !== 'year'"
+                          class="px-3 py-1 rounded text-sm">
+                    Year
+                  </button>
+                  <button type="button" (click)="updateReportPeriod('custom')" 
+                          [class.bg-yellow-500]="reportPeriod === 'custom'"
+                          [class.bg-gray-700]="reportPeriod !== 'custom'"
+                          class="px-3 py-1 rounded text-sm">
+                    Custom
+                  </button>
+                </div>
+              </div>
+
+              <!-- Date Range Selection (shown when custom period is selected) -->
+              <div class="mb-4" [class.hidden]="!showCustomDateRange">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
+                    <input type="date" id="startDate" formControlName="startDate"
+                           class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-yellow-400 text-white">
+                  </div>
+                  <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+                    <input type="date" id="endDate" formControlName="endDate"
+                           class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-yellow-400 text-white">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Report Format Selection -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Report Format</label>
+                <div class="flex space-x-4">
+                  <label class="inline-flex items-center">
+                    <input type="radio" [(ngModel)]="reportFormat" [ngModelOptions]="{standalone: true}" value="pdf" checked
+                           class="form-radio text-yellow-500">
+                    <span class="ml-2 text-white">PDF</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="radio" [(ngModel)]="reportFormat" [ngModelOptions]="{standalone: true}" value="csv"
+                           class="form-radio text-yellow-500">
+                    <span class="ml-2 text-white">CSV</span>
+                  </label>
+                 
+                </div>
+              </div>
+
+              <!-- Report Content Options -->
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Report Content</label>
+                <div class="space-y-3 gap-1">
+                  <label class="inline-flex items-center">
+                    <input type="checkbox" formControlName="includeExpenses" 
+                           class="form-checkbox  text-yellow-500">
+                    <span class="ml-2 text-white">Include Expenses</span>
+                  </label>
+                  <label class="inline-flex ml-6 items-center">
+                    <input type="checkbox" formControlName="includeIncomes" 
+                           class="form-checkbox text-yellow-500">
+                    <span class="ml-2 text-white">Include Incomes</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="checkbox" formControlName="includeBudgets" 
+                           class="form-checkbox text-yellow-500">
+                    <span class="ml-2 text-white">Include Budget Analysis</span>
+                  </label>
+                  <label class="inline-flex ml-2 items-center">
+                    <input type="checkbox" formControlName="includeInsights" 
+                           class="form-checkbox text-yellow-500">
+                    <span class="ml-2 text-white">Include Financial Insights</span>
+                  </label>
+                  <label class="inline-flex ml-3 items-center">
+                    <input type="checkbox" formControlName="includeCharts" 
+                           class="form-checkbox text-yellow-500">
+                    <span class="ml-2 text-white">Include Charts</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex justify-between">
+                <button type="button" (click)="togglePreview()" 
+                       class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                  {{ showPreview ? 'Hide Preview' : 'Show Preview' }}
+                </button>
+                <button type="submit" [disabled]="reportForm.invalid || exportingReport"
+                       class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 disabled:bg-gray-500 disabled:text-gray-300">
+                  {{ exportingReport ? 'Generating...' : 'Generate Report' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column - Report Preview -->
+        <div class="lg:col-span-3">
+          <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 shadow-lg h-full">
+            <h2 class="text-xl font-bold text-white mb-4">Report Preview</h2>
+            
+            <!-- If data is loaded but there are no transactions -->
+            <div *ngIf="reportData.transactions.length === 0" class="flex flex-col items-center justify-center py-10">
+              <mat-icon class="text-yellow-400 text-5xl">description</mat-icon>
+              <p class="mt-4 text-white text-center">No transaction data found for the selected period.<br>Try changing the date range or adding transactions.</p>
+            </div>
+
+            <!-- Report Preview Content -->
+            <div *ngIf="reportData.transactions.length > 0">
+              <!-- Financial Summary -->
+              <div class="mb-6">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3">Financial Summary</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div class="bg-black/40 p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Total Income</p>
+                    <p class="text-white text-lg">{{ formatCurrency(getTotalIncome()) }}</p>
+                  </div>
+                  <div class="bg-black/40 p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Total Expenses</p>
+                    <p class="text-white text-lg">{{ formatCurrency(getTotalExpenses()) }}</p>
+                  </div>
+                  <div class="bg-black/40 p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Net Savings</p>
+                    <p class="text-white text-lg" [class.text-green-400]="getNetSavings() > 0" [class.text-red-400]="getNetSavings() < 0">
+                      {{ formatCurrency(getNetSavings()) }}
+                    </p>
+                  </div>
+                  <div class="bg-black/40 p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Savings Rate</p>
+                    <p class="text-white text-lg" [class.text-green-400]="getSavingsRate() > 20" [class.text-yellow-400]="getSavingsRate() <= 20 && getSavingsRate() > 0" [class.text-red-400]="getSavingsRate() <= 0">
+                      {{ getSavingsRate().toFixed(1) }}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Transactions Preview -->
+              <div class="mb-6">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3">Recent Transactions</h3>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-black/40">
+                      <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-black/20 divide-y divide-gray-700">
+                      <tr *ngFor="let transaction of reportData.transactions.slice(0, 5)">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ formatDate(transaction.date) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm" [class.text-green-400]="transaction.type === 'income'" [class.text-red-400]="transaction.type === 'expense'">
+                          {{ transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ transaction.category }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right" [class.text-green-400]="transaction.type === 'income'" [class.text-red-400]="transaction.type === 'expense'">
+                          {{ formatCurrency(transaction.amount) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p *ngIf="reportData.transactions.length > 5" class="text-sm text-gray-400 mt-2 text-center">
+                    + {{ reportData.transactions.length - 5 }} more transactions
+                  </p>
+                </div>
+              </div>
+
+              <!-- Expense Categories Preview -->
+              <div *ngIf="reportForm.get('includeExpenses')?.value" class="mb-6">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3">Expense Categories</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="bg-black/40 p-4 rounded-lg h-64">
+                 
+                    <div class="h-full flex items-center justify-center border border-dashed border-gray-600 rounded">
+                      <div class="text-center">
+                        <mat-icon class="text-yellow-400 text-3xl">pie_chart</mat-icon>
+                        <p class="text-gray-300 mt-2">Expense Category Chart</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bg-black/40 p-4 rounded-lg max-h-64 overflow-y-auto">
+                    <table class="min-w-full">
+                      <thead>
+                        <tr>
+                          <th class="text-left text-xs font-medium text-gray-300 uppercase tracking-wider pb-2">Category</th>
+                          <th class="text-right text-xs font-medium text-gray-300 uppercase tracking-wider pb-2">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let item of expenseChartData">
+                          <td class="py-2 text-sm text-gray-200">{{ item.name }}</td>
+                          <td class="py-2 text-sm text-red-400 text-right">{{ formatCurrency(item.value) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Financial Insights Preview -->
+              <div *ngIf="reportForm.get('includeInsights')?.value && reportData.insights.length > 0" class="mb-6">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3">Financial Insights</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div *ngFor="let insight of reportData.insights" 
+                   
+                       class="p-4 rounded-lg">
+                    <div class="flex items-start">
+                      <mat-icon 
+                        [class.text-green-400]="insight.type === 'success'"
+                        [class.text-yellow-400]="insight.type === 'info'"
+                        [class.text-red-400]="insight.type === 'warning'"
+                        class="mr-3">{{ insight.icon }}</mat-icon>
+                      <div>
+                        <h4 class="text-white font-medium">{{ insight.title }}</h4>
+                        <p class="text-gray-300 text-sm">{{ insight.description }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved Reports Tab Content -->
+    <div *ngIf="activeTab === 'saved-reports' && !isLoading" class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 shadow-lg">
+      <h2 class="text-xl font-bold text-white mb-4">Your Saved Reports</h2>
+      
+      <!-- No Saved Reports State -->
+      <div class="flex flex-col items-center justify-center py-10 text-center">
+        <mat-icon class="text-yellow-400 text-5xl">folder</mat-icon>
+        <p class="mt-4 text-white">You don't have any saved reports yet.</p>
+        <p class="text-gray-400 mt-2">Generated reports will appear here for future reference.</p>
+        <button (click)="setActiveTab('generator')" class="mt-4 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400">
+          Create a Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Financial Insights Tab Content -->
+    <div *ngIf="activeTab === 'insights' && !isLoading" class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 shadow-lg">
+      <h2 class="text-xl font-bold text-white mb-4">Financial Insights</h2>
+      
+      <div *ngIf="reportData.insights.length === 0" class="flex flex-col items-center justify-center py-10 text-center">
+        <mat-icon class="text-yellow-400 text-5xl">insights</mat-icon>
+        <p class="mt-4 text-white">No financial insights available yet.</p>
+        <p class="text-gray-400 mt-2">Add more transactions to get personalized financial insights.</p>
+      </div>
+      
+      <div *ngIf="reportData.insights.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let insight of reportData.insights" 
+             [class.border-green-500]="insight.type === 'success'"
+             [class.border-yellow-500]="insight.type === 'info'"
+             [class.border-red-500]="insight.type === 'warning'"
+             class="bg-black/40 p-5 rounded-lg border">
+          <div class="flex items-start">
+            <div class="mr-4">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center">
+                <mat-icon 
+                  [class.text-green-400]="insight.type === 'success'"
+                  [class.text-yellow-400]="insight.type === 'info'"
+                  [class.text-red-400]="insight.type === 'warning'"
+                  class="text-2xl">{{ insight.icon }}</mat-icon>
+              </div>
+            </div>
+            <div>
+              <h4 class="text-white font-medium text-lg mb-2">{{ insight.title }}</h4>
+              <p class="text-gray-300">{{ insight.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Call-to-Action for More Insights -->
+      <div class="mt-8 p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-white">Want deeper financial analysis?</h3>
+            <p class="text-gray-300 mt-2">Generate a comprehensive report to get a detailed breakdown of your finances.</p>
+          </div>
+          <button (click)="setActiveTab('generator')" class="mt-4 md:mt-0 px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 font-medium">
+            Generate Full Report
+          </button>
+        </div>
+      </div>
+    </div>
+  

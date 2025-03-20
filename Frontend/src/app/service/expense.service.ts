@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map,tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 
 const BASE_URL = 'http://localhost:8080';
 
@@ -43,6 +43,32 @@ export interface ExpenseFilterParams {
   minAmount?: number;
   maxAmount?: number;
   tags?: string;
+}
+
+export interface ReportRequest {
+  startDate: string;
+  endDate: string;
+  reportTitle: string;
+  includeExpenses: boolean;
+  includeIncomes: boolean;
+  includeBudgets: boolean;
+  includeInsights?: boolean;
+  includeCharts?: boolean;
+}
+
+export interface SavedReportConfig {
+  id?: number;
+  reportTitle: string;
+  reportType: string;
+  configuration: string;
+  createdDate?: Date;
+}
+
+export interface FinancialInsight {
+  title: string;
+  description: string;
+  type: string;
+  icon: string;
 }
 
 @Injectable({
@@ -121,7 +147,6 @@ export class ExpenseService {
     );
   }
   
-
   getExpensesByDateRange(startDate: string, endDate: string): Observable<any[]> {
     const headers = this.createAuthorizationHeader();
     return this.http.get<any[]>(`${BASE_URL}/api/expenses/filter`, {
@@ -201,6 +226,109 @@ export class ExpenseService {
     return this.http.delete(`${BASE_URL}/api/expenses/${id}`, { headers });
   }
 
+  // Report Generation Methods
+  generateReport(reportRequest: ReportRequest): Observable<any> {
+    this.logRequestStart('api/reports/generate');
+    return this.http.post(`${BASE_URL}/api/reports/generate`, reportRequest, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.logRequestComplete('api/reports/generate', response)),
+      catchError(error => {
+        console.error('❌ Error generating report:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  exportToExcel(reportRequest: ReportRequest): Observable<Blob> {
+    this.logRequestStart('api/reports/export-excel');
+    return this.http.post(`${BASE_URL}/api/reports/export-excel`, reportRequest, {
+      responseType: 'blob',
+      withCredentials: true
+    }).pipe(
+      catchError(error => {
+        console.error('❌ Error exporting to Excel:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getFinancialInsights(period?: string): Observable<FinancialInsight[]> {
+    this.logRequestStart('api/reports/insights');
+    let params = new HttpParams();
+    if (period) {
+      params = params.set('period', period);
+    }
+    
+    return this.http.get<FinancialInsight[]>(`${BASE_URL}/api/reports/insights`, {
+      params,
+      withCredentials: true
+    }).pipe(
+      tap(insights => this.logRequestComplete('api/reports/insights', insights)),
+      map(insights => insights || []),
+      catchError(error => {
+        console.error('❌ Error fetching financial insights:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getMonthlySummary(months: number = 6): Observable<any[]> {
+    this.logRequestStart('api/reports/monthly-summary');
+    return this.http.get<any[]>(`${BASE_URL}/api/reports/monthly-summary`, {
+      params: { months: months.toString() },
+      withCredentials: true
+    }).pipe(
+      tap(summary => this.logRequestComplete('api/reports/monthly-summary', summary)),
+      map(summary => summary || []),
+      catchError(error => {
+        console.error('❌ Error fetching monthly summary:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  saveReportConfiguration(config: SavedReportConfig): Observable<any> {
+    this.logRequestStart('api/reports/save-configuration');
+    return this.http.post(`${BASE_URL}/api/reports/save-configuration`, config, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.logRequestComplete('api/reports/save-configuration', response)),
+      catchError(error => {
+        console.error('❌ Error saving report configuration:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getSavedReportConfigurations(): Observable<SavedReportConfig[]> {
+    this.logRequestStart('api/reports/saved-configurations');
+    return this.http.get<SavedReportConfig[]>(`${BASE_URL}/api/reports/saved-configurations`, {
+      withCredentials: true
+    }).pipe(
+      tap(configs => this.logRequestComplete('api/reports/saved-configurations', configs)),
+      map(configs => configs || []),
+      catchError(error => {
+        console.error('❌ Error fetching saved report configurations:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  deleteReportConfiguration(id: number): Observable<any> {
+    this.logRequestStart(`api/reports/saved-configurations/${id}`);
+    return this.http.delete(`${BASE_URL}/api/reports/saved-configurations/${id}`, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.logRequestComplete(`api/reports/saved-configurations/${id}`, response)),
+      catchError(error => {
+        console.error('❌ Error deleting report configuration:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Utility Methods
   getCategoryIcon(category: string): string {
     const icons: { [key: string]: string } = {
       'GROCERY': 'shopping_cart',
@@ -243,6 +371,7 @@ export class ExpenseService {
     const jwtToken = localStorage.getItem('jwt');
     return jwtToken ? new HttpHeaders().set('Authorization', `Bearer ${jwtToken}`) : new HttpHeaders();
   }
+  
   private logRequestStart(endpoint: string): void {
     console.log(`📤 Requesting data from: ${endpoint}`);
   }
