@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { retry, catchError } from 'rxjs/operators';
 
 const BASE_URL = 'http://localhost:8080';
 
@@ -65,13 +66,7 @@ export class FinancialGoalService {
     return this.http.delete(`${BASE_URL}/api/financial-goals/${id}`, { withCredentials: true });
   }
 
-  updateGoalProgress(id: number, currentAmount: number): Observable<FinancialGoal> {
-    return this.http.patch<FinancialGoal>(
-      `${BASE_URL}/api/financial-goals/${id}/progress`, 
-      { currentAmount }, 
-      { withCredentials: true }
-    );
-  }
+ 
 
   addMilestone(goalId: number, milestone: Milestone): Observable<FinancialGoal> {
     return this.http.post<FinancialGoal>(
@@ -170,6 +165,19 @@ export class FinancialGoalService {
     return category && colors[category] ? colors[category] : '#7986CB'; 
   }
   
+  updateGoalProgress(id: number, currentAmount: number): Observable<FinancialGoal> {
+  return this.http.put<FinancialGoal>(
+    `${BASE_URL}/api/financial-goals/${id}/progress`, 
+    { currentAmount }, 
+    { withCredentials: true }
+  ).pipe(
+    retry(2), 
+    catchError(error => {
+      console.error('Error updating progress:', error);
+      return throwError(() => error);
+    })
+  );
+}
   getDefaultGoalIcon(category?: string): string {
     const icons: Record<string, string> = {
       'Emergency Fund': 'health_and_safety',
@@ -188,3 +196,4 @@ export class FinancialGoalService {
     return category && icons[category] ? icons[category] : 'flag';
   }
 }
+

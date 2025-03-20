@@ -16,12 +16,11 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    console.log('Intercepting request to:', request.url);
-    request = request.clone({
-      withCredentials: true
-    });
-
+    console.log('Intercepting request to:', request.url, 'Method:', request.method);
     const token = localStorage.getItem('jwt');
+    console.log('Token present:', !!token);
+
+   
     if (token) {
       console.log('Adding JWT token from localStorage to request');
       request = request.clone({

@@ -130,11 +130,11 @@ public class FinancialGoalController {
         }
     }
 
-    @PatchMapping("/{id}/progress")
+    @PutMapping("/{id}/progress")
     public ResponseEntity<FinancialGoalDTO> updateGoalProgress(
             @PathVariable Long id,
             @RequestBody Map<String, Double> progressUpdate) {
-
+        logger.info("Received progress update request for goal ID: {} with data: {}", id, progressUpdate);
         String email = getEmailFromJwtCookie();
         if (email == null) {
             logger.warn("No valid JWT token found in cookie");

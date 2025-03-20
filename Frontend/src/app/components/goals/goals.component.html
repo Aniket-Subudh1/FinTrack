@@ -23,9 +23,9 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm">Total Goals</p>
-            <h3 class="text-xl font-bold text-white">{{goals.length || 0}}</h3>
+            <h5 class="text-xl font-bold text-white">{{goals.length || 0}}</h5>
           </div>
-          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+          <div class="w-12 h-12 rounded-full mt-3 bg-yellow-500/20 flex items-center justify-center">
             <mat-icon class="text-yellow-400">flag</mat-icon>
           </div>
         </div>
@@ -51,10 +51,10 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm">Total Target</p>
-            <h3 class="text-xl font-bold text-white">{{getTotalTargetAmount() | currency:'INR':'symbol':'1.0-0'}}</h3>
+            <h5 class="text-sm font-bold text-white">{{getTotalTargetAmount() | currency:'INR':'symbol':'1.0-0'}}</h5>
           </div>
-          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
-            <mat-icon class="text-yellow-400">account_balance</mat-icon>
+          <div class="w-12 h-12 rounded-full mt-3 bg-yellow-500/20 flex items-center justify-center">
+            <mat-icon class="text-yellow-400 ">account_balance</mat-icon>
           </div>
         </div>
         <div class="mt-4 flex items-center justify-between">
@@ -72,12 +72,12 @@
       <!-- Upcoming Milestone Card -->
       <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 
                   shadow-lg hover:shadow-yellow-400/20 transition-all duration-300" *ngIf="nextMilestone">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center text-sm justify-between">
           <div>
             <p class="text-gray-400 text-sm">Upcoming Milestone</p>
-            <h3 class="text-lg font-bold text-white truncate">{{nextMilestone.title}}</h3>
+            <h5 class="text-sm font-bold text-white truncate">{{nextMilestone.title}}</h5>
           </div>
-          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+          <div class="w-12 h-12 rounded-full mt-3 ml-1 bg-yellow-500/20 flex items-center justify-center">
             <mat-icon class="text-yellow-400">emoji_events</mat-icon>
           </div>
         </div>
@@ -168,7 +168,7 @@
         </div>
         
         <div *ngIf="!isLoading && filteredGoals.length === 0" class="text-center py-20">
-          <mat-icon class="text-yellow-400 text-5xl mb-4">search</mat-icon>
+         
           <p class="text-lg text-white">No goals found matching your filters</p>
           <button (click)="filterGoals('all')" class="mt-4 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400">
             Show All Goals
@@ -178,7 +178,7 @@
         <!-- Goal Timeline Items -->
         <div *ngFor="let goal of filteredGoals; let i = index" class="goal-timeline-item mb-8 last:mb-0 relative" [id]="'goal-' + goal.id">
           <!-- Date Marker -->
-          <div class="absolute left-0 w-8 h-8 rounded-full bg-black border-4 border-yellow-500 -translate-x-[20px]
+          <div class="absolute left-0 w-8 h-8 rounded-full bg-black border-4 border-yellow-500 -translate-x-[45px]
                       flex items-center justify-center"></div>
           
           <!-- Goal Card -->
@@ -290,11 +290,11 @@
               <!-- Milestones Timeline -->
               <div *ngIf="goal.milestones && goal.milestones.length > 0" class="my-5">
                 <div class="flex items-center mb-2">
-                  <mat-icon class="text-yellow-400 mr-2">emoji_events</mat-icon>
+                  <mat-icon class="text-yellow-400 -mt-4 mr-2">emoji_events</mat-icon>
                   <h4 class="text-white font-semibold">Milestones</h4>
                 </div>
                 
-                <div class="relative ml-5 pl-4 border-l border-yellow-500/50">
+                <div class="relative ml-5 border-l border-yellow-500/50">
                   <div *ngFor="let milestone of sortMilestones(goal.milestones)" 
                        class="mb-3 last:mb-0 relative"
                        [class.opacity-70]="!milestone.completed && isDateBefore(milestone.targetDate.toString(), currentDate.toString())">
@@ -378,7 +378,7 @@
   <div *ngIf="showGoalModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
     <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-yellow-400">{{editingGoal ? 'Edit Goal' : 'Add New Goal'}}</h2>
+        <h2 class="text-sm font-bold text-yellow-400">{{editingGoal ? 'Edit Goal' : 'Add New Goal'}}</h2>
         <button (click)="closeModal()" class="text-gray-400 hover:text-white">
           <mat-icon>close</mat-icon>
         </button>

@@ -36,12 +36,11 @@ export class JwtService {
     console.log('Starting logout process');
     console.log('Current cookies:', document.cookie);
 
-    // Don't send CSRF tokens in headers - simplify the request
-    // Your backend should recognize the authenticated cookie without additional headers
+ 
 
     return this.http.post<any>(`${BASE_URL}/logout`, {}, {
-      withCredentials: true, // This ensures cookies are sent
-      observe: 'response'  // Get full response including headers
+      withCredentials: true, 
+      observe: 'response'  
     }).pipe(
       tap(response => {
         console.log('Logout API response:', response);
@@ -131,9 +130,8 @@ export class JwtService {
     return this.http.get<any>(`${BASE_URL}/api/user/check-auth`, { withCredentials: true })
       .pipe(
         map(response => {
-          console.log('Auth check response:', response);
+         
           
-          // If we get a token in the response, store it
           if (response && response.token) {
             localStorage.setItem('jwt', response.token);
             console.log('JWT token stored from auth check response');
