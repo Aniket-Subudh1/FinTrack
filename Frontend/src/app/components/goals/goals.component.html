@@ -1,288 +1,680 @@
-<div class="min-h-screen flex" style="background-image: url('assets/saa.png'); background-attachment: fixed;">
-  <app-sidebar
-    [isSidebarOpen]="isSidebarOpen"
+<div class="min-h-screen flex flex-col" style="background-image: url('assets/saa.png'); background-attachment: fixed; background-size: cover;">
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen" 
     (toggleSidebar)="toggleSidebar()"
   ></app-sidebar>
 
-  <div class="flex-1 flex items-center justify-center">
-    <div class="bg-black/30 backdrop-blur-md shadow-lg p-8 rounded-lg max-w-4xl w-full text-white border border-gray-700">
-      <div class="w-full">
-        <h2 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Financial Goals</h2>
 
-        <!-- Tabs -->
-        <div class="flex mb-6 border-b border-gray-700">
-          <button 
-            [class]="activeTab === 'setup' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
-            (click)="setActiveTab('setup')"
-          >
-            Goal Setup
+  <div class="flex-1 transition-all duration-300 p-8" [ngClass]="{'ml-20': !isSidebarOpen, 'ml-80': isSidebarOpen}">
+ 
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 
+                 animate-gradient-text inline-block">
+        Financial Goals Timeline
+      </h1>
+      
+    </header>
+
+   
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+    
+      <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 
+                  shadow-lg hover:shadow-yellow-400/20 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm">Total Goals</p>
+            <h3 class="text-xl font-bold text-white">{{goals.length || 0}}</h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+            <mat-icon class="text-yellow-400">flag</mat-icon>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm">Active</p>
+            <p class="text-white">{{activeGoals.length || 0}}</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-sm">Completed</p>
+            <p class="text-white">{{completedGoals.length || 0}}</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-sm">Progress</p>
+            <p class="text-white">{{getAverageProgress() | number:'1.0-0'}}%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Amount Card -->
+      <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 
+                  shadow-lg hover:shadow-yellow-400/20 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm">Total Target</p>
+            <h3 class="text-xl font-bold text-white">{{getTotalTargetAmount() | currency:'INR':'symbol':'1.0-0'}}</h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+            <mat-icon class="text-yellow-400">account_balance</mat-icon>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm">Current</p>
+            <p class="text-white">{{getTotalCurrentAmount() | currency:'INR':'symbol':'1.0-0'}}</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-sm">Remaining</p>
+            <p class="text-white">{{getTotalRemainingAmount() | currency:'INR':'symbol':'1.0-0'}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Milestone Card -->
+      <div class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-yellow-500/30 
+                  shadow-lg hover:shadow-yellow-400/20 transition-all duration-300" *ngIf="nextMilestone">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm">Upcoming Milestone</p>
+            <h3 class="text-lg font-bold text-white truncate">{{nextMilestone.title}}</h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+            <mat-icon class="text-yellow-400">emoji_events</mat-icon>
+          </div>
+        </div>
+        <div class="mt-4">
+          <p class="text-gray-400 text-sm">Goal</p>
+          <p class="text-white truncate">{{getMilestoneGoal(nextMilestone)?.title || 'N/A'}}</p>
+          <div class="mt-2 flex justify-between items-center">
+            <p class="text-gray-400 text-sm">{{formatDate(nextMilestone.targetDate)}}</p>
+            <p class="text-yellow-400">
+              {{(nextMilestone.targetAmount - (getMilestoneGoal(nextMilestone)?.currentAmount || 0)) | currency:'INR':'symbol':'1.0-0'}} 
+              remaining
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Goal Card -->
+      <div (click)="openAddGoalModal()" 
+           class="bg-black/30 backdrop-blur-md p-6 rounded-lg border border-dashed border-yellow-500/50 
+                  shadow-lg hover:shadow-yellow-400/20 transition-all duration-300
+                  flex flex-col items-center justify-center cursor-pointer 
+                  hover:bg-black/50">
+        <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4">
+          <mat-icon class="text-yellow-400 text-3xl">add</mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-white text-center">Add New Goal</h3>
+        <p class="text-gray-400 text-sm text-center mt-2">Start your journey towards a new financial milestone</p>
+      </div>
+    </div>
+
+    <!-- Timeline Controls and Filters -->
+    <div class="flex flex-wrap gap-4 mb-6 items-center">
+      <div class="flex-1">
+        <div class="flex items-center">
+          <mat-icon class="mr-2 text-yellow-400">filter_list</mat-icon>
+          <h3 class="text-lg font-semibold text-white">Filter Goals</h3>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button (click)="filterGoals('all')" [class]="getFilterButtonClass('all')">
+            All
           </button>
-          <button 
-            [class]="activeTab === 'progress' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
-            (click)="setActiveTab('progress')"
-          >
-            Progress Tracking
+          <button (click)="filterGoals('active')" [class]="getFilterButtonClass('active')">
+            Active
           </button>
-          <button 
-            [class]="activeTab === 'analysis' ? 'px-4 py-2 text-yellow-400 border-b-2 border-yellow-400' : 'px-4 py-2 text-gray-300 hover:text-yellow-300'"
-            (click)="setActiveTab('analysis')"
-          >
-            Expense Analysis
+          <button (click)="filterGoals('completed')" [class]="getFilterButtonClass('completed')">
+            Completed
+          </button>
+          <button (click)="filterGoals('nearComplete')" [class]="getFilterButtonClass('nearComplete')">
+            Nearly Complete
           </button>
         </div>
+      </div>
+      
+      <div class="flex flex-col">
+        <label for="category-filter" class="text-gray-300 mb-1">Category</label>
+        <select id="category-filter" [(ngModel)]="categoryFilter" (change)="applyFilters()"
+                class="bg-black/40 border border-yellow-500/30 rounded-lg px-4 py-2 text-white">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of availableCategories" [value]="category">
+            {{category}}
+          </option>
+        </select>
+      </div>
+      
+      <div class="flex flex-col">
+        <label for="sort-by" class="text-gray-300 mb-1">Sort By</label>
+        <select id="sort-by" [(ngModel)]="sortBy" (change)="applyFilters()"
+                class="bg-black/40 border border-yellow-500/30 rounded-lg px-4 py-2 text-white">
+          <option value="targetDate">Target Date</option>
+          <option value="progress">Progress</option>
+          <option value="priority">Priority</option>
+          <option value="amount">Amount</option>
+        </select>
+      </div>
+    </div>
 
-        <!-- Goal Setup Tab -->
-        <div *ngIf="activeTab === 'setup'" class="animate-fade-in">
-          <form #goalForm="ngForm" (ngSubmit)="saveGoals()">
-            <div class="mb-4">
-              <label for="monthlyIncome" class="block text-lg font-medium text-yellow-300">Monthly Income (₹):</label>
-              <input
-                type="number"
-                id="monthlyIncome"
-                class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                name="monthlyIncome"
-                [(ngModel)]="monthlyIncome"
-                required
-              />
-            </div>
-
-            <div class="mb-4">
-              <label for="savingsGoal" class="block text-lg font-medium text-yellow-300">Monthly Savings Goal (₹):</label>
-              <input
-                type="number"
-                id="savingsGoal"
-                class="w-full px-4 py-2 mt-1 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                name="savingsGoal"
-                [(ngModel)]="savingsGoal"
-                required
-              />
-            </div>
-
-            <div class="mb-6">
-              <div class="flex justify-between items-center">
-                <label class="block text-lg font-medium text-yellow-300">Expense Categories:</label>
-                <div class="text-sm text-gray-400">
-                  Available: ₹{{ calculateAvailableAmount() }}
+    <!-- Interactive Timeline -->
+    <section class="mb-8">
+      <div class="relative pl-8 pb-8 ml-8">
+        <!-- Timeline Indicator Line -->
+        <div class="absolute left-0 top-0 h-full w-4 border-l-4 border-yellow-500/50"></div>
+        <!-- Timeline Indicator Line Glow -->
+        <div class="absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-yellow-500 to-transparent opacity-30 blur-sm -translate-x-2"></div>
+        
+        <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+          <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+          <p class="mt-4 text-yellow-400">Loading your goals...</p>
+        </div>
+        
+        <div *ngIf="!isLoading && filteredGoals.length === 0" class="text-center py-20">
+          <mat-icon class="text-yellow-400 text-5xl mb-4">search</mat-icon>
+          <p class="text-lg text-white">No goals found matching your filters</p>
+          <button (click)="filterGoals('all')" class="mt-4 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400">
+            Show All Goals
+          </button>
+        </div>
+        
+        <!-- Goal Timeline Items -->
+        <div *ngFor="let goal of filteredGoals; let i = index" class="goal-timeline-item mb-8 last:mb-0 relative" [id]="'goal-' + goal.id">
+          <!-- Date Marker -->
+          <div class="absolute left-0 w-8 h-8 rounded-full bg-black border-4 border-yellow-500 -translate-x-[20px]
+                      flex items-center justify-center"></div>
+          
+          <!-- Goal Card -->
+          <div class="bg-black/40 backdrop-blur-md rounded-xl border border-yellow-500/30 shadow-lg 
+                      overflow-hidden transition-all duration-300 transform hover:scale-[1.01]">
+            
+            <!-- Header with Status and Actions -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-700"
+                 [style.background-color]="goal.color ? goal.color + '33' : goal.status === 'COMPLETED' ? '#4CAF5033' : '#7986CB33'">
+              
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center mr-3"
+                     [style.color]="goal.color || (goal.status === 'COMPLETED' ? '#4CAF50' : '#7986CB')">
+                  <mat-icon>{{goal.icon || 'flag'}}</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-white">{{goal.title}}</h3>
+                  <div class="flex items-center mt-1">
+                    <span class="py-1 px-2 rounded-full text-xs mr-2" 
+                          [style.background-color]="getStatusBackgroundColor(goal.status)">
+                      {{goal.status || 'ACTIVE'}}
+                    </span>
+                    <span class="py-1 px-2 rounded-full text-xs" 
+                          [style.background-color]="getPriorityBackgroundColor(goal.priority)">
+                      {{goal.priority || 'MEDIUM'}} Priority
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div class="text-sm text-gray-400 mb-2">Set your monthly budget for each category</div>
               
-              <div *ngFor="let budget of categoryBudgets; let i = index" class="mb-4 bg-black/20 p-4 rounded-lg">
-                <div class="flex justify-between mb-2">
-                  <select
-                    class="w-1/2 px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    name="category-{{i}}"
-                    [(ngModel)]="budget.category"
-                    required
-                  >
-                    <option value="" disabled>Select Category</option>
-                    <option *ngFor="let category of availableCategories" [value]="category">{{ category }}</option>
-                  </select>
+              <div class="flex">
+                <button (click)="editGoal(goal)" 
+                        class="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center mr-1 hover:bg-yellow-500/30">
+                  <mat-icon class="text-yellow-400 text-sm">edit</mat-icon>
+                </button>
+                <button (click)="updateProgress(goal)" 
+                        class="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center mr-1 hover:bg-yellow-500/30">
+                  <mat-icon class="text-yellow-400 text-sm">trending_up</mat-icon>
+                </button>
+                <button (click)="deleteGoal(goal)" 
+                        class="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center hover:bg-red-500/30">
+                  <mat-icon class="text-red-400 text-sm">delete</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Goal Details -->
+            <div class="p-5">
+              <!-- Progress Section -->
+              <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                  <div class="text-white">
+                    <span class="font-semibold">{{ goal.progressPercentage | number:'1.0-0' }}%</span> 
+                    Complete
+                  </div>
+                  <div>
+                    <span class="text-white">{{ goal.currentAmount | currency:'INR':'symbol':'1.0-0' }}</span> 
+                    <span class="text-gray-400">/</span> 
+                    <span class="text-yellow-400">{{ goal.targetAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+                
+                <!-- Progress Bar with Animations -->
+                <div class="relative h-3 bg-gray-700 rounded-full overflow-hidden">
+                  <!-- Background Pulse Animation for Off-Track Goals -->
+                  <div *ngIf="!goal.onTrack" class="absolute inset-0 bg-red-500/20 animate-pulse"></div>
                   
-                  <div class="flex items-center w-1/2 ml-2">
-                    <input
-                      type="number"
-                      class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      name="amount-{{i}}"
-                      [(ngModel)]="budget.amount"
-                      required
-                    />
-                    <button 
-                      type="button" 
-                      class="ml-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                      (click)="removeBudgetItem(i)"
-                    >
-                      ✕
+                  <!-- Progress Fill -->
+                  <div class="absolute h-full transition-all duration-1000 ease-out"
+                       [style.width.%]="goal.progressPercentage"
+                       [style.background]="getProgressGradient(goal)"></div>
+                       
+                  <!-- Milestone Markers -->
+                  <ng-container *ngIf="goal.milestones">
+                    <div *ngFor="let milestone of goal.milestones" 
+                         class="absolute w-1 h-6 bottom-0 -mb-1.5 transform -translate-x-1/2 transition-all duration-500"
+                         [class.bg-white]="!milestone.completed"
+                         [class.bg-yellow-400]="milestone.completed"
+                         [style.left.%]="(milestone.targetAmount / goal.targetAmount) * 100">
+                    </div>
+                  </ng-container>
+                  
+                </div>
+              </div>
+              
+              <!-- Time Information -->
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="bg-black/30 p-3 rounded-lg">
+                  <p class="text-gray-400 text-xs">Start Date</p>
+                  <p class="text-white">{{formatDate(goal.startDate)}}</p>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg">
+                  <p class="text-gray-400 text-xs">Target Date</p>
+                  <p class="text-white">{{formatDate(goal.targetDate)}}</p>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg">
+                  <p class="text-gray-400 text-xs">Days Remaining</p>
+                  <p [class]="(goal?.daysRemaining ?? 999999) <= 30 ? 'text-yellow-400 font-bold' : 'text-white'">
+                    {{goal.daysRemaining}} days
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Description (if available) -->
+              <div *ngIf="goal.description" class="mb-4 text-gray-300 border-l-2 border-yellow-500/50 pl-3 italic">
+                "{{goal.description}}"
+              </div>
+              
+              <!-- Milestones Timeline -->
+              <div *ngIf="goal.milestones && goal.milestones.length > 0" class="my-5">
+                <div class="flex items-center mb-2">
+                  <mat-icon class="text-yellow-400 mr-2">emoji_events</mat-icon>
+                  <h4 class="text-white font-semibold">Milestones</h4>
+                </div>
+                
+                <div class="relative ml-5 pl-4 border-l border-yellow-500/50">
+                  <div *ngFor="let milestone of sortMilestones(goal.milestones)" 
+                       class="mb-3 last:mb-0 relative"
+                       [class.opacity-70]="!milestone.completed && isDateBefore(milestone.targetDate.toString(), currentDate.toString())">
+                    
+                    <!-- Milestone Marker -->
+                    <div [class]="getMilestoneMarkerClass(milestone)"
+                         [style.background-color]="milestone.completed ? '#FFEB3B' : '#424242'"></div>
+
+                    <!-- Milestone Content -->
+                    <div class="ml-6 p-2 bg-black/30 rounded-lg border border-gray-700">
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <span class="font-semibold text-white">{{milestone.title}}</span>
+                          <p class="text-sm text-gray-400">{{formatDate(milestone.targetDate)}}</p>
+                        </div>
+                        <div class="text-right flex items-center">
+                          <span class="font-semibold text-yellow-400 mr-2">
+                            {{milestone.targetAmount | currency:'INR':'symbol':'1.0-0'}}
+                          </span>
+                          <p class="text-xs text-gray-400 mr-2">
+                            <span *ngIf="milestone.completed" class="text-green-400">Completed</span>
+                            <span *ngIf="!milestone.completed">
+                              {{(milestone.progressPercentage || 0) | number:'1.0-0'}}% progress
+                            </span>
+                          </p>
+                          <button (click)="editMilestone(goal, milestone)" 
+                                  class="w-6 h-6 rounded-full bg-black/30 flex items-center justify-center mr-1 hover:bg-yellow-500/30">
+                            <mat-icon class="text-yellow-400 text-sm">edit</mat-icon>
+                          </button>
+                          <button (click)="deleteMilestone(goal, milestone)" 
+                                  class="w-6 h-6 rounded-full bg-black/30 flex items-center justify-center hover:bg-red-500/30">
+                            <mat-icon class="text-red-400 text-sm">delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Add Milestone Button -->
+                  <div class="ml-6 mt-3">
+                    <button (click)="addMilestone(goal)" 
+                            class="flex items-center text-sm text-yellow-400 hover:text-yellow-300">
+                      <mat-icon class="text-sm mr-1">add_circle</mat-icon>
+                      Add milestone
                     </button>
                   </div>
                 </div>
-
-                <div class="relative mt-2">
-                  <div class="w-full bg-gray-600 rounded-full h-2">
-                    <div 
-                      class="bg-yellow-400 h-2 rounded-full" 
-                      [style.width]="getRecommendedPercentage(i) + '%'"
-                    ></div>
-                  </div>
-                  <div class="flex justify-between mt-1 text-xs text-gray-400">
-                    <span>{{ getRecommendedAmount(i) | currency:'INR':'symbol':'1.0-0' }}</span>
-                    <span>Recommended: {{ getRecommendedPercentage(i) }}%</span>
+              </div>
+              
+              <!-- Achievements Badges -->
+              <div *ngIf="goal.achievements && goal.achievements.length > 0" class="mt-4">
+                <div class="flex flex-wrap gap-2">
+                  <div *ngFor="let achievement of goal.achievements" 
+                       class="py-1 px-3 rounded-full bg-yellow-500/20 text-yellow-400 text-xs inline-flex items-center">
+                    <mat-icon class="text-sm mr-1">star</mat-icon>
+                    {{achievement}}
                   </div>
                 </div>
               </div>
-
-              <button
-                type="button"
-                class="w-full py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-500 mb-4"
-                (click)="addBudgetItem()"
-              >
-                + Add Category
-              </button>
-
-              <button
-                type="button"
-                class="w-full py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 mb-4"
-                (click)="applyRecommendations()"
-              >
-                Apply Recommendations
-              </button>
-
-              <button
-                type="submit"
-                class="w-full py-3 bg-yellow-500 text-black rounded-lg font-semibold transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400 disabled:bg-gray-700"
-                [disabled]="!goalForm.form.valid || isLoading"
-              >
-                <span *ngIf="!isLoading">Save Goals</span>
-                <span *ngIf="isLoading">Saving...</span>
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Progress Tracking Tab -->
-        <div *ngIf="activeTab === 'progress'" class="animate-fade-in">
-          <div class="mb-6">
-            <h3 class="text-xl font-bold mb-4 text-yellow-300">Monthly Progress</h3>
-            
-            <!-- Savings Progress -->
-            <div class="mb-6 bg-black/20 p-4 rounded-lg">
-              <div class="flex justify-between mb-2">
-                <span class="text-lg font-medium">Savings Goal</span>
-                <span class="text-lg font-medium">{{ currentSavings | currency:'INR':'symbol':'1.0-0' }} / {{ savingsGoal | currency:'INR':'symbol':'1.0-0' }}</span>
-              </div>
-              <div class="relative">
-                <div class="w-full bg-gray-600 rounded-full h-4">
-                  <div 
-                    class="bg-green-400 h-4 rounded-full" 
-                    [style.width]="getSavingsPercentage() + '%'"
-                  ></div>
+              
+              <!-- Goal Status and AI Tips -->
+              <div *ngIf="goal.status !== 'COMPLETED'" class="mt-4 p-3 rounded-lg">
+                <div class="flex items-center">
+                  <mat-icon class="mr-2" [class.text-green-400]="goal.onTrack" [class.text-red-400]="!goal.onTrack">
+                    {{goal.onTrack ? 'trending_up' : 'trending_down'}}
+                  </mat-icon>
+                  <span class="text-white">{{getGoalStatusMessage(goal)}}</span>
                 </div>
-                <div class="absolute top-0 h-4 w-full flex items-center justify-center text-xs font-bold">
-                  {{ getSavingsPercentage() }}%
-                </div>
-              </div>
-            </div>
-            
-            <!-- Category Progress -->
-            <div *ngFor="let budget of categoryBudgets" class="mb-4 bg-black/20 p-4 rounded-lg">
-              <div class="flex justify-between mb-2">
-                <span class="text-lg font-medium">{{ budget.category }}</span>
-                <span class="text-lg font-medium">{{ getCategorySpent(budget.category) | currency:'INR':'symbol':'1.0-0' }} / {{ budget.amount | currency:'INR':'symbol':'1.0-0' }}</span>
-              </div>
-              <div class="relative">
-                <div class="w-full bg-gray-600 rounded-full h-4">
-                  <div 
-                    [class]="getCategoryPercentage(budget.category) > 100 ? 'bg-red-500 h-4 rounded-full' : 'bg-blue-400 h-4 rounded-full'"
-                    [style.width]="getCategoryPercentage(budget.category) > 100 ? '100%' : getCategoryPercentage(budget.category) + '%'"
-                  ></div>
-                </div>
-                <div class="absolute top-0 h-4 w-full flex items-center justify-center text-xs font-bold">
-                  {{ getCategoryPercentage(budget.category) }}%
-                </div>
-              </div>
-              <div *ngIf="getCategoryPercentage(budget.category) > 100" class="mt-2 text-red-400 text-sm">
-                Budget exceeded by {{ getCategoryOverage(budget.category) | currency:'INR':'symbol':'1.0-0' }}
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mt-6">
-              <div class="bg-black/20 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-yellow-300 mb-2">Days Remaining</h4>
-                <p class="text-3xl font-bold">{{ daysRemaining }}</p>
-              </div>
-              <div class="bg-black/20 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-yellow-300 mb-2">Daily Budget</h4>
-                <p class="text-3xl font-bold">{{ getDailyBudget() | currency:'INR':'symbol':'1.0-0' }}</p>
+                <p *ngIf="!goal.onTrack" class="mt-2 text-gray-300 text-sm">
+                  {{getAITip(goal)}}
+                </p>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  </div>
 
-        <!-- Expense Analysis Tab -->
-        <div *ngIf="activeTab === 'analysis'" class="animate-fade-in">
-          <div class="mb-6">
-            <h3 class="text-xl font-bold mb-4 text-yellow-300">Expense Analysis</h3>
-            
-            <!-- Income vs Expense Chart -->
-            <div class="mb-6 bg-black/20 p-4 rounded-lg">
-              <h4 class="text-lg font-medium text-yellow-300 mb-4">Income vs Expenses</h4>
-              <div class="h-64 w-full">
-                <div class="mb-6 bg-black/20 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-yellow-300 mb-4">Income vs Expenses</h4>
-                  <div class="h-64 w-full">
-                    <ngx-charts-bar-vertical
-                      [view]="[700, 250]"
-                      [scheme]="colorScheme"
-                      [results]="incomeVsExpenseData"
-                      [gradient]="true"
-                      [xAxis]="true"
-                      [yAxis]="true"
-                      [legend]="true"
-                      [showXAxisLabel]="true"
-                      [showYAxisLabel]="true"
-                      [xAxisLabel]="'Category'"
-                      [yAxisLabel]="'Amount'"
-                      [showDataLabel]="true">
-                    </ngx-charts-bar-vertical>
-                  </div>
-                </div>
-                <div id="incomeVsExpenseChart" class="h-full"></div>
-              </div>
-            </div>
-            
-            <!-- Category Breakdown Chart -->
-            <div class="mb-6 bg-black/20 p-4 rounded-lg">
-              <h4 class="text-lg font-medium text-yellow-300 mb-4">Expense Breakdown</h4>
-              <div class="h-64 w-full">
-                <div class="mb-6 bg-black/20 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-yellow-300 mb-4">Expense Breakdown</h4>
-                  <div class="h-64 w-full">
-                    <ngx-charts-pie-chart
-                      [view]="[700, 250]"
-                      [scheme]="colorScheme"
-                      [results]="categoryBreakdownData"
-                      [gradient]="true"
-                      [legend]="true"
-                      [labels]="true"
-                      [doughnut]="false"
-                      [arcWidth]="0.5">
-                    </ngx-charts-pie-chart>
-                  </div>
-                </div>
-                <div id="categoryBreakdownChart" class="h-full"></div>
-              </div>
-            </div>
-            
-            <!-- Spending Insights -->
-            <div class="bg-black/20 p-4 rounded-lg">
-              <h4 class="text-lg font-medium text-yellow-300 mb-2">Spending Insights</h4>
-              <ul class="list-disc pl-5 space-y-2">
-                <li *ngFor="let insight of spendingInsights" class="text-sm">
-                  {{ insight }}
-                </li>
-              </ul>
+  <!-- Add/Edit Goal Modal -->
+  <div *ngIf="showGoalModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">{{editingGoal ? 'Edit Goal' : 'Add New Goal'}}</h2>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Goal Form -->
+      <form [formGroup]="goalForm" (ngSubmit)="saveGoal()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <!-- Title -->
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Goal Title</label>
+            <input type="text" formControlName="title"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+                  placeholder="e.g., Emergency Fund, New Car, Dream Vacation">
+            <p *ngIf="goalForm.get('title')?.invalid && goalForm.get('title')?.touched" 
+              class="text-red-400 mt-1 text-xs">
+              Title is required
+            </p>
+          </div>
+
+          <!-- Target Amount -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Target Amount (₹)</label>
+            <input type="number" formControlName="targetAmount"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+            <p *ngIf="goalForm.get('targetAmount')?.invalid && goalForm.get('targetAmount')?.touched" 
+              class="text-red-400 mt-1 text-xs">
+              Target amount is required and must be positive
+            </p>
+          </div>
+          
+          <!-- Current Amount -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Current Amount (₹)</label>
+            <input type="number" formControlName="currentAmount"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+            <p *ngIf="goalForm.get('currentAmount')?.invalid && goalForm.get('currentAmount')?.touched" 
+              class="text-red-400 mt-1 text-xs">
+              Current amount is required and must be positive
+            </p>
+          </div>
+          
+          <!-- Target Date -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Target Date</label>
+            <input type="date" formControlName="targetDate"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+            <p *ngIf="goalForm.get('targetDate')?.invalid && goalForm.get('targetDate')?.touched" 
+              class="text-red-400 mt-1 text-xs">
+              Target date is required and must be in the future
+            </p>
+          </div>
+          
+          <!-- Start Date -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
+            <input type="date" formControlName="startDate"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+          </div>
+          
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Category</label>
+            <select formControlName="category"
+                   class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+              <option value="">Select a category</option>
+              <option *ngFor="let category of availableCategories" [value]="category">
+                {{category}}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Priority -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Priority</label>
+            <select formControlName="priority"
+                   class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          
+          <!-- Description -->
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Description (Optional)</label>
+            <textarea formControlName="description" rows="3"
+                     class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+                     placeholder="Why is this goal important to you?"></textarea>
+          </div>
+          
+          <!-- Color and Icon selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Icon</label>
+            <select formControlName="icon"
+                   class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+              <option value="flag">Flag</option>
+              <option value="home">Home</option>
+              <option value="directions_car">Car</option>
+              <option value="flight">Travel</option>
+              <option value="school">Education</option>
+              <option value="attach_money">Money</option>
+              <option value="business">Business</option>
+              <option value="savings">Savings</option>
+              <option value="favorite">Heart</option>
+              <option value="beach_access">Beach</option>
+              <option value="health_and_safety">Health</option>
+              <option value="stars">Star</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Color</label>
+            <div class="flex space-x-2">
+              <div *ngFor="let color of availableColors" 
+                  class="w-8 h-8 rounded-full cursor-pointer transition-transform hover:scale-110"
+                  [style.background-color]="color"
+                  [ngClass]="{'ring-2 ring-white': goalForm.get('color')?.value === color}"
+                  (click)="goalForm.get('color')?.setValue(color)"></div>
             </div>
           </div>
         </div>
+        
+        <div class="flex justify-end mt-6 space-x-3">
+          <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="goalForm.invalid || isSubmitting" 
+                  class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 
+                         disabled:bg-gray-500 disabled:text-gray-300 disabled:cursor-not-allowed">
+            {{ isSubmitting ? 'Saving...' : (editingGoal ? 'Update Goal' : 'Create Goal') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Milestone Modal -->
+  <div *ngIf="showMilestoneModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">{{editingMilestone ? 'Edit Milestone' : 'Add Milestone'}}</h2>
+        <button (click)="closeMilestoneModal()" class="text-gray-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Milestone Form -->
+      <form [formGroup]="milestoneForm" (ngSubmit)="saveMilestone()">
+        <!-- Title -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Milestone Title</label>
+          <input type="text" formControlName="title"
+                class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+                placeholder="e.g., Halfway There">
+          <p *ngIf="milestoneForm.get('title')?.invalid && milestoneForm.get('title')?.touched" 
+            class="text-red-400 mt-1 text-xs">
+            Title is required
+          </p>
+        </div>
+
+        <!-- Target Amount -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-1">
+            Target Amount (₹) - Max: {{selectedGoal?.targetAmount | currency:'INR':'symbol':'1.0-0'}}
+          </label>
+          <input type="number" formControlName="targetAmount"
+                class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+          <p *ngIf="milestoneForm.get('targetAmount')?.invalid && milestoneForm.get('targetAmount')?.touched" 
+            class="text-red-400 mt-1 text-xs">
+            Target amount is required and must be positive
+          </p>
+        </div>
+        
+        <!-- Target Date -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-1">
+            Target Date - Before: {{formatDate(selectedGoal?.targetDate)}}
+          </label>
+          <input type="date" formControlName="targetDate"
+                class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+          <p *ngIf="milestoneForm.get('targetDate')?.invalid && milestoneForm.get('targetDate')?.touched" 
+            class="text-red-400 mt-1 text-xs">
+            Target date is required
+          </p>
+        </div>
+        
+        <!-- Description -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Description (Optional)</label>
+          <textarea formControlName="description" rows="2"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+                  placeholder="Milestone description"></textarea>
+        </div>
+        
+        <div class="flex justify-end mt-6 space-x-3">
+          <button type="button" (click)="closeMilestoneModal()" class="px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="milestoneForm.invalid || isSubmitting" 
+                  class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 
+                         disabled:bg-gray-500 disabled:text-gray-300 disabled:cursor-not-allowed">
+            {{ isSubmitting ? 'Saving...' : (editingMilestone ? 'Update Milestone' : 'Add Milestone') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Update Progress Modal -->
+  <div *ngIf="showProgressModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">Update Progress</h2>
+        <button (click)="closeProgressModal()" class="text-gray-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="selectedGoal" class="mb-6">
+        <h3 class="text-lg text-white mb-2">{{selectedGoal.title}}</h3>
+        
+        <!-- Current progress visualization -->
+        <div class="mb-4">
+          <div class="flex justify-between mb-1">
+            <div class="text-white">
+              <span class="font-semibold">{{ selectedGoal.progressPercentage | number:'1.0-0' }}%</span> 
+              Complete
+            </div>
+            <div>
+              <span class="text-white">{{ selectedGoal.currentAmount | currency:'INR':'symbol':'1.0-0' }}</span> 
+              <span class="text-gray-400">/</span> 
+              <span class="text-yellow-400">{{ selectedGoal.targetAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="relative h-5 bg-gray-700 rounded-full overflow-hidden">
+            <div class="absolute h-full transition-all duration-1000 ease-out"
+                 [style.width.%]="selectedGoal.progressPercentage"
+                 [style.background]="getProgressGradient(selectedGoal)"></div>
+          </div>
+        </div>
+
+        <!-- Update Progress Form -->
+        <form [formGroup]="progressForm" (ngSubmit)="saveProgress()">
+          <!-- New Amount -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Current Amount (₹)</label>
+            <input type="number" formControlName="currentAmount"
+                  class="w-full px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white">
+            <p *ngIf="progressForm.get('currentAmount')?.invalid && progressForm.get('currentAmount')?.touched" 
+              class="text-red-400 mt-1 text-xs">
+              Amount is required and must be positive
+            </p>
+          </div>
+
+          <!-- Milestones Potentially Completed -->
+          <div *ngIf="progressForm.valid && getNextMilestones().length > 0" class="mb-4">
+            <p class="text-gray-300 mb-2">This update might complete these milestones:</p>
+            <div class="space-y-2">
+              <div *ngFor="let milestone of getNextMilestones()" 
+                   class="p-2 bg-black/30 rounded-lg border border-yellow-500/30 flex justify-between items-center">
+                <span class="text-white">{{milestone.title}}</span>
+                <span class="text-yellow-400">{{milestone.targetAmount | currency:'INR':'symbol':'1.0-0'}}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end mt-6 space-x-3">
+            <button type="button" (click)="closeProgressModal()" class="px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="progressForm.invalid || isSubmitting" 
+                    class="px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 
+                           disabled:bg-gray-500 disabled:text-gray-300 disabled:cursor-not-allowed">
+              {{ isSubmitting ? 'Updating...' : 'Update Progress' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
   <!-- Success Notification -->
-  <div
-    *ngIf="successBubble.show"
-    class="fixed top-10 bubble-container bg-green-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
-  >
-    <h3 class="text-lg font-bold">Success!</h3>
-    <p class="text-lg">{{ successBubble.message }}</p>
+  <div *ngIf="successMessage" 
+       class="fixed bottom-10 right-10 bg-green-500/90 text-white px-6 py-4 rounded-lg shadow-lg 
+              animate-fade-in-slide-up flex items-center">
+    <mat-icon class="mr-2">check_circle</mat-icon>
+    <p>{{successMessage}}</p>
   </div>
 
-  <!-- Warning Notification -->
-  <div
-    *ngIf="warningBubble.show"
-    class="fixed top-10 bubble-container bg-yellow-500 text-black px-8 py-6 rounded-lg shadow-lg animate-slide-in"
-  >
-    <h3 class="text-lg font-bold">Warning!</h3>
-    <p class="text-lg">{{ warningBubble.message }}</p>
+  <!-- Error Notification -->
+  <div *ngIf="errorMessage" 
+       class="fixed bottom-10 right-10 bg-red-500/90 text-white px-6 py-4 rounded-lg shadow-lg 
+              animate-fade-in-slide-up flex items-center">
+    <mat-icon class="mr-2">error</mat-icon>
+    <p>{{errorMessage}}</p>
   </div>
-</div>

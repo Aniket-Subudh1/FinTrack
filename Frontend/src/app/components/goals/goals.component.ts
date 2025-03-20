@@ -1,523 +1,559 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
-import { ExpenseService } from '../../service/expense.service';
-import { IncomeService } from '../../service/income.service';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { Color, ScaleType } from '@swimlane/ngx-charts';
-import * as d3 from 'd3';
-
-interface CategoryBudget {
-  category: string;
-  amount: number;
-  recommended?: number;
-  spent?: number;
-}
-
-interface ColorScheme extends Color {
-  domain: string[];
-}
-
-interface ChartData {
-  name: string;
-  value: number;
-}
+import { FinancialGoalService, FinancialGoal, Milestone } from '../../service/financial-goal.service';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-goals',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent, NgxChartsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    SidebarComponent,
+    DatePipe
+  ],
   templateUrl: './goals.component.html',
   styleUrls: ['./goals.component.css']
 })
 export class GoalsComponent implements OnInit {
-  isSidebarOpen = true;
-  activeTab = 'setup';
-  @ViewChild('incomeVsExpenseChart') incomeVsExpenseChartElement!: ElementRef;
-  @ViewChild('categoryBreakdownChart') categoryBreakdownChartElement!: ElementRef;
-  
-  // Goal setup properties
-  monthlyIncome: number = 0;
-  savingsGoal: number = 0;
-  categoryBudgets: CategoryBudget[] = [];
-  availableCategories: string[] = [];
+  // UI State
+  isSidebarOpen: boolean = true;
   isLoading: boolean = false;
+  isSubmitting: boolean = false;
+  successMessage: string = '';
+  errorMessage: string = '';
+  currentDate: Date = new Date();
   
-  // Progress tracking properties
-  currentSavings: number = 0;
-  daysRemaining: number = 0;
+  // Modals
+  showGoalModal: boolean = false;
+  showMilestoneModal: boolean = false;
+  showProgressModal: boolean = false;
   
-  // Success and warning notifications
-  successBubble: { show: boolean; message: string } = { show: false, message: '' };
-  warningBubble: { show: boolean; message: string } = { show: false, message: '' };
+  // Data
+  goals: FinancialGoal[] = [];
+  filteredGoals: FinancialGoal[] = [];
+  activeGoals: FinancialGoal[] = [];
+  completedGoals: FinancialGoal[] = [];
+  nextMilestone?: Milestone;
+  editingGoal: boolean = false;
+  editingMilestone: boolean = false;
+  selectedGoal?: FinancialGoal;
+  selectedMilestone?: Milestone;
   
-  // Chart data properties
-  incomeVsExpenseData: ChartData[] = [];
-  categoryBreakdownData: ChartData[] = [];
-  spendingInsights: string[] = [];
+  // Filters and Sorting
+  currentFilter: string = 'all';
+  categoryFilter: string = '';
+  sortBy: string = 'targetDate';
   
-  // Recommended percentages for budget categories
-  categoryRecommendations: { [key: string]: number } = {
-    'Housing': 30,
-    'Food': 15,
-    'Transportation': 10,
-    'Utilities': 10,
-    'Entertainment': 5,
-    'Healthcare': 10,
-    'Debt Payments': 10,
-    'Personal Care': 5,
-    'Education': 5,
-    'Miscellaneous': 5
-  };
+  // Forms
+  goalForm!: FormGroup;
+  milestoneForm!: FormGroup;
+  progressForm!: FormGroup;
   
+  // Options
+  availableCategories: string[] = [
+    'Emergency Fund', 'Retirement', 'Vacation', 'Education', 'Home',
+    'Car', 'Debt Payment', 'Wedding', 'Business', 'Investment', 'Other'
+  ];
+  
+  availableColors: string[] = [
+    '#E57373', '#81C784', '#64B5F6', '#FFD54F', '#9575CD',
+    '#4DB6AC', '#F06292', '#BA68C8', '#4FC3F7', '#AED581', '#A1887F'
+  ];
+
   constructor(
-    private expenseService: ExpenseService,
-    private incomeService: IncomeService
+    private fb: FormBuilder,
+    private financialGoalService: FinancialGoalService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.fetchExpenseCategories();
-    this.loadSavedGoals();
-    this.calculateDaysRemaining();
-    this.fetchExpenses();
-    
-    // Initialize with at least one budget item
-    if (this.categoryBudgets.length === 0) {
-      this.addBudgetItem();
-    }
+    this.initForms();
+    this.loadGoals();
   }
-  
+
+  initForms(): void {
+    this.goalForm = this.fb.group({
+      id: [null],
+      title: ['', Validators.required],
+      description: [''],
+      targetAmount: [null, [Validators.required, Validators.min(1)]],
+      currentAmount: [0, [Validators.required, Validators.min(0)]],
+      startDate: [this.formatDateForInput(new Date()), Validators.required],
+      targetDate: [null, Validators.required],
+      category: [''],
+      priority: ['MEDIUM'],
+      color: [''],
+      icon: ['flag'],
+      status: ['ACTIVE']
+    }, { validators: this.dateValidator });
+
+    this.milestoneForm = this.fb.group({
+      id: [null],
+      title: ['', Validators.required],
+      description: [''],
+      targetAmount: [null, [Validators.required, Validators.min(1)]],
+      targetDate: [null, Validators.required]
+    }, { validators: this.milestoneDateValidator });
+
+    this.progressForm = this.fb.group({
+      currentAmount: [0, [Validators.required, Validators.min(0)]]
+    });
+  }
+
+  dateValidator(form: FormGroup) {
+    const startDate = new Date(form.get('startDate')?.value);
+    const targetDate = new Date(form.get('targetDate')?.value);
+    return targetDate > startDate ? null : { invalidDateRange: true };
+  }
+
+  milestoneDateValidator(form: FormGroup) {
+    if (!this.selectedGoal) return null;
+    const goalStartDate = new Date(this.selectedGoal.startDate);
+    const goalTargetDate = new Date(this.selectedGoal.targetDate);
+    const milestoneTargetDate = new Date(form.get('targetDate')?.value);
+    return (milestoneTargetDate >= goalStartDate && milestoneTargetDate <= goalTargetDate) ? null : { invalidMilestoneDate: true };
+  }
+
+  loadGoals(): void {
+    this.isLoading = true;
+    this.financialGoalService.getAllGoals().subscribe({
+      next: (goals) => {
+        this.goals = goals;
+        this.activeGoals = this.goals.filter(g => g.status === 'ACTIVE');
+        this.completedGoals = this.goals.filter(g => g.status === 'COMPLETED');
+        this.applyFilters();
+        this.findNextMilestone();
+        this.isLoading = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, 'Failed to load financial goals');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  findNextMilestone(): void {
+    const allMilestones: { milestone: Milestone, goal: FinancialGoal }[] = [];
+    this.activeGoals.forEach(goal => {
+      if (!goal.milestones) return;
+      goal.milestones
+        .filter(m => !m.completed)
+        .forEach(milestone => {
+          allMilestones.push({ milestone, goal });
+        });
+    });
+    allMilestones.sort((a, b) => new Date(a.milestone.targetDate).getTime() - new Date(b.milestone.targetDate).getTime());
+    this.nextMilestone = allMilestones.length > 0 ? allMilestones[0].milestone : undefined;
+  }
+
+  getMilestoneGoal(milestone: Milestone): FinancialGoal | undefined {
+    return this.goals.find(goal => goal.milestones?.some(m => m.id === milestone.id));
+  }
+
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 
-  /*colorScheme = {
-    domain: ['#FFD700', '#1E88E5', '#13D8AA', '#FF5252', '#8A2BE2', '#FF7F50', '#8BC34A']
-  };*/
+  filterGoals(filter: string): void {
+    this.currentFilter = filter;
+    this.applyFilters();
+  }
 
-  colorScheme: ColorScheme = {
-    name: 'customScheme',
-    selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
-  };
-  
-  setActiveTab(tab: string): void {
-    this.activeTab = tab;
-    
-    if (tab === 'progress') {
-      this.fetchExpenses();
-    } else if (tab === 'analysis') {
-      this.fetchExpenses();
-      setTimeout(() => {
-        this.generateCharts();
-        this.generateInsights();
-      }, 100);
+  applyFilters(): void {
+    let filteredGoals: FinancialGoal[] = [];
+    switch (this.currentFilter) {
+      case 'active':
+        filteredGoals = this.goals.filter(g => g.status === 'ACTIVE');
+        break;
+      case 'completed':
+        filteredGoals = this.goals.filter(g => g.status === 'COMPLETED');
+        break;
+      case 'nearComplete':
+        filteredGoals = this.goals.filter(g => g.status === 'ACTIVE' && (g.progressPercentage || 0) >= 75);
+        break;
+      case 'all':
+      default:
+        filteredGoals = [...this.goals];
+        break;
     }
-  }
-  
-  ngAfterViewInit(): void {
-    if (this.activeTab === 'analysis') {
-      this.generateCharts();
+    if (this.categoryFilter) {
+      filteredGoals = filteredGoals.filter(g => g.category === this.categoryFilter);
     }
+    filteredGoals = this.sortGoals(filteredGoals);
+    this.filteredGoals = filteredGoals;
   }
-  
-  fetchExpenseCategories(): void {
-    this.expenseService.getExpenseCategories().subscribe(
-      (categories: string[]) => {
-        this.availableCategories = categories;
-      },
-      (error) => {
-        console.error('Error fetching expense categories:', error);
-        this.showWarningBubble('Failed to load expense categories');
+
+  sortGoals(goals: FinancialGoal[]): FinancialGoal[] {
+    return [...goals].sort((a, b) => {
+      switch (this.sortBy) {
+        case 'progress':
+          return (b.progressPercentage || 0) - (a.progressPercentage || 0);
+        case 'priority': {
+          const priorityOrder = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
+          return (priorityOrder[a.priority as keyof typeof priorityOrder] || 1) - 
+                 (priorityOrder[b.priority as keyof typeof priorityOrder] || 1);
+        }
+        case 'amount':
+          return (b.targetAmount || 0) - (a.targetAmount || 0);
+        case 'targetDate':
+        default:
+          return new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime();
       }
+    });
+  }
+
+  sortMilestones(milestones: Milestone[]): Milestone[] {
+    return [...milestones].sort((a, b) => 
+      new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime()
     );
   }
-  
-  loadSavedGoals(): void {
-    // Get goals from local storage or API
-    const savedGoals = localStorage.getItem('financialGoals');
-    
-    if (savedGoals) {
-      const goals = JSON.parse(savedGoals);
-      this.monthlyIncome = goals.monthlyIncome;
-      this.savingsGoal = goals.savingsGoal;
-      this.categoryBudgets = goals.categoryBudgets;
+
+  openAddGoalModal(): void {
+    this.editingGoal = false;
+    this.goalForm.reset({
+      currentAmount: 0,
+      startDate: this.formatDateForInput(new Date()),
+      priority: 'MEDIUM',
+      icon: 'flag',
+      status: 'ACTIVE'
+    });
+    this.showGoalModal = true;
+  }
+
+  editGoal(goal: FinancialGoal): void {
+    this.editingGoal = true;
+    this.selectedGoal = goal;
+    this.goalForm.patchValue({
+      id: goal.id,
+      title: goal.title,
+      description: goal.description || '',
+      targetAmount: goal.targetAmount,
+      currentAmount: goal.currentAmount,
+      startDate: this.formatDateForInput(goal.startDate),
+      targetDate: this.formatDateForInput(goal.targetDate),
+      category: goal.category || '',
+      priority: goal.priority || 'MEDIUM',
+      color: goal.color || '',
+      icon: goal.icon || 'flag',
+      status: goal.status || 'ACTIVE'
+    });
+    this.showGoalModal = true;
+  }
+
+  saveGoal(): void {
+    if (this.goalForm.invalid) return;
+    this.isSubmitting = true;
+    const formValue = this.goalForm.value;
+    if (!formValue.color && formValue.category) {
+      formValue.color = this.financialGoalService.getDefaultGoalColor(formValue.category);
     }
-  }
-  
-  calculateDaysRemaining(): void {
-    const now = new Date();
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    this.daysRemaining = lastDayOfMonth.getDate() - now.getDate() + 1;
-  }
-  
-  addBudgetItem(): void {
-    this.categoryBudgets.push({
-      category: '',
-      amount: 0
-    });
-  }
-  
-  removeBudgetItem(index: number): void {
-    this.categoryBudgets.splice(index, 1);
-  }
-  
-  calculateAvailableAmount(): number {
-    const totalBudgeted = this.categoryBudgets.reduce((total, budget) => total + (budget.amount || 0), 0);
-    return this.monthlyIncome - this.savingsGoal - totalBudgeted;
-  }
-  
-  getRecommendedPercentage(index: number): number {
-    const category = this.categoryBudgets[index].category;
-    return category ? (this.categoryRecommendations[category] || 5) : 0;
-  }
-  
-  getRecommendedAmount(index: number): number {
-    const percentage = this.getRecommendedPercentage(index);
-    return (percentage / 100) * this.monthlyIncome;
-  }
-  
-  applyRecommendations(): void {
-    this.categoryBudgets.forEach((budget, index) => {
-      if (budget.category) {
-        const recommendedAmount = this.getRecommendedAmount(index);
-        budget.amount = Math.round(recommendedAmount);
-      }
-    });
-  }
-  
-  saveGoals(): void {
-    this.isLoading = true;
-    
-    const goals = {
-      monthlyIncome: this.monthlyIncome,
-      savingsGoal: this.savingsGoal,
-      categoryBudgets: this.categoryBudgets
+    if (!formValue.icon && formValue.category) {
+      formValue.icon = this.financialGoalService.getDefaultGoalIcon(formValue.category);
+    }
+    const goal: FinancialGoal = {
+      ...formValue,
+      startDate: new Date(formValue.startDate),
+      targetDate: new Date(formValue.targetDate),
+      currentAmount: Number(formValue.currentAmount),
+      targetAmount: Number(formValue.targetAmount)
     };
-    
-    // Save to local storage for now, you can later add API call
-    localStorage.setItem('financialGoals', JSON.stringify(goals));
-    
-    setTimeout(() => {
-      this.isLoading = false;
-      this.showSuccessBubble('Financial goals saved successfully!');
-      this.setActiveTab('progress');
-      this.renderIncomeVsExpenseChart();
-      this.renderCategoryBreakdownChart();
-    }, 1000);
-  }
-  
-  fetchExpenses(): void {
-    this.expenseService.getExpenses().subscribe(
-      (expenses: any) => {
-        // Calculate current savings and spending by category
-        this.calculateProgress(expenses);
-      },
-      (error) => {
-        console.error('Error fetching expenses:', error);
-      }
-    );
-  }
-  
-  calculateProgress(expenses: any[]): void {
-    // Calculate current month's expenses
-    const now = new Date();
-    const currentMonthExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
-      return expenseDate.getMonth() === now.getMonth() && 
-             expenseDate.getFullYear() === now.getFullYear();
-    });
-    
-    // Sum expenses by category
-    const expensesByCategory: { [key: string]: number } = {};
-    currentMonthExpenses.forEach(expense => {
-      if (!expensesByCategory[expense.category]) {
-        expensesByCategory[expense.category] = 0;
-      }
-      expensesByCategory[expense.category] += expense.amount;
-    });
-    
-    // Update budget objects with spent amounts
-    this.categoryBudgets.forEach(budget => {
-      budget.spent = expensesByCategory[budget.category] || 0;
-    });
-    
-    // Calculate total expenses
-    const totalExpenses = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    
-    // Calculate current savings (assuming all remaining money is saved)
-    this.currentSavings = Math.max(0, this.monthlyIncome - totalExpenses);
-  }
-  
-  getSavingsPercentage(): number {
-    return this.savingsGoal > 0 ? Math.min(100, Math.round((this.currentSavings / this.savingsGoal) * 100)) : 0;
-  }
-  
-  getCategorySpent(category: string): number {
-    const budget = this.categoryBudgets.find(b => b.category === category);
-    return budget?.spent || 0;
-  }
-  
-  getCategoryPercentage(category: string): number {
-    const budget = this.categoryBudgets.find(b => b.category === category);
-    if (!budget || budget.amount === 0) return 0;
-    return Math.round((this.getCategorySpent(category) / budget.amount) * 100);
-  }
-  
-  getCategoryOverage(category: string): number {
-    const budget = this.categoryBudgets.find(b => b.category === category);
-    if (!budget) return 0;
-    const spent = this.getCategorySpent(category);
-    return spent > budget.amount ? spent - budget.amount : 0;
-  }
-  
-  getDailyBudget(): number {
-    // Get total budget excluding savings
-    const totalBudget = this.categoryBudgets.reduce((sum, budget) => sum + budget.amount, 0);
-    // Divide by days remaining in month
-    return this.daysRemaining > 0 ? totalBudget / this.daysRemaining : 0;
-  }
-  
-  generateCharts(): void {
-    // Generate Income vs Expenses chart data
-    this.incomeVsExpenseData = [
-      { name: 'Income', value: this.monthlyIncome },
-      { name: 'Expenses', value: this.categoryBudgets.reduce((sum, budget) => sum + (budget.spent || 0), 0) },
-      { name: 'Savings', value: this.currentSavings }
-    ];
-    
-    // Generate Category Breakdown chart data
-    this.categoryBreakdownData = this.categoryBudgets
-      .filter(budget => budget.category && budget.spent)
-      .map(budget => ({
-        name: budget.category,
-        value: budget.spent || 0
-      }));
-  }
-  
-  generateInsights(): void {
-    this.spendingInsights = [];
-    
-    // Check if user is on track with savings
-    if (this.currentSavings < this.savingsGoal * 0.75) {
-      this.spendingInsights.push("You're falling behind on your savings goal. Consider reducing spending in non-essential categories.");
-    } else if (this.currentSavings >= this.savingsGoal) {
-      this.spendingInsights.push("Great job! You've met or exceeded your savings goal for this month.");
-    }
-    
-    // Check for overspending categories
-    const overspentCategories = this.categoryBudgets.filter(budget => 
-      budget.category && budget.spent && budget.amount && budget.spent > budget.amount);
-    
-    if (overspentCategories.length > 0) {
-      this.spendingInsights.push(`You've exceeded your budget in ${overspentCategories.length} ${overspentCategories.length === 1 ? 'category' : 'categories'}.`);
-      
-      overspentCategories.forEach(budget => {
-        const percentage = Math.round((budget.spent || 0) / budget.amount * 100) - 100;
-        this.spendingInsights.push(`${budget.category}: ${percentage}% over budget. Consider adjusting your spending habits.`);
+    if (this.editingGoal && goal.id) {
+      this.financialGoalService.updateGoal(goal.id, goal).subscribe({
+        next: (updatedGoal) => {
+          const index = this.goals.findIndex(g => g.id === updatedGoal.id);
+          if (index !== -1) {
+            this.goals[index] = updatedGoal;
+          }
+          this.showSuccess('Goal updated successfully');
+          this.closeModal();
+          this.applyFilters();
+          this.findNextMilestone();
+          this.isSubmitting = false;
+        },
+        error: (error: HttpErrorResponse) => {
+          this.handleError(error, 'Failed to update goal');
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      this.financialGoalService.createGoal(goal).subscribe({
+        next: (newGoal) => {
+          this.goals.push(newGoal);
+          this.showSuccess('Goal created successfully');
+          this.closeModal();
+          this.applyFilters();
+          this.findNextMilestone();
+          this.isSubmitting = false;
+        },
+        error: (error: HttpErrorResponse) => {
+          this.handleError(error, 'Failed to create goal');
+          this.isSubmitting = false;
+        }
       });
     }
-    
-    // Add some general insights
-    if (this.daysRemaining < 10) {
-      this.spendingInsights.push(`Only ${this.daysRemaining} days left in the month. Your daily budget is ₹${Math.round(this.getDailyBudget())}.`);
-    }
-    
-    // If any category has very low spending
-    const lowSpendCategories = this.categoryBudgets.filter(budget => 
-      budget.category && budget.spent !== undefined && budget.amount && 
-      (budget.spent / budget.amount) < 0.3 && this.daysRemaining < 15);
-    
-    if (lowSpendCategories.length > 0) {
-      this.spendingInsights.push(`You're underspending in ${lowSpendCategories.length} ${lowSpendCategories.length === 1 ? 'category' : 'categories'}. You might be able to reallocate some funds.`);
-    }
-  }
-  
-  private showSuccessBubble(message: string): void {
-    this.successBubble = { show: true, message };
-    setTimeout(() => {
-      this.successBubble.show = false;
-    }, 3000);
-  }
-  
-  private showWarningBubble(message: string): void {
-    this.warningBubble = { show: true, message };
-    setTimeout(() => {
-      this.warningBubble.show = false;
-    }, 3000);
   }
 
-  renderIncomeVsExpenseChart(): void {
-    const element = document.getElementById('incomeVsExpenseChart');
-    if (!element) return;
-    
-    // Clear existing chart
-    d3.select(element).selectAll('*').remove();
-    
-    // Set up dimensions
-    const width = element.clientWidth;
-    const height = element.clientHeight;
-    const margin = {top: 20, right: 20, bottom: 30, left: 70};
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-    
-    // Create SVG
-    const svg = d3.select(element)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-    
-    // Set up scales
-    const x = d3.scaleBand()
-      .range([0, chartWidth])
-      .padding(0.4)
-      .domain(this.incomeVsExpenseData.map(d => d.name));
-    
-    const maxValue = Math.max(...this.incomeVsExpenseData.map(d => d.value));
-    const y = d3.scaleLinear()
-      .range([chartHeight, 0])
-      .domain([0, maxValue * 1.1]);
-    
-    // Add X axis
-    svg.append('g')
-      .attr('transform', `translate(0,${chartHeight})`)
-      .call(d3.axisBottom(x))
-      .selectAll('text')
-      .style('fill', '#ffffff');
-    
-    // Add Y axis
-    svg.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat(d => `₹${d3.format(',')(d)}`))
-      .selectAll('text')
-      .style('fill', '#ffffff');
-    
-    // Add bars
-    svg.selectAll('.bar')
-      .data(this.incomeVsExpenseData)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', d => x(d.name) ?? 0)
-      .attr('y', d => y(d.value))
-      .attr('width', x.bandwidth())
-      .attr('height', d => chartHeight - y(d.value))
-      .attr('fill', (d, i) => this.colorScheme.domain[i % this.colorScheme.domain.length]);
-    
-    // Add labels
-    svg.selectAll('.label')
-      .data(this.incomeVsExpenseData)
-      .enter()
-      .append('text')
-      .attr('class', 'label')
-      .attr('x', d => {
-        const xValue = x(d.name);
-        return xValue !== undefined ? xValue + x.bandwidth() / 2 : 0;
-      })
-      .attr('y', d => y(d.value) - 5)
-      .attr('text-anchor', 'middle')
-      .text(d => `₹${d.value.toLocaleString()}`)
-      .style('fill', '#ffffff')
-      .style('font-size', '12px');
+  deleteGoal(goal: FinancialGoal): void {
+    if (!goal.id || !confirm('Are you sure you want to delete this goal?')) return;
+    this.financialGoalService.deleteGoal(goal.id).subscribe({
+      next: () => {
+        this.goals = this.goals.filter(g => g.id !== goal.id);
+        this.applyFilters();
+        this.findNextMilestone();
+        this.showSuccess('Goal deleted successfully');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, 'Failed to delete goal');
+      }
+    });
   }
-  
-  renderCategoryBreakdownChart(): void {
-    const element = document.getElementById('categoryBreakdownChart');
-    if (!element || this.categoryBreakdownData.length === 0) return;
-    
-    // Clear existing chart
-    d3.select(element).selectAll('*').remove();
-    
-    // Set up dimensions
-    const width = element.clientWidth;
-    const height = element.clientHeight;
-    const radius = Math.min(width, height) / 2 - 10;
-    
-    // Create SVG
-    const svg = d3.select(element)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', `translate(${width / 2},${height / 2})`);
-    
-    // Set up color scale
-    const color = d3.scaleOrdinal()
-      .domain(this.categoryBreakdownData.map(d => d.name))
-      .range(this.colorScheme.domain);
-    
-    // Compute the position of each group on the pie
-    const pie = d3.pie()
-      .value((d: any) => d.value)
-      .sort(null);
-    
-    const data_ready = pie(this.categoryBreakdownData as any);
-    
-    // Build the pie chart
-    const arcGenerator = d3.arc()
-      .innerRadius(0)
-      .outerRadius(radius);
-    
-    // Add the arcs
-    svg.selectAll('slices')
-      .data(data_ready)
-      .enter()
-      .append('path')
-      .attr('d', arcGenerator as unknown as string)
-      .attr('fill', d => color((d.data as unknown as ChartData).name) as string)
-      .attr('stroke', 'white')
-      .style('stroke-width', '2px');
-    
-    // Add the labels
-    const labelArc = d3.arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius * 0.6);
-    
-    svg.selectAll('labels')
-      .data(data_ready)
-      .enter()
-      .append('text')
-      .text(d => {
-        const percent = Math.round(((d.data as unknown as ChartData).value / this.categoryBreakdownData.reduce((sum, item) => sum + item.value, 0)) * 100);
-        return percent > 5 ? `${(d.data as unknown as ChartData).name}: ${percent}%` : '';
-      })
-      .attr('transform', d => `translate(${labelArc.centroid(d as unknown as d3.DefaultArcObject)})`)
-      .style('text-anchor', 'middle')
-      .style('font-size', '12px')
-      .style('fill', 'white');
-    
-    // Add a legend
-    const legendRectSize = 15;
-    const legendSpacing = 4;
-    const legendHeight = legendRectSize + legendSpacing;
-    
-    const legend = svg.selectAll('.legend')
-      .data(this.categoryBreakdownData)
-      .enter()
-      .append('g')
-      .attr('class', 'legend')
-      .attr('transform', (d, i) => {
-        const height = legendHeight * this.categoryBreakdownData.length;
-        const offset = height / 2;
-        const horz = radius + 20;
-        const vert = i * legendHeight - offset;
-        return `translate(${horz},${vert})`;
-      });
-    
-    legend.append('rect')
-      .attr('width', legendRectSize)
-      .attr('height', legendRectSize)
-      .style('fill', (d: ChartData) => color(d.name) as string)
-      .style('stroke', (d: ChartData) => color(d.name) as string);
-    
-    legend.append('text')
-      .attr('x', legendRectSize + legendSpacing)
-      .attr('y', legendRectSize - legendSpacing)
-      .text(d => d.name)
-      .style('fill', 'white')
-      .style('font-size', '12px');
+
+  addMilestone(goal: FinancialGoal): void {
+    this.editingMilestone = false;
+    this.selectedGoal = goal;
+    this.milestoneForm.reset();
+    this.showMilestoneModal = true;
+  }
+
+  editMilestone(goal: FinancialGoal, milestone: Milestone): void {
+    this.editingMilestone = true;
+    this.selectedGoal = goal;
+    this.selectedMilestone = milestone;
+    this.milestoneForm.patchValue({
+      id: milestone.id,
+      title: milestone.title,
+      description: milestone.description || '',
+      targetAmount: milestone.targetAmount,
+      targetDate: this.formatDateForInput(milestone.targetDate)
+    });
+    this.showMilestoneModal = true;
+  }
+
+  saveMilestone(): void {
+    if (this.milestoneForm.invalid || !this.selectedGoal || !this.selectedGoal.id) return;
+    this.isSubmitting = true;
+    const formValue = this.milestoneForm.value;
+    const milestone: Milestone = {
+      ...formValue,
+      targetAmount: Number(formValue.targetAmount),
+      targetDate: new Date(formValue.targetDate)
+    };
+    const updatedGoal: FinancialGoal = { ...this.selectedGoal };
+    if (!updatedGoal.milestones) updatedGoal.milestones = [];
+    if (this.editingMilestone && milestone.id) {
+      const milestoneIndex = updatedGoal.milestones.findIndex(m => m.id === milestone.id);
+      if (milestoneIndex !== -1) {
+        updatedGoal.milestones[milestoneIndex] = milestone;
+      }
+    } else {
+      updatedGoal.milestones.push(milestone);
+    }
+    this.financialGoalService.updateGoal(this.selectedGoal.id, updatedGoal).subscribe({
+      next: (updatedGoal) => {
+        const index = this.goals.findIndex(g => g.id === updatedGoal.id);
+        if (index !== -1) {
+          this.goals[index] = updatedGoal;
+        }
+        this.showSuccess(this.editingMilestone ? 'Milestone updated successfully' : 'Milestone added successfully');
+        this.closeMilestoneModal();
+        this.applyFilters();
+        this.findNextMilestone();
+        this.isSubmitting = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, this.editingMilestone ? 'Failed to update milestone' : 'Failed to add milestone');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  deleteMilestone(goal: FinancialGoal, milestone: Milestone): void {
+    if (!goal.id || !milestone.id || !confirm('Are you sure you want to delete this milestone?')) return;
+    const updatedGoal: FinancialGoal = { ...goal };
+    updatedGoal.milestones = updatedGoal.milestones?.filter(m => m.id !== milestone.id) || [];
+    this.financialGoalService.updateGoal(goal.id, updatedGoal).subscribe({
+      next: (updatedGoal) => {
+        const index = this.goals.findIndex(g => g.id === updatedGoal.id);
+        if (index !== -1) {
+          this.goals[index] = updatedGoal;
+        }
+        this.showSuccess('Milestone deleted successfully');
+        this.applyFilters();
+        this.findNextMilestone();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, 'Failed to delete milestone');
+      }
+    });
+  }
+
+  updateProgress(goal: FinancialGoal): void {
+    this.selectedGoal = goal;
+    this.progressForm.patchValue({
+      currentAmount: goal.currentAmount
+    });
+    this.showProgressModal = true;
+  }
+
+  saveProgress(): void {
+    if (this.progressForm.invalid || !this.selectedGoal || !this.selectedGoal.id) return;
+    this.isSubmitting = true;
+    const newAmount = Number(this.progressForm.get('currentAmount')?.value);
+    this.financialGoalService.updateGoalProgress(this.selectedGoal.id, newAmount).subscribe({
+      next: (updatedGoal) => {
+        const index = this.goals.findIndex(g => g.id === updatedGoal.id);
+        if (index !== -1) {
+          this.goals[index] = updatedGoal;
+        }
+        this.showSuccess('Progress updated successfully');
+        this.closeProgressModal();
+        this.applyFilters();
+        this.findNextMilestone();
+        this.isSubmitting = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, 'Failed to update progress');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  getNextMilestones(): Milestone[] {
+    if (!this.selectedGoal || !this.selectedGoal.milestones) return [];
+    const newAmount = Number(this.progressForm.get('currentAmount')?.value);
+    return this.selectedGoal.milestones
+      .filter(m => !m.completed && newAmount >= m.targetAmount)
+      .sort((a, b) => a.targetAmount - b.targetAmount);
+  }
+
+  closeModal(): void {
+    this.showGoalModal = false;
+    this.editingGoal = false;
+    this.selectedGoal = undefined;
+    this.goalForm.reset({
+      currentAmount: 0,
+      startDate: this.formatDateForInput(new Date()),
+      priority: 'MEDIUM',
+      icon: 'flag',
+      status: 'ACTIVE'
+    });
+  }
+
+  closeMilestoneModal(): void {
+    this.showMilestoneModal = false;
+    this.editingMilestone = false;
+    this.selectedGoal = undefined;
+    this.selectedMilestone = undefined;
+    this.milestoneForm.reset();
+  }
+
+  closeProgressModal(): void {
+    this.showProgressModal = false;
+    this.selectedGoal = undefined;
+    this.progressForm.reset();
+  }
+
+  formatDate(date?: Date | string): string {
+    if (!date) return 'N/A';
+    return new DatePipe('en-US').transform(date, 'MMM d, yyyy') || 'N/A';
+  }
+
+  formatDateForInput(date?: Date | string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+  }
+
+  getFilterButtonClass(filter: string): string {
+    const baseClass = 'px-4 py-2 rounded-lg text-sm transition-all duration-300';
+    return this.currentFilter === filter
+      ? `${baseClass} bg-teal-500 text-white`
+      : `${baseClass} bg-gray-800 text-gray-300 hover:bg-gray-700`;
+  }
+
+  getStatusBackgroundColor(status?: string): string {
+    return this.financialGoalService.getGoalStatusColor(status) + '33';
+  }
+
+  getPriorityBackgroundColor(priority?: string): string {
+    return this.financialGoalService.getGoalPriorityColor(priority) + '33';
+  }
+
+  getProgressGradient(goal: FinancialGoal): string {
+    const color = this.financialGoalService.getProgressColor(goal.progressPercentage || 0, goal.onTrack || false);
+    return `linear-gradient(to right, ${color}, ${color}66)`;
+  }
+
+  getMilestoneMarkerClass(milestone: Milestone): string {
+    return `milestone-marker`;
+  }
+
+  getGoalStatusMessage(goal: FinancialGoal): string {
+    return goal.onTrack
+      ? 'On Track - Keep up the great work!'
+      : 'Off Track - Needs attention to meet the target!';
+  }
+
+  getAITip(goal: FinancialGoal): string {
+    const remainingAmount = goal.targetAmount - goal.currentAmount;
+    const remainingDays = goal.daysRemaining || 1;
+    const dailySavingsNeeded = remainingAmount / remainingDays;
+    return `To get back on track, try saving ₹${Math.ceil(dailySavingsNeeded)} per day for the next ${remainingDays} days.`;
+  }
+
+  getAverageProgress(): number {
+    if (this.activeGoals.length === 0) return 0;
+    const totalProgress = this.activeGoals.reduce((sum, goal) => sum + (goal.progressPercentage || 0), 0);
+    return totalProgress / this.activeGoals.length;
+  }
+
+  getTotalTargetAmount(): number {
+    return this.goals.reduce((sum, goal) => sum + (goal.targetAmount || 0), 0);
+  }
+
+  getTotalCurrentAmount(): number {
+    return this.goals.reduce((sum, goal) => sum + (goal.currentAmount || 0), 0);
+  }
+
+  getTotalRemainingAmount(): number {
+    return this.getTotalTargetAmount() - this.getTotalCurrentAmount();
+  }
+
+  showSuccess(message: string): void {
+    this.successMessage = message;
+    setTimeout(() => this.successMessage = '', 3000);
+  }
+
+  showError(message: string): void {
+    this.errorMessage = message;
+    setTimeout(() => this.errorMessage = '', 3000);
+  }
+
+  isDateBefore(date1: string | undefined, date2: string | undefined): boolean {
+    if (!date1 || !date2) return false;
+    return new Date(date1) < new Date(date2);
+  }
+
+  handleError(error: HttpErrorResponse, defaultMessage: string): void {
+    let errorMessage = defaultMessage;
+    if (error.status === 401) {
+      errorMessage = 'Unauthorized access. Please log in again.';
+      this.router.navigate(['/login']);
+    } else if (error.status === 404) {
+      errorMessage = 'Resource not found. Please try again.';
+    } else if (error.status === 400) {
+      errorMessage = 'Invalid request. Please check your input.';
+    } else if (error.status === 500) {
+      errorMessage = 'Server error. Please try again later.';
+    }
+    console.error(`${defaultMessage}:`, error);
+    this.showError(errorMessage);
   }
 }

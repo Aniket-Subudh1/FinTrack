@@ -1,19 +1,31 @@
 package com.personalfinancetracker.backend.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
-public class IncomeRequest {
+public class IncomeResponse {
+    private Long id;
     private double amount;
     private String source;
+    private LocalDate date;
+    private String customerEmail;
     private String description;
     private Boolean isRecurring;
     private String recurringFrequency;
     private List<String> tags;
 
     // Constructors
-    public IncomeRequest() {}
+    public IncomeResponse() {}
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public double getAmount() {
         return amount;
     }
@@ -28,6 +40,22 @@ public class IncomeRequest {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
 
     public String getDescription() {

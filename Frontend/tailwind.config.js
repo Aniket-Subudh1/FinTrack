@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{html,ts,scss,css}"],
+  safelist: ['text-sm'],
   theme: {
     extend: {
       keyframes: {
@@ -9,6 +10,7 @@ module.exports = {
             transform: 'translateY(-50%)',
             opacity: '0',
           },
+          
           '100%': {
             transform: 'translateY(0)',
             opacity: '1',

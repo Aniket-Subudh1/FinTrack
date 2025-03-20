@@ -1,11 +1,6 @@
 package com.personalfinancetracker.backend.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
-
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
@@ -17,6 +12,16 @@ public class Income {
     private String source;
     private LocalDate date;
     private String customerEmail;
+
+
+    private String description;
+    private boolean isRecurring;
+    private String recurringFrequency;
+    private String tags;
+
+
+    public Income() {}
+
 
     public Long getId() {
         return id;
@@ -58,5 +63,35 @@ public class Income {
         this.customerEmail = customerEmail;
     }
 
-    // Getters and Setters
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public boolean isRecurring() {
+        return isRecurring;
+    }
+
+    public void setRecurring(boolean recurring) {
+        isRecurring = recurring;
+    }
+
+    public String getRecurringFrequency() {
+        return recurringFrequency;
+    }
+
+    public void setRecurringFrequency(String recurringFrequency) {
+        this.recurringFrequency = recurringFrequency;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
 }
