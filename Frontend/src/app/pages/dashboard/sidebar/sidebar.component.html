@@ -28,7 +28,7 @@
                   [ngClass]="{'text-yellow-400': isActive('/expense')}"
                 >
                     <mat-icon>add_circle_outline</mat-icon>
-                    <span *ngIf="isSidebarOpen">Add Expenses</span>
+                    <span *ngIf="isSidebarOpen">Expenses</span>
                 </a>
             </li>
             <li>
@@ -38,7 +38,7 @@
                 [ngClass]="{'text-yellow-400': isActive('/income')}"
               >
                   <mat-icon>money</mat-icon>
-                  <span *ngIf="isSidebarOpen">Add Income</span>
+                  <span *ngIf="isSidebarOpen">Income</span>
               </a>
           </li>
           <li>
@@ -80,7 +80,7 @@
             </li>
             <li>
 
-                <a (click)="navigateTo('/profile')"  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400" [ngClass]="{'text-yellow-400': isActive('/report')}">
+                <a (click)="navigateTo('/profile')"  class="flex items-center space-x-4 text-gray-300 hover:text-yellow-400" [ngClass]="{'text-yellow-400': isActive('/profile')}">
                     <mat-icon>person</mat-icon>
                     <span *ngIf="isSidebarOpen">Profile</span>
                 </a>

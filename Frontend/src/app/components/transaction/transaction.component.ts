@@ -1,299 +1,768 @@
-import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { SidebarComponent } from '../../pages/dashboard/sidebar/sidebar.component';
-
+import { ExpenseService } from '../../service/expense.service';
+import { IncomeService } from '../../service/income.service';
+import { FinancialGoalService } from '../../service/financial-goal.service';
+import { BudgetService } from '../../service/budget.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 interface Transaction {
-  id?: string;
-  date: Date;
+  id?: number;
+  type: 'income' | 'expense';
   amount: number;
   category: string;
-  type: 'income' | 'expense';
+  date: Date | string;
   description?: string;
-}
-
-interface SortConfig {
-  field: string;
-  direction: 'asc' | 'desc';
+  tags?: string[];
 }
 
 @Component({
   selector: 'app-transaction',
-  templateUrl: './transaction.component.html',
-  styleUrls: ['./transaction.component.css'],
   standalone: true,
-  imports: [FormsModule, CommonModule, SidebarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    SidebarComponent,
+    DatePipe,
+    FormsModule,
+    RouterModule,
+    NgxChartsModule
+  ],
+  templateUrl: './transaction.component.html',
+  styleUrls: ['./transaction.component.css']
 })
 export class TransactionComponent implements OnInit {
+  // UI state
   isSidebarOpen: boolean = true;
-  amount: number = 0;
-  category: string = '';
-  type: 'income' | 'expense' = 'expense';
-  description: string = '';
-  categories: string[] = [
-    'Salary', 'Food', 'Transport', 'Entertainment', 'Utilities', 
-    'Rent', 'Shopping', 'Investment', 'Freelance', 'Medical'
-  ];
-  transactions: Transaction[] = [
-    {
-      id: '1',
-      date: new Date(2025, 2, 10),
-      amount: 50000,
-      category: 'Salary',
-      type: 'income',
-      description: 'Monthly salary'
-    },
-    {
-      id: '2',
-      date: new Date(2025, 2, 12),
-      amount: 2500,
-      category: 'Food',
-      type: 'expense',
-      description: 'Grocery shopping'
-    },
-    {
-      id: '3',
-      date: new Date(2025, 2, 14),
-      amount: 1000,
-      category: 'Transport',
-      type: 'expense',
-      description: 'Fuel'
-    },
-    {
-      id: '4',
-      date: new Date(2025, 2, 15),
-      amount: 10000,
-      category: 'Freelance',
-      type: 'income',
-      description: 'Website project'
-    }
-  ];
-  successBubble: { show: boolean; message: string } = { show: false, message: '' };
-  filterToast: { show: boolean; message: string } = { show: false, message: '' };
   isLoading: boolean = false;
-  totalIncome: number = 0;
-  totalExpense: number = 0;
-  netBalance: number = 0;
-  
-  // Actual filter values (applied)
+  activeTab: string = 'all'; // 'all', 'income', 'expense', 'recent', 'insights'
+  successMessage: string = '';
+  errorMessage: string = '';
+  showDeleteConfirmModal: boolean = false;
+  showTransactionModal: boolean = false;
+  selectedTransaction: Transaction | null = null;
+  isSubmitting: boolean = false;
+  searchQuery: string = '';
   filterCategory: string = '';
-  filterType: 'all' | 'income' | 'expense' = 'all';
-  searchDate: string = '';
+  dateRange: { start: Date | null, end: Date | null } = { start: null, end: null };
+  selectedChartType: string = 'income';
+  // Form
+  transactionForm!: FormGroup;
   
-  // Temporary filter values (not yet applied)
-  tempFilterCategory: string = '';
-  tempFilterType: 'all' | 'income' | 'expense' = 'all';
-  tempSearchDate: string = '';
+  // Data
+  transactions: Transaction[] = [];
+  incomeCategories: string[] = [];
+  expenseCategories: string[] = [];
+  filteredTransactions: Transaction[] = [];
+  goals: any[] = [];
+  budgets: any[] = [];
   
-  // Sort field and direction
-  sortField: string = 'date';
-  sortDirection: 'asc' | 'desc' = 'desc';
+  // Charts data
+  cashFlowData: any[] = [];
+  categoryDistributionData: any[] = [];
+  dailyTrendsData: any[] = [];
   
-  // Multiple sort configuration
-  sortConfigs: SortConfig[] = [{ field: 'date', direction: 'desc' }];
+  // Chart options
+  colorScheme = {
+    domain: ['#4CAF50', '#F44336', '#2196F3', '#FF9800', '#9C27B0', '#607D8B', '#E91E63', '#FFEB3B']
+  };
   
-  // Track modal state
-  showTrackerModal: boolean = false;
+  // Formatters
+  currencyFormatter = (val: number) => `₹${Math.round(val).toLocaleString()}`;
+  dateFormatter = (date: Date) => new DatePipe('en-US').transform(date, 'MMM d') || '';
   
+  constructor(
+    private fb: FormBuilder,
+    private expenseService: ExpenseService,
+    private incomeService: IncomeService,
+    private financialGoalService: FinancialGoalService,
+    private budgetService: BudgetService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadData();
+  }
+
+  initForm(): void {
+    this.transactionForm = this.fb.group({
+      id: [null],
+      type: ['expense', Validators.required],
+      amount: [null, [Validators.required, Validators.min(1)]],
+      category: ['', Validators.required],
+      date: [new Date().toISOString().slice(0, 10), Validators.required],
+      description: [''],
+      tags: [''],
+      isRecurring: [false],
+      recurringFrequency: [''],
+      allocateToGoal: [false],
+      goalId: [null]
+    });
+    
+    // Listen for changes to transaction type
+    this.transactionForm.get('type')?.valueChanges.subscribe(type => {
+      this.updateCategoryValidators(type);
+    });
+    
+    // Listen for changes to isRecurring
+    this.transactionForm.get('isRecurring')?.valueChanges.subscribe(isRecurring => {
+      const recurringFrequencyControl = this.transactionForm.get('recurringFrequency');
+      if (isRecurring) {
+        recurringFrequencyControl?.setValidators(Validators.required);
+      } else {
+        recurringFrequencyControl?.clearValidators();
+      }
+      recurringFrequencyControl?.updateValueAndValidity();
+    });
+    
+    // Listen for changes to allocateToGoal
+    this.transactionForm.get('allocateToGoal')?.valueChanges.subscribe(allocateToGoal => {
+      const goalIdControl = this.transactionForm.get('goalId');
+      if (allocateToGoal) {
+        goalIdControl?.setValidators(Validators.required);
+      } else {
+        goalIdControl?.clearValidators();
+      }
+      goalIdControl?.updateValueAndValidity();
+    });
+  }
+  
+  updateCategoryValidators(type: string): void {
+    const categoryControl = this.transactionForm.get('category');
+    if (categoryControl) {
+      categoryControl.setValue('');
+    }
+  }
+  getExpenseTransactionsCount(): number {
+    return this.filteredTransactions.filter(transaction => transaction.type === 'expense').length;
+  }
+  getIncomeTransactionsCount(): number {
+    return this.transactions.filter(transaction => transaction.type === 'income').length;
+  }
+  loadData(): void {
+    this.isLoading = true;
+    
+    // Load all necessary data in parallel
+    forkJoin({
+      expenses: this.expenseService.getExpenses().pipe(catchError(err => {
+        console.error('Error loading expenses:', err);
+        return of([]);
+      })),
+      incomes: this.incomeService.getIncomes().pipe(catchError(err => {
+        console.error('Error loading incomes:', err);
+        return of([]);
+      })),
+      expenseCategories: this.expenseService.getExpenseCategories().pipe(catchError(err => {
+        console.error('Error loading expense categories:', err);
+        return of([]);
+      })),
+      incomeCategories: this.incomeService.getIncomeSources().pipe(catchError(err => {
+        console.error('Error loading income categories:', err);
+        return of([]);
+      })),
+      goals: this.financialGoalService.getActiveGoals().pipe(catchError(err => {
+        console.error('Error loading goals:', err);
+        return of([]);
+      })),
+      budgets: this.budgetService.getBudgetItems().pipe(catchError(err => {
+        console.error('Error loading budgets:', err);
+        return of([]);
+      }))
+    }).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
+    ).subscribe({
+      next: (data) => {
+        // Store the category data
+        this.expenseCategories = data.expenseCategories;
+        this.incomeCategories = data.incomeCategories;
+        this.goals = data.goals;
+        this.budgets = data.budgets;
+        
+        // Process expenses and incomes into unified transaction list
+        const expenses = data.expenses.map(expense => ({
+          id: expense.id,
+          type: 'expense' as const,
+          amount: expense.amount,
+          category: expense.category,
+          date: new Date(expense.date),
+          description: expense.note,
+          tags: expense.tags || []
+        }));
+        
+        const incomes = data.incomes.map(income => ({
+          id: income.id,
+          type: 'income' as const,
+          amount: income.amount,
+          category: income.source,
+          date: new Date(income.date),
+          description: income.description,
+          tags: income.tags || []
+        }));
+        
+        // Combine all transactions and sort by date (newest first)
+        this.transactions = [...expenses, ...incomes].sort((a, b) => {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        
+        this.filteredTransactions = [...this.transactions];
+        
+        // Generate chart data
+        this.generateChartData();
+      },
+      error: (error) => {
+        console.error('Error loading data:', error);
+        this.showError('Failed to load transaction data. Please try again.');
+      }
+    });
+  }
+
+  generateChartData(): void {
+    this.generateCashFlowData();
+    this.generateCategoryDistributionData();
+    this.generateDailyTrendsData();
+  }
+
+  generateCashFlowData(): void {
+    // Get last 6 months data
+    const now = new Date();
+    const months: { [key: string]: { income: number, expense: number } } = {};
+    
+    // Initialize the last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = month.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      months[monthKey] = { income: 0, expense: 0 };
+    }
+    
+    // Populate the data
+    this.transactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      // Only consider last 6 months
+      if (date.getTime() >= new Date(now.getFullYear(), now.getMonth() - 5, 1).getTime() && 
+          date.getTime() <= now.getTime()) {
+        const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        if (transaction.type === 'income') {
+          months[monthKey].income += transaction.amount;
+        } else {
+          months[monthKey].expense += transaction.amount;
+        }
+      }
+    });
+    
+    // Convert to chart data format
+    this.cashFlowData = Object.entries(months).map(([name, data]) => ({
+      name,
+      series: [
+        { name: 'Income', value: data.income },
+        { name: 'Expense', value: data.expense }
+      ]
+    }));
+  }
+
+  generateCategoryDistributionData(): void {
+    const expenseCategories: { [key: string]: number } = {};
+    const incomeCategories: { [key: string]: number } = {};
+    
+    // Current month only
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    this.transactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      if (date >= startOfMonth && date <= now) {
+        if (transaction.type === 'expense') {
+          if (!expenseCategories[transaction.category]) {
+            expenseCategories[transaction.category] = 0;
+          }
+          expenseCategories[transaction.category] += transaction.amount;
+        } else {
+          if (!incomeCategories[transaction.category]) {
+            incomeCategories[transaction.category] = 0;
+          }
+          incomeCategories[transaction.category] += transaction.amount;
+        }
+      }
+    });
+    
+    // Convert to chart data format based on active tab
+    if (this.activeTab === 'expense' || this.activeTab === 'all' || this.activeTab === 'insights') {
+      this.categoryDistributionData = Object.entries(expenseCategories)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 7); // Top 7 categories only
+    } else {
+      this.categoryDistributionData = Object.entries(incomeCategories)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 7); // Top 7 categories only
+    }
+  }
+
+  generateDailyTrendsData(): void {
+    const last30Days: { [key: string]: { income: number, expense: number } } = {};
+    const now = new Date();
+    
+    // Initialize last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const day = new Date(now);
+      day.setDate(now.getDate() - i);
+      const dayKey = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      last30Days[dayKey] = { income: 0, expense: 0 };
+    }
+    
+    // Populate the data
+    this.transactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      // Only consider last 30 days
+      if (date.getTime() >= new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29).getTime() && 
+          date.getTime() <= now.getTime()) {
+        const dayKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (transaction.type === 'income') {
+          last30Days[dayKey].income += transaction.amount;
+        } else {
+          last30Days[dayKey].expense += transaction.amount;
+        }
+      }
+    });
+    
+    // Convert to chart data format
+    this.dailyTrendsData = [
+      {
+        name: 'Income',
+        series: Object.entries(last30Days).map(([name, data]) => ({
+          name,
+          value: data.income
+        }))
+      },
+      {
+        name: 'Expense',
+        series: Object.entries(last30Days).map(([name, data]) => ({
+          name,
+          value: data.expense
+        }))
+      }
+    ];
+  }
+
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
   
-  toggleTrackerModal(): void {
-    this.showTrackerModal = !this.showTrackerModal;
+  switchTab(tab: string): void {
+    this.activeTab = tab;
     
-    if (this.showTrackerModal) {
-      // Simulate loading
-      this.isLoading = true;
-      setTimeout(() => {
-        this.calculateTotals();
-        this.sortTransactions();
-        this.isLoading = false;
-      }, 500);
-      
-      this.tempFilterCategory = this.filterCategory;
-      this.tempFilterType = this.filterType;
-      this.tempSearchDate = this.searchDate;
+    // Apply tab-specific filters
+    switch (tab) {
+      case 'all':
+        this.resetFilters();
+        break;
+      case 'income':
+        this.filteredTransactions = this.transactions.filter(t => t.type === 'income');
+        this.generateCategoryDistributionData();
+        break;
+      case 'expense':
+        this.filteredTransactions = this.transactions.filter(t => t.type === 'expense');
+        this.generateCategoryDistributionData();
+        break;
+      case 'recent':
+        // Show last 7 days transactions
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+        this.filteredTransactions = this.transactions.filter(t => 
+          new Date(t.date) >= last7Days
+        );
+        break;
+      case 'insights':
+        this.filteredTransactions = this.transactions;
+        break;
     }
-  }
-  
-  constructor() {}
-
-  openCalendar(dateInput: HTMLInputElement): void {
-    dateInput.showPicker();
-  }
- 
-  addTransaction(): void {
-    if (this.amount > 0 && this.category.trim()) {
-      // Simulate loading
-      this.isLoading = true;
-      
-      setTimeout(() => {
-        const newTransaction: Transaction = {
-          id: (this.transactions.length + 1).toString(),
-          date: new Date(),
-          amount: this.amount,
-          category: this.category,
-          type: this.type,
-          description: this.description
-        };
-        
-        this.transactions.push(newTransaction);
-        this.showSuccessBubble(`Added ${this.type === 'income' ? 'Income' : 'Expense'} - ${this.category}: ₹ ${this.amount}`);
-        this.calculateTotals();
-        this.sortTransactions();
-        this.resetFormFields();
-        this.isLoading = false;
-      }, 800);
-    }
-  }
-
-  private showSuccessBubble(message: string): void {
-    this.successBubble = { show: true, message };
-    setTimeout(() => {
-      this.successBubble.show = false;
-    }, 3000);
-  }
-  
-  private showFilterToast(message: string): void {
-    this.filterToast = { show: true, message };
-    setTimeout(() => {
-      this.filterToast.show = false;
-    }, 3000);
-  }
-
-  private resetFormFields(): void {
-    this.amount = 0;
-    this.category = '';
-    this.description = '';
   }
 
   applyFilters(): void {
-    this.filterCategory = this.tempFilterCategory;
-    this.filterType = this.tempFilterType;
-    this.searchDate = this.tempSearchDate;
-    this.calculateTotals();
-    this.showFilterToast('Filters applied successfully');
+    let filtered = [...this.transactions];
+    
+    // Apply active tab filter
+    if (this.activeTab === 'income') {
+      filtered = filtered.filter(t => t.type === 'income');
+    } else if (this.activeTab === 'expense') {
+      filtered = filtered.filter(t => t.type === 'expense');
+    }
+    
+    // Apply search query
+    if (this.searchQuery.trim() !== '') {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.category.toLowerCase().includes(query) ||
+        (t.description && t.description.toLowerCase().includes(query)) ||
+        (t.tags && t.tags.some(tag => tag.toLowerCase().includes(query)))
+      );
+    }
+    
+    // Apply category filter
+    if (this.filterCategory !== '') {
+      filtered = filtered.filter(t => t.category === this.filterCategory);
+    }
+    
+    // Apply date range filter
+    if (this.dateRange.start) {
+      filtered = filtered.filter(t => new Date(t.date) >= (this.dateRange.start as Date));
+    }
+    if (this.dateRange.end) {
+      const endDate = new Date(this.dateRange.end as Date);
+      endDate.setHours(23, 59, 59, 999); // End of day
+      filtered = filtered.filter(t => new Date(t.date) <= endDate);
+    }
+    
+    this.filteredTransactions = filtered;
   }
 
-  calculateTotals(): void {
-    const filteredTransactions = this.getFilteredTransactions();
-    this.totalIncome = filteredTransactions
-      .filter(transaction => transaction.type === 'income')
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
+  resetFilters(): void {
+    this.searchQuery = '';
+    this.filterCategory = '';
+    this.dateRange = { start: null, end: null };
+    this.filteredTransactions = [...this.transactions];
     
-    this.totalExpense = filteredTransactions
-      .filter(transaction => transaction.type === 'expense')
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-    
-    this.netBalance = this.totalIncome - this.totalExpense;
+    // Apply active tab filter
+    this.switchTab(this.activeTab);
   }
 
-  getFilteredTransactions(): Transaction[] {
-    return this.transactions.filter(transaction => {
-      // Filter by category if one is selected
-      const categoryMatch = !this.filterCategory || transaction.category === this.filterCategory;
+  openTransactionModal(type: 'income' | 'expense'): void {
+    this.transactionForm.reset({
+      id: null,
+      type: type,
+      amount: null,
+      category: '',
+      date: new Date().toISOString().slice(0, 10),
+      description: '',
+      tags: '',
+      isRecurring: false,
+      recurringFrequency: '',
+      allocateToGoal: false,
+      goalId: null
+    });
+    
+    this.selectedTransaction = null;
+    this.showTransactionModal = true;
+  }
+
+  editTransaction(transaction: Transaction): void {
+    this.selectedTransaction = transaction;
+    
+    const tags = Array.isArray(transaction.tags) ? transaction.tags.join(', ') : '';
+    const date = transaction.date instanceof Date 
+      ? transaction.date.toISOString().slice(0, 10) 
+      : new Date(transaction.date).toISOString().slice(0, 10);
+    
+    this.transactionForm.patchValue({
+      id: transaction.id,
+      type: transaction.type,
+      amount: transaction.amount,
+      category: transaction.category,
+      date: date,
+      description: transaction.description || '',
+      tags: tags,
+      // Additional properties would be patched here based on the transaction type
+      isRecurring: false, // Default value, would need to be set based on actual data
+      recurringFrequency: '',
+      allocateToGoal: false,
+      goalId: null
+    });
+    
+    this.showTransactionModal = true;
+  }
+
+  saveTransaction(): void {
+    if (this.transactionForm.invalid) {
+      return;
+    }
+    
+    this.isSubmitting = true;
+    const formValue = this.transactionForm.value;
+    
+    // Process tags
+    const tags = formValue.tags ? formValue.tags.split(',').map((tag: string) => tag.trim()) : [];
+    
+    if (formValue.type === 'income') {
+      const incomeData = {
+        id: formValue.id,
+        amount: formValue.amount,
+        source: formValue.category,
+        description: formValue.description,
+        isRecurring: formValue.isRecurring,
+        recurringFrequency: formValue.isRecurring ? formValue.recurringFrequency : '',
+        tags: tags
+      };
       
-      // Filter by type if one is selected
-      const typeMatch = this.filterType === 'all' || transaction.type === this.filterType;
-      
-      // Filter by date if one is entered
-      let dateMatch = true;
-      if (this.searchDate) {
-        const searchDate = new Date(this.searchDate);
-        const transactionDate = new Date(transaction.date);
-        dateMatch = transactionDate.toDateString() === searchDate.toDateString();
+      if (formValue.id) {
+        // Update existing income
+        this.incomeService.updateIncome(formValue.id, incomeData).subscribe({
+          next: () => this.handleTransactionSuccess('Income updated successfully'),
+          error: (error) => this.handleTransactionError(error, 'Failed to update income')
+        });
+      } else {
+        // Add new income
+        this.incomeService.addIncome(incomeData).subscribe({
+          next: () => this.handleTransactionSuccess('Income added successfully'),
+          error: (error) => this.handleTransactionError(error, 'Failed to add income')
+        });
       }
+    } else {
+      // Process expense
+      const expenseData = {
+        id: formValue.id,
+        amount: formValue.amount,
+        category: formValue.category,
+        note: formValue.description,
+        isRecurring: formValue.isRecurring,
+        recurringFrequency: formValue.isRecurring ? formValue.recurringFrequency : '',
+        tags: tags
+      };
       
-      return categoryMatch && typeMatch && dateMatch;
+      if (formValue.id) {
+        // Update existing expense
+        this.expenseService.updateExpense(formValue.id, expenseData).subscribe({
+          next: () => this.handleTransactionSuccess('Expense updated successfully'),
+          error: (error) => this.handleTransactionError(error, 'Failed to update expense')
+        });
+      } else {
+        // Add new expense
+        this.expenseService.addExpense(expenseData).subscribe({
+          next: () => this.handleTransactionSuccess('Expense added successfully'),
+          error: (error) => this.handleTransactionError(error, 'Failed to add expense')
+        });
+      }
+    }
+    
+    // Handle goal allocation if needed
+    if (formValue.allocateToGoal && formValue.goalId) {
+      this.updateGoalProgress(formValue.goalId, formValue.amount, formValue.type);
+    }
+  }
+
+  updateGoalProgress(goalId: number, amount: number, type: string): void {
+    const goal = this.goals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    let newAmount = goal.currentAmount;
+    if (type === 'income') {
+      newAmount += amount;
+    } else {
+      newAmount -= amount;
+    }
+    
+    // Ensure we don't go below 0
+    if (newAmount < 0) newAmount = 0;
+    
+    this.financialGoalService.updateGoalProgress(goalId, newAmount).subscribe({
+      next: () => {
+        console.log('Goal progress updated successfully');
+      },
+      error: (error) => {
+        console.error('Failed to update goal progress:', error);
+        this.showError('Goal allocation recorded, but failed to update goal progress.');
+      }
     });
   }
 
-  clearFilters(): void {
-    this.filterCategory = '';
-    this.filterType = 'all';
-    this.searchDate = '';
-    this.tempFilterCategory = '';
-    this.tempFilterType = 'all';
-    this.tempSearchDate = '';
-    this.calculateTotals();
-    this.showFilterToast('Filters cleared');
+  handleTransactionSuccess(message: string): void {
+    this.showTransactionModal = false;
+    this.isSubmitting = false;
+    this.showSuccess(message);
+    this.loadData();
   }
 
-  formatDate(date: Date): string {
-    return date.toLocaleDateString();
+  handleTransactionError(error: HttpErrorResponse, fallbackMessage: string): void {
+    this.isSubmitting = false;
+    console.error('Transaction error:', error);
+    
+    let errorMessage = fallbackMessage;
+    if (error.status === 401) {
+      errorMessage = 'Your session has expired. Please log in again.';
+      this.router.navigate(['/login']);
+    } else if (error.status === 403) {
+      errorMessage = 'You don\'t have permission to perform this action.';
+    } else if (error.error && error.error.message) {
+      errorMessage = error.error.message;
+    }
+    
+    this.showError(errorMessage);
   }
 
-  sortTransactions(): void {
-    if (this.sortConfigs.length > 0) {
-      this.transactions.sort((a, b) => {
-        // Apply multiple sort fields in order
-        for (const config of this.sortConfigs) {
-          let comparison = 0;
-          
-          if (config.field === 'date') {
-            comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-          } else if (config.field === 'amount') {
-            comparison = a.amount - b.amount;
-          } else if (config.field === 'category') {
-            comparison = a.category.localeCompare(b.category);
-          } else if (config.field === 'type') {
-            comparison = a.type.localeCompare(b.type);
-          }
-          
-          if (comparison !== 0) {
-            return config.direction === 'asc' ? comparison : -comparison;
-          }
+  confirmDeleteTransaction(transaction: Transaction): void {
+    this.selectedTransaction = transaction;
+    this.showDeleteConfirmModal = true;
+  }
+
+  deleteTransaction(): void {
+    if (!this.selectedTransaction) return;
+    
+    this.isSubmitting = true;
+    
+    if (this.selectedTransaction.type === 'income') {
+      this.incomeService.deleteIncome(this.selectedTransaction.id as number).subscribe({
+        next: () => {
+          this.showSuccess('Income deleted successfully');
+          this.closeDeleteModal();
+          this.loadData();
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.handleTransactionError(error, 'Failed to delete income');
         }
-        
-        return 0; // If all comparisons are equal
+      });
+    } else {
+      this.expenseService.deleteExpense(this.selectedTransaction.id as number).subscribe({
+        next: () => {
+          this.showSuccess('Expense deleted successfully');
+          this.closeDeleteModal();
+          this.loadData();
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.handleTransactionError(error, 'Failed to delete expense');
+        }
       });
     }
   }
 
-  toggleSort(field: string): void {
-    // Update the legacy sort field and direction
-    if (this.sortField === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  closeTransactionModal(): void {
+    this.showTransactionModal = false;
+    this.selectedTransaction = null;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteConfirmModal = false;
+    this.selectedTransaction = null;
+    this.isSubmitting = false;
+  }
+
+  showSuccess(message: string): void {
+    this.successMessage = message;
+    setTimeout(() => this.successMessage = '', 3000);
+  }
+
+  showError(message: string): void {
+    this.errorMessage = message;
+    setTimeout(() => this.errorMessage = '', 3000);
+  }
+  
+  getCategoryIcon(category: string, type: string): string {
+    if (type === 'income') {
+      return this.incomeService.getSourceIcon(category);
     } else {
-      this.sortField = field;
-      this.sortDirection = 'asc';
+      return this.expenseService.getCategoryIcon(category);
+    }
+  }
+
+  getCategoryColor(category: string, type: string): string {
+    if (type === 'income') {
+      return this.incomeService.getSourceColor(category);
+    } else {
+      return this.expenseService.getCategoryColor(category);
+    }
+  }
+  
+  getTransactionStatusClass(transaction: Transaction): string {
+    return transaction.type === 'income' ? 'bg-green-500' : 'bg-red-500';
+  }
+  
+  formatDate(date: Date | string): string {
+    return new DatePipe('en-US').transform(date, 'MMM d, y') || '';
+  }
+  
+  getTotalIncome(): number {
+    return this.filteredTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+  
+  getTotalExpense(): number {
+    return this.filteredTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+  
+  getNetAmount(): number {
+    return this.getTotalIncome() - this.getTotalExpense();
+  }
+  
+  getSpendingInsights(): string[] {
+    const insights: string[] = [];
+    
+    // Calculate some basic insights
+    const totalIncome = this.transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    const totalExpense = this.transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    // Savings rate
+    const savingsRate = totalIncome > 0 ? (totalIncome - totalExpense) / totalIncome * 100 : 0;
+    
+    if (savingsRate >= 20) {
+      insights.push(`Great job saving ${savingsRate.toFixed(1)}% of your income!`);
+    } else if (savingsRate > 0) {
+      insights.push(`You're saving ${savingsRate.toFixed(1)}% of your income. Try to reach 20%!`);
+    } else if (savingsRate < 0) {
+      insights.push(`You're spending more than you earn. Consider reducing expenses.`);
     }
     
-    // Also update the sortConfigs array
-    this.sortConfigs = this.sortConfigs.filter(config => config.field !== field);
-    
-    // Then add it as the primary sort
-    this.sortConfigs.unshift({
-      field: field, 
-      direction: this.sortDirection
+    // Highest expense category
+    const expenseByCategory: Record<string, number> = {};
+    this.transactions.filter(t => t.type === 'expense').forEach(expense => {
+      if (!expenseByCategory[expense.category]) {
+        expenseByCategory[expense.category] = 0;
+      }
+      expenseByCategory[expense.category] += expense.amount;
     });
     
-    // Keep only up to 3 sort fields
-    if (this.sortConfigs.length > 3) {
-      this.sortConfigs.pop();
+    const highestCategory = Object.entries(expenseByCategory)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    if (highestCategory) {
+      const percentOfExpense = (highestCategory[1] / totalExpense) * 100;
+      insights.push(`Your highest spending category is ${highestCategory[0]} (${percentOfExpense.toFixed(1)}% of expenses).`);
     }
     
-    this.sortTransactions();
-  }
-
-  getSortIcon(field: string): string {
-    const config = this.sortConfigs.find(config => config.field === field);
-    if (!config) return '↕️';
-    return config.direction === 'asc' ? `↑` : `↓`;
-  }
-
-  getAmountClass(type: string): string {
-    return type === 'income' ? 'text-green-400' : 'text-red-400';
-  }
-
-  ngOnInit(): void {
-    // Calculate initial totals
-    this.calculateTotals();
+    // Month-over-month spending
+    const currentMonth = new Date().getMonth();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const currentYear = new Date().getFullYear();
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     
-    // Initialize temporary filter values
-    this.tempFilterCategory = this.filterCategory;
-    this.tempFilterType = this.filterType;
-    this.tempSearchDate = this.searchDate;
+    const currentMonthExpenses = this.transactions
+      .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === currentMonth && new Date(t.date).getFullYear() === currentYear)
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    const lastMonthExpenses = this.transactions
+      .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === lastMonth && new Date(t.date).getFullYear() === lastMonthYear)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    if (lastMonthExpenses > 0) {
+      const changePercent = ((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100;
+      if (changePercent > 10) {
+        insights.push(`Your spending is up ${changePercent.toFixed(1)}% compared to last month.`);
+      } else if (changePercent < -10) {
+        insights.push(`You've reduced spending by ${Math.abs(changePercent).toFixed(1)}% from last month. Good job!`);
+      } else {
+        insights.push(`Your spending is stable compared to last month (${changePercent.toFixed(1)}% change).`);
+      }
+    }
+    
+    return insights;
   }
 }
