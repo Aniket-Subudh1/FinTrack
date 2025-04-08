@@ -139,12 +139,12 @@ export class DashboardComponent implements OnInit {
       if (token) {
         console.log('Found token in URL parameters, saving to localStorage');
         localStorage.setItem('jwt', token);
-        
-      
+
+
         this.router.navigate(['/dashboard']);
       }
     });
-    
+
     this.checkAndSyncAuth();
     this.loadInitialData();
   }
@@ -193,11 +193,16 @@ export class DashboardComponent implements OnInit {
 
         // Load expenses
         const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
         const currentMonthExpenses = results.expenses.filter((expense: Expense) => {
           const expenseDate = new Date(expense.date);
-          return expenseDate.getMonth() === now.getMonth() && expenseDate.getFullYear() === now.getFullYear();
+          return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
         });
+
         this.monthlyExpenses = currentMonthExpenses.reduce((sum: number, expense: Expense) => sum + (expense.amount || 0), 0);
+
         const recentExpenses = results.expenses
           .sort((a: Expense, b: Expense) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 5)
@@ -212,7 +217,7 @@ export class DashboardComponent implements OnInit {
         // Load incomes
         const currentMonthIncomes = results.incomes.filter((income: Income) => {
           const incomeDate = new Date(income.date);
-          return incomeDate.getMonth() === now.getMonth() && incomeDate.getFullYear() === now.getFullYear();
+          return incomeDate.getMonth() === currentMonth && incomeDate.getFullYear() === currentYear;
         });
         this.monthlyIncome = currentMonthIncomes.reduce((sum: number, income: Income) => sum + (income.amount || 0), 0);
         this.totalBalance = this.monthlyIncome - this.monthlyExpenses;
@@ -245,28 +250,17 @@ export class DashboardComponent implements OnInit {
             })),
         }));
 
-        // Load expense summary and pie chart data
-        this.expenseSummary = results.summary
-          .filter(
-            (item) =>
-              item &&
-              typeof item.category === 'string' &&
-              typeof item.totalAmount === 'number' &&
-              !isNaN(item.totalAmount) &&
-              item.totalAmount > 0
-          )
-          .map((item) => ({
-            category: item.category,
-            totalAmount: item.totalAmount,
-          }));
+        // Filter expenses for the current month and calculate summary
+        // This replaces the API's summary data with our own calculation based on current month only
+        this.expenseSummary = this.calculateExpenseSummary(currentMonthExpenses);
 
         this.pieChartData = this.expenseSummary.map((item) => ({
           name: item.category,
           value: item.totalAmount,
         }));
 
-        console.log('Raw Summary Data:', results.summary);
-        console.log('Processed Expense Summary:', this.expenseSummary);
+        console.log('Current Month Expenses:', currentMonthExpenses);
+        console.log('Processed Current Month Expense Summary:', this.expenseSummary);
         console.log('Pie Chart Data:', this.pieChartData);
 
         this.calculateSpendingTotals();
@@ -278,6 +272,22 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  private calculateExpenseSummary(expenses: Expense[]): ExpenseCategorySummary[] {
+    const summary: { [category: string]: number } = {};
+
+    expenses.forEach(expense => {
+      if (!summary[expense.category]) {
+        summary[expense.category] = 0;
+      }
+      summary[expense.category] += expense.amount;
+    });
+
+    return Object.keys(summary).map(category => ({
+      category,
+      totalAmount: summary[category]
+    }));
   }
 
   labelFormatter(value: number): string {
@@ -455,5 +465,4 @@ export class DashboardComponent implements OnInit {
   getRemainingBudget(): number {
     return this.monthlyIncome - this.getTotalBudgeted() - this.savingsGoal;
   }
-
 }
